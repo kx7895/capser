@@ -1,0 +1,44 @@
+{% extends 'app/layout/_layout.html.twig' %}
+
+{% block title %}Neuer Kunde{% endblock %}
+
+{% block breadcrumb1 %}Kontakte{% endblock %}
+{% block breadcrumb2 %}Kunden{% endblock %}
+
+{% block content %}
+    <!--suppress HtmlUnknownAnchorTarget -->
+    {% set showSingleSubmitButtons = false %}
+
+    {{ form_start(form) }}
+
+    <div class="row">
+        <div class="col-xxl-9">
+            <div id="default">
+                {{ include('app/customer/_form.html.twig') }}
+            </div>
+        </div>
+        <div class="col-xxl-3">
+            <div class="nav-sticky">
+                <div class="btn-group w-100 mb-4" role="group">
+                    <a class="btn btn-outline-primary" href="{{ path('app_customer_index') }}">
+                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
+                    </a>
+                    <button class="btn btn-primary">
+                        <i class="fa-regular fa-save me-1"></i> Speichern
+                    </button>
+                </div>
+                <div class="card d-none d-xxl-block">
+                    <div class="card-body">
+                        <ul class="nav flex-column" id="stickyNav">
+                            <li class="nav-item"><a class="nav-link" href="#sectionStammdaten">Stammdaten</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionZahlungsdaten">Zahlungsdaten</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionRechnungsstandards">Rechnungsstandards</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ form_end(form) }}
+{% endblock %}

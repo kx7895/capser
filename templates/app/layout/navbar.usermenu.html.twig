@@ -1,0 +1,46 @@
+<div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up" aria-labelledby="navbarDropdownUserImage">
+    <h6 class="dropdown-header d-flex align-items-center">
+        <img class="dropdown-user-img" src="{% if app.user.profileImagePath %}/images/profiles/{{ app.user.profileImagePath }}{% else %}{{ asset('images/fa-user-solid.png') }}{% endif %}">
+        <div class="dropdown-user-details">
+            <div class="dropdown-user-details-name">{{ app.user.firstName }} {{ app.user.lastName }}</div>
+            {% if app.user.primaryPrincipal %}
+                <div class="dropdown-user-details-email">{{ app.user.primaryPrincipal.name }}</div>
+            {% endif %}
+        </div>
+    </h6>
+    <div class="dropdown-divider"></div>
+{#    <a class="dropdown-item {% if app.request.pathInfo == path('app_settings_profile') or app.request.pathInfo == path('app_settings_password') %}active{% endif %}" href="{{ path('app_settings_profile') }}">#}
+{#        <div class="dropdown-item-icon">#}
+{#            <i class="fa-regular fa-user"></i>#}
+{#        </div>#}
+{#        Profil#}
+{#    </a>#}
+{#    <a class="dropdown-item {% if app.request.pathInfo == path('app_settings_settings') or app.request.pathInfo == path('app_settings_users') %} active{% endif %}" href="{{ path('app_settings_settings') }}">#}
+{#        <div class="dropdown-item-icon">#}
+{#            <i class="fa-solid fa-gear"></i>#}
+{#        </div>#}
+{#        Einstellungen#}
+{#    </a>#}
+    {% if is_granted('ROLE_SUPERADMIN') %}
+        <a class="dropdown-item" href="{{ path('admin_index') }}">
+            <div class="dropdown-item-icon">
+                <i class="fa-solid fa-wrench"></i>
+            </div>
+            System-Einstellungen
+        </a>
+    {% endif %}
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{{ path('imprint') }}">
+        <div class="dropdown-item-icon">
+            <i class="fa-regular fa-circle-question"></i>
+        </div>
+        Support
+    </a>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{{ path('logout') }}">
+        <div class="dropdown-item-icon">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </div>
+        Abmelden
+    </a>
+</div>

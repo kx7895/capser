@@ -1,0 +1,10 @@
+{% extends 'app/layout/_layout.html.twig' %}
+
+{% block title %}{{ customer.name }}{% endblock %}
+
+{% block breadcrumb1 %}Kontakte{% endblock %}
+{% block breadcrumb2 %}Kunden{% endblock %}
+
+{% block content %}
+    {% include('app/layout/_betatestbanner.html.twig') %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'guest/_layout.html.twig' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <div class="pb-1">
+        <h3 class="card-title text-center">Anmelden</h3>
+        <p class="text-center">Geben Sie Ihre E-Mail-Adresse &amp; Ihr Passwort ein, um sich anzumelden.</p>
+    </div>
+    <form method="post" class="row g-3">
+        {% if error %}
+            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+        {% if app.user %}
+            <div class="alert alert-info">Sie sind bereits als <i>{{ app.user.userIdentifier }}</i> angemeldet, <a href="{{ path('logout') }}">jetzt abmelden</a>.</div>
+        {% endif %}
+        <div class="col-12">
+            <label for="username" class="form-label">E-Mail-Adresse</label>
+            <input class="form-control" type="email" value="{{ last_username }}" name="_username" id="username" autocomplete="email" required="required">
+        </div>
+        <div class="col-12">
+            <div class="float-end text-muted small"><a href="{{ path('password') }}">Passwort vergessen?</a></div>
+            <label for="password" class="form-label">Passwort</label>
+            <input class="form-control" type="password" name="_password" id="password" autocomplete="current-password"  required="required">
+        </div>
+        <div class="col-12">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="_remember_me" id="rememberMe">
+                <label class="form-check-label" for="rememberMe">Anmeldung merken</label>
+            </div>
+        </div>
+        <div class="col-12">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <button class="btn btn-lg btn-primary w-100" type="submit">capser starten</button>
+        </div>
+        <div class="col-12 text-center">
+            <p class="small mb-0">Noch kein Account? <a href="{{ path('registration') }}">Kostenlos registrieren</a>.</p>
+        </div>
+    </form>
+{% endblock %}

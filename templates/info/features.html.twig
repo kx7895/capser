@@ -1,0 +1,89 @@
+{% extends 'info/_layout.html.twig' %}
+
+{% block title %}Funktionen{% endblock %}
+
+{% block content %}
+    <style>
+        .card-cover {
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+        }
+        .feature-icon-small {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+
+    <div class="container py-5">
+        <h2 class="pb-2 border-bottom">Awesome Features</h2>
+        <div class="row row-cols-1 row-cols-md-2 align-items-md-center g-5 py-5">
+            <div class="col d-flex flex-column align-items-start gap-2">
+                <h2 class="fw-bold text-body-emphasis">Left-aligned title explaining these awesome features</h2>
+                <p class="text-body-secondary">Paragraph of text beneath the heading to explain the heading. We'll add onto it with another sentence and probably just keep going until we run out of words.</p>
+                <a href="#" class="btn btn-primary btn-lg">Kostenlos testen</a>
+            </div>
+            <div class="col">
+                <div class="row row-cols-1 row-cols-sm-2 g-4">
+                    <div class="col d-flex flex-column gap-2">
+                        <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-secondary bg-gradient fs-4 rounded-3">
+                            <i class="fa-regular fa-star"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-0 text-body-emphasis">Featured title</h4>
+                        <p class="text-body-secondary">Paragraph of text beneath the heading to explain the heading.</p>
+                    </div>
+                    <div class="col d-flex flex-column gap-2">
+                        <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-secondary bg-gradient fs-4 rounded-3">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-0 text-body-emphasis">Featured title</h4>
+                        <p class="text-body-secondary">Paragraph of text beneath the heading to explain the heading.</p>
+                    </div>
+                    <div class="col d-flex flex-column gap-2">
+                        <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-secondary bg-gradient fs-4 rounded-3">
+                            <i class="fa-regular fa-comments"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-0 text-body-emphasis">Featured title</h4>
+                        <p class="text-body-secondary">Paragraph of text beneath the heading to explain the heading.</p>
+                    </div>
+                    <div class="col d-flex flex-column gap-2">
+                        <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-secondary bg-gradient fs-4 rounded-3">
+                            <i class="fa-regular fa-money-bill-transfer"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-0 text-body-emphasis">Featured title</h4>
+                        <p class="text-body-secondary">Paragraph of text beneath the heading to explain the heading.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mb-2">
+        <h2 class="pb-2 border-bottom">Planned Features</h2>
+        <div class="row row-cols-1 row-cols-lg-2 align-items-stretch g-4 py-5">
+            <div class="col">
+                <div class="card card-cover h-100 overflow-hidden rounded-4 shadow-lg" style="background-image: url('{{ asset('images/info/features-example-1.jpg') }}');">
+                    <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1">
+                        <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">Short title, long jacket</h3>
+                        <ul class="d-flex list-unstyled mt-auto">
+                            <li class="me-auto text-bg-secondary p-2 rounded-2">
+                                <i class="fa-regular fa-money-bill-transfer"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card card-cover h-100 overflow-hidden rounded-4 shadow-lg" style="background-image: url('{{ asset('images/info/features-example-2.jpg') }}');">
+                    <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1">
+                        <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">Much longer title that wraps to multiple lines</h3>
+                        <ul class="d-flex list-unstyled mt-auto">
+                            <li class="me-auto text-bg-secondary p-2 rounded-2">
+                                <i class="fa-regular fa-money-bill-transfer"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

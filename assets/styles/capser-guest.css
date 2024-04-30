@@ -1,0 +1,27 @@
+/*--------------------------------------------------------------
+# CHANGED BOOTSTRAP/SBADMIN
+--------------------------------------------------------------*/
+
+.logo img {
+    max-height: 28px;
+    margin-right: 8px;
+}
+
+.logo span {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--cp-color-primary);
+    font-family: "Raleway", sans-serif;
+}
+
+/*--------------------------------------------------------------
+# OWN ELEMENTS
+--------------------------------------------------------------*/
+
+#footer-links a {
+    color: var(--cp-color-secondary-light);
+}
+
+#footer-links a:hover {
+    color: var(--cp-color-secondary);
+}

@@ -16,10 +16,45 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'info' => [
+        'path' => './assets/info.js',
+        'entrypoint' => true,
+    ],
+    'guest' => [
+        'path' => './assets/guest.js',
+        'entrypoint' => true,
+    ],
     '@hotwired/stimulus' => [
         'version' => '3.2.2',
     ],
     '@symfony/stimulus-bundle' => [
         'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
+    ],
+    'bootstrap' => [
+        'version' => '5.3.3',
+    ],
+    '@popperjs/core' => [
+        'version' => '2.11.8',
+    ],
+    'bootstrap/dist/css/bootstrap.min.css' => [
+        'version' => '5.3.3',
+        'type' => 'css',
+    ],
+    '@fortawesome/fontawesome-free/css/all.css' => [
+        'version' => '6.5.2',
+        'type' => 'css',
+    ],
+    'debounce' => [
+        'version' => '2.0.0',
+    ],
+    'tom-select' => [
+        'version' => '2.3.1',
+    ],
+    '@hotwired/turbo' => [
+        'version' => '7.3.0',
+    ],
+    'tom-select/dist/css/tom-select.bootstrap5.css' => [
+        'version' => '2.3.1',
+        'type' => 'css',
     ],
 ];

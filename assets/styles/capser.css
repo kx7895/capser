@@ -1,0 +1,76 @@
+:root {
+    --cp-color-text: #444444;
+
+    --cp-color-primary: #00063F;
+    --cp-color-primary-light: #40446F;
+
+    --cp-color-secondary: #708090;
+    --cp-color-secondary-light: #B7C0C8;
+
+    --cp-color-background: #FDFDFE;
+}
+
+/*--------------------------------------------------------------
+# CHANGED BOOTSTRAP
+--------------------------------------------------------------*/
+
+body {
+    background: var(--cp-color-background);
+}
+
+a {
+    color: var(--cp-color-primary-light);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--cp-color-primary);
+    text-decoration: none;
+}
+
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--cp-color-primary);
+    --bs-btn-border-color: var(--cp-color-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--cp-color-primary-light);
+    --bs-btn-hover-border-color: var(--cp-color-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--cp-color-primary-light);
+    --bs-btn-active-border-color: var(--cp-color-primary);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--cp-color-primary-light);
+    --bs-btn-disabled-border-color: var(--cp-color-primary-light);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--cp-color-primary);
+    --bs-btn-bg: #fff;
+    --bs-btn-border-color: var(--cp-color-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--cp-color-primary-light);
+    --bs-btn-hover-border-color: var(--cp-color-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--cp-color-primary);
+    --bs-btn-active-border-color: var(--cp-color-primary);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--cp-color-primary-light);
+    --bs-btn-disabled-border-color: var(--cp-color-primary-light);
+}
+
+/*--------------------------------------------------------------
+# OWN ELEMENTS
+--------------------------------------------------------------*/
+
+.xsmall {
+    font-size: .75em;
+}
+
+.rounded-start-0 {
+    border-bottom-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+}
+
+.pt-9 {
+    padding-top: 5.5rem !important;
+}

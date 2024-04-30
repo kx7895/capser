@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block importmap %}{{ importmap('app') }}{% endblock %}
+{% block bodyCssClass %}nav-fixed{% endblock %}
+
+{% block body %}
+    <div class="toast-container pt-9 px-4 top-0 end-0">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="toast" role="alert" data-controller="toast" data-bs-delay="10000">
+                    {% if message is iterable %}
+                        <div class="toast-header text-bg-{{ label }}">
+                            <strong class="me-auto">{{ message.0 }}</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            {{ message.1|raw }}
+                        </div>
+                    {% else %}
+                        <div class="toast-header text-bg-{{ label }}">
+                            <strong class="me-auto">Benachrichtigung</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    {{ include('app/layout/navbar.html.twig') }}
+
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            {{ include('app/layout/sidebar.html.twig') }}
+        </div>
+        <div id="layoutSidenav_content">
+            <main>
+                <header class="page-header page-header-dark bg-gradient-primary-to-secondary">
+                    <div class="container-fluid px-4">
+                        <div class="page-header-content pt-4 pb-5">
+                            <div class="row align-items-center justify-content-between">
+                                <div class="col-auto">
+                                    <h1 class="page-header-title">
+                                        {{ block('title') }}
+                                    </h1>
+                                </div>
+                            </div>
+                            <nav class="mt-2 rounded" aria-label="breadcrumb">
+                                <ol class="breadcrumb px-3 py-2 rounded mb-0">
+                                    <li class="breadcrumb-item"><a href="{{ path('app_index') }}">Start</a></li>
+
+                                    {% set _block_breadcrumb1 = block('breadcrumb1') %}
+                                    {% if _block_breadcrumb1 is not empty %}
+                                        <li class="breadcrumb-item">{{ _block_breadcrumb1 }}</li>
+                                    {% endif %}
+
+                                    {% set _block_breadcrumb2 = block('breadcrumb2') %}
+                                    {% if _block_breadcrumb2 is not empty %}
+                                        <li class="breadcrumb-item">{{ _block_breadcrumb2 }}</li>
+                                    {% endif %}
+
+                                    <li class="breadcrumb-item active">{{ block('title') }}</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </header>
+                <div class="container-fluid px-4 pt-4">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+            <footer class="footer-admin mt-auto footer-light xsmall">
+                <div class="container-xl px-4">
+                    <div class="row">
+                        <div class="col-md-6 small"><a href="https://quarin.digital" target="_blank">Quarin GmbH</a></div>
+                        <div class="col-md-6 text-md-end small">
+                            <a href="{{ path('privacy') }}">Datenschutz</a>
+                            ·
+                            <a href="{{ path('imprint') }}">Impressum</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+{% endblock %}

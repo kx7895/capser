@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block importmap %}{{ importmap('info') }}{% endblock %}
+
+{% block body %}
+<div class="container py-3">
+    <header>
+        <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+            <a href="/" class="d-flex align-items-center link-body-emphasis text-decoration-none logo">
+                <img src="{{ asset('images/logo/Q/Q.png') }}" alt="Logo">
+                <span class="fs-4 ms-2">capser</span>
+            </a>
+
+            <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none {% if (app.request.pathInfo == path('home') or app.request.pathInfo == path('index')) %}fw-bold{% endif %}" href="{{ path('home') }}">Überblick</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none {% if (app.request.pathInfo == path('features')) %}fw-bold{% endif %}" href="{{ path('features') }}">Funktionen</a>
+                <a class="py-2 link-body-emphasis text-decoration-none {% if (app.request.pathInfo == path('pricing')) %}fw-bold{% endif %}" href="{{ path('pricing') }}">Preise</a>
+                <a href="{{ path('login') }}" class="btn btn-outline-primary ms-4 d-none d-lg-block">Anmelden</a>
+                <a href="{{ path('registration') }}" class="btn btn-primary ms-2 d-none d-lg-block">Kostenlos testen</a>
+            </nav>
+
+            <div class="row">
+                <div class="col-12 mt-1">
+                    <a href="{{ path('login') }}" class="btn btn-outline-primary d-lg-none">Anmelden</a>
+                    <a href="{{ path('registration') }}" class="btn btn-primary d-lg-none">Kostenlos testen</a>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<footer class="footer mt-auto py-5 bg-body-tertiary border-top">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-md">
+                <h5><a href="https://www.quarin.digital" target="_blank">Quarin GmbH</a></h5>
+                <small class="d-block mb-3 text-body-secondary">© 2015–2024</small>
+            </div>
+            <div class="col-6 col-md">
+                <h5>capser</h5>
+                <ul class="list-unstyled text-small">
+                    <li><a href="{{ path('home') }}">Überblick</a></li>
+                    <li><a href="{{ path('features') }}">Funktionen</a></li>
+                    <li><a href="#">Kundenstimmen</a></li>
+                    <li><a href="#">Schnittstelle</a></li>
+                    <li><a href="{{ path('pricing') }}">Preise</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md">
+                <h5>Über uns</h5>
+                <ul class="list-unstyled text-small">
+                    <li><a href="#">Team</a></li>
+                    <li><a href="#">Standorte</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md">
+                <h5>Rechtliche Hinweise</h5>
+                <ul class="list-unstyled text-small">
+                    <li><a href="{{ path('imprint') }}">Impressum</a></li>
+                    <li><a href="{{ path('privacy') }}">Datenschutz</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}

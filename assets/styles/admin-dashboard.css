@@ -1,0 +1,24 @@
+.main-content {
+    background-size: auto 100%;
+    background-repeat: no-repeat;
+}
+@media (prefers-color-scheme: light) {
+    .main-content {
+        background-image: url("../images/backgrounds/SwissAlps-Light.jpg");
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .main-content {
+        background-image: url("../images/backgrounds/SwissAlps-Dark.jpg");
+    }
+    .user-menu-wrapper span.user-avatar .user-avatar-icon-background {
+        color: whitesmoke;
+    }
+}
+.content-header {
+    display: none;
+}
+.user-details .user-name,
+.dropdown-settings-button i {
+    color: whitesmoke;
+}

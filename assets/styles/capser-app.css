@@ -1,0 +1,106 @@
+/*--------------------------------------------------------------
+# CHANGED BOOTSTRAP/SBADMIN
+--------------------------------------------------------------*/
+
+.toast {
+    transition-: opacity 0.4s ease;
+}
+
+/* SBAdmin Custom - Logo im Menü (Kopf) verschönern */
+.topnav .navbar-brand {
+    font-family: "Raleway", sans-serif;
+    font-weight: 600;
+}
+.topnav .navbar-brand img {
+    height: 1rem;
+    margin-top: -2px;
+    margin-right: 4px;
+}
+.topnav.navbar-light .navbar-brand {
+    color: var(--cp-color-primary);
+}
+
+/* SBAdmin Custom - Navigation Sidebar verschönern */
+.sidenav-light .sidenav-menu .nav-link
+{
+    color: var(--cp-color-primary-light);
+    text-decoration: none;
+}
+.sidenav-light .sidenav-menu .nav-link:hover,
+.sidenav-light .sidenav-menu .nav-link.active
+{
+    color: var(--cp-color-primary);
+    text-decoration: none;
+}
+.sidenav-light .sidenav-menu .nav-link.active .nav-link-icon
+{
+    color: var(--cp-color-primary);
+}
+
+/* SBAdmin Custom - Navigation User Menu verschönern */
+.nav-borders .nav-link.active {
+    color: var(--cp-color-primary);
+    border-bottom-color: var(--cp-color-primary);
+}
+.dropdown-item.active, .dropdown-item:active {
+    background-color: var(--cp-color-primary);
+}
+
+/* Bootstrap Custom - Etwas schlankere Tabellen */
+.table > :not(caption) > * > *, .datatable-table > :not(caption) > * > * {
+    padding: 0.4rem 0.5rem;
+}
+
+/* Bootstrap Custom - Cards verschönern */
+.card:not([class*=bg-]) .card-header {
+    color: var(--cp-color-primary);
+}
+
+/* SBAdmin Custom - Page Header in Capser-Farben */
+.bg-gradient-primary-to-secondary {
+    background-color: var(--cp-color-primary) !important;
+    background-image: linear-gradient(135deg, var(--cp-color-primary) 0%, var(--cp-color-primary-light) 100%) !important;
+}
+
+/*--------------------------------------------------------------
+# CHANGED UX AUTOCOMPLETE (Tom-Select)
+--------------------------------------------------------------*/
+
+.ts-dropdown {
+    background: #fff !important;
+}
+.ts-dropdown .active {
+    color: #343a40 !important;
+}
+/* Fix in Zusammenhang mit: https://github.com/orchidjs/tom-select/issues/579 */
+.form-floating .ts-control {
+    padding-top: 1.625rem;
+    padding-bottom: .625rem;
+    padding-left: 18px;
+}
+
+/*--------------------------------------------------------------
+# OWN ELEMENTS
+--------------------------------------------------------------*/
+
+.img-account-profile {
+    height: 15rem;
+}
+
+.logo img {
+    max-height: 26px;
+}
+
+.table .id-column, .table .action-column {
+    width: 1%;
+}
+
+.table .action-column {
+    text-align: right;
+    vertical-align: middle;
+    text-wrap: nowrap;
+}
+
+.table .action-column a:not(:last-of-type) {
+    margin-right: 0.3rem;
+}

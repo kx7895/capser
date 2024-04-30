@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block importmap %}{{ importmap('guest') }}{% endblock %}
+
+{% block body %}
+    <main>
+        <div class="container">
+            <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+                            <div class="d-flex justify-content-center mb-2">
+                                <a href="{{ path('index') }}" class="logo d-flex align-items-center w-auto">
+                                    <img src="{{ asset('images/logo/Q/Q.png') }}" alt="Logo">
+                                    <span class="ms-1">capser</span>
+                                </a>
+                            </div>
+                            <div class="card">
+                                <div class="card-body pt-3 pb-4">
+                                    {% block content %}{% endblock %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-center mt-3" id="footer-links">
+                                <p class="xsmall text-muted m-0"><a href="https://www.quarin.digital" target="_blank">Quarin GmbH</a> | <a href="{{ path('privacy') }}">Datenschutz</a> | <a href="{{ path('imprint') }}">Impressum</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+{% endblock %}
