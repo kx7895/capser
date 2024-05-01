@@ -160,13 +160,13 @@
 <div class="card mb-4" id="sectionTags">
     <div class="card-header">Tags</div>
     <div class="card-body">
-        <div {{ stimulus_controller('form-collection') }}
-                data-form-collection-index-value="{{ form.tags|length > 0 ? form.tags|last.vars.name + 1 : 0 }}"
-                data-form-collection-prototype-value="{{ form_widget(form.tags.vars.prototype)|e('html_attr') }}"
+        <div {{ stimulus_controller('form_tag_collection') }}
+                data-form-tag-collection-index-value="{{ form.tags|length > 0 ? form.tags|last.vars.name + 1 : 0 }}"
+                data-form-tag-collection-prototype-value="{{ form_widget(form.tags.vars.prototype)|e('html_attr') }}"
                 class="row"
         >
             <div class="col-11">
-                <div {{ stimulus_target('form-collection', 'collectionContainer') }} class="tags">
+                <div {{ stimulus_target('form_tag_collection', 'collectionContainer') }} class="tags">
                     {% for tag in form.tags %}
                         <div class="btn-group mb-1">
                             <div class="btn btn-outline-primary btn-sm">{{ tag.vars.value }}</div>
@@ -176,7 +176,7 @@
                 </div>
             </div>
             <div class="col-1 d-flex align-items-center justify-content-end">
-                <button class="btn btn-sm btn-success ms-1" type="button" {{ stimulus_action('form-collection', 'addCollectionElement') }}><i class="fa-solid fa-plus"></i></button>
+                <button class="btn btn-sm btn-success ms-1" type="button" {{ stimulus_action('form_tag_collection', 'addCollectionElement') }}><i class="fa-solid fa-plus"></i></button>
             </div>
         </div>
 
