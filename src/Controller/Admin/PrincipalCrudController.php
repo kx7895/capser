@@ -132,25 +132,25 @@ class PrincipalCrudController extends AbstractCrudController
 
             FormField::addFieldset('Rechnungsangaben (deutsch)'),
 
-            TextareaField::new('footerColumn1', 'Fußzeile 1')
+            TextareaField::new('footerColumn1', 'Fusszeile 1')
                 ->setColumns(4)
                 ->hideOnIndex(),
-            TextareaField::new('footerColumn2', 'Fußzeile 2')
+            TextareaField::new('footerColumn2', 'Fusszeile 2')
                 ->setColumns(4)
                 ->hideOnIndex(),
-            TextareaField::new('footerColumn3', 'Fußzeile 3')
+            TextareaField::new('footerColumn3', 'Fusszeile 3')
                 ->setColumns(4)
                 ->hideOnIndex(),
 
             FormField::addFieldset('Rechnungsangaben (englisch)'),
 
-            TextareaField::new('footerColumn1En', 'Fußzeile 1')
+            TextareaField::new('footerColumn1En', 'Fusszeile 1')
                 ->setColumns(4)
                 ->hideOnIndex(),
-            TextareaField::new('footerColumn2En', 'Fußzeile 2')
+            TextareaField::new('footerColumn2En', 'Fusszeile 2')
                 ->setColumns(4)
                 ->hideOnIndex(),
-            TextareaField::new('footerColumn3En', 'Fußzeile 3')
+            TextareaField::new('footerColumn3En', 'Fusszeile 3')
                 ->setColumns(4)
                 ->hideOnIndex(),
 

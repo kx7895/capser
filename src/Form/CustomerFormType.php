@@ -23,6 +23,7 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -306,6 +307,38 @@ class CustomerFormType extends AbstractType
                         'clear_button',
                     ],
                 ],
+            ])
+
+            // unfortunately, it is necessary to specify the style-height of textares fixed according to https://getbootstrap.com/docs/5.3/forms/floating-labels/#textareas
+            ->add('specialFooterColumn1', TextareaType::class, [
+                'row_attr' => [
+                    'class' => 'form-floating',
+                ],
+                'attr' => [
+                    'style' => 'height:140px;'
+                ],
+                'label' => 'Fusszeile 1',
+                'required' => false,
+            ])
+            ->add('specialFooterColumn2', TextareaType::class, [
+                'row_attr' => [
+                    'class' => 'form-floating',
+                ],
+                'attr' => [
+                    'style' => 'height:140px;'
+                ],
+                'label' => 'Fusszeile 2',
+                'required' => false,
+            ])
+            ->add('specialFooterColumn3', TextareaType::class, [
+                'row_attr' => [
+                    'class' => 'form-floating',
+                ],
+                'attr' => [
+                    'style' => 'height:140px;'
+                ],
+                'label' => 'Fusszeile 3',
+                'required' => false,
             ])
 
 

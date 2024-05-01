@@ -114,6 +114,15 @@ class Customer
     #[ORM\Column(nullable: true)]
     private ?int $ledgerAccountNumber = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $specialFooterColumn1 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $specialFooterColumn2 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $specialFooterColumn3 = null;
+
     public function __construct()
     {
         $this->customerInvoiceRecipients = new ArrayCollection();
@@ -599,5 +608,41 @@ class Customer
     public function __toString(): string
     {
         return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
+    }
+
+    public function getSpecialFooterColumn1(): ?string
+    {
+        return $this->specialFooterColumn1;
+    }
+
+    public function setSpecialFooterColumn1(?string $specialFooterColumn1): static
+    {
+        $this->specialFooterColumn1 = $specialFooterColumn1;
+
+        return $this;
+    }
+
+    public function getSpecialFooterColumn2(): ?string
+    {
+        return $this->specialFooterColumn2;
+    }
+
+    public function setSpecialFooterColumn2(?string $specialFooterColumn2): static
+    {
+        $this->specialFooterColumn2 = $specialFooterColumn2;
+
+        return $this;
+    }
+
+    public function getSpecialFooterColumn3(): ?string
+    {
+        return $this->specialFooterColumn3;
+    }
+
+    public function setSpecialFooterColumn3(?string $specialFooterColumn3): static
+    {
+        $this->specialFooterColumn3 = $specialFooterColumn3;
+
+        return $this;
     }
 }

@@ -114,7 +114,8 @@
     <div class="card-header">Rechnungsstandards</div>
     <div class="card-body">
         <fieldset class="border border-1 border-light mb-4 p-3">
-            <legend class="h6">Standardvorgaben (individuell überschreibbar)</legend>
+            <legend class="h6">Standardwerte</legend>
+            <p>Diese Standardwerte können bei der Belegerstellung individuell überschrieben werden.</p>
             <div class="row g-3">
                 <div class="col-md-6">
                     {{ form_row(form.currencyDefault) }}
@@ -127,6 +128,21 @@
                 </div>
                 <div class="col-md-6">
                     {{ form_row(form.accountingPlanLedgerDefault) }}
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="border border-1 border-light mb-4 p-3">
+            <legend class="h6">Fusszeile</legend>
+            <p>Sofern die Beleg-Fusszeile speziell für diesen Kunden angepasst werden soll, kann sie hiermit überschrieben werden.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {{ form_row(form.specialFooterColumn1) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.specialFooterColumn2) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.specialFooterColumn3) }}
                 </div>
             </div>
         </fieldset>

@@ -16,6 +16,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
@@ -137,7 +138,7 @@ class CustomerCrudController extends AbstractCrudController
                 ->setColumns(6),
 
             FormField::addFieldset('Standardwerte')
-                ->setHelp('Diese Werte können bei der Belegerstellung individuell überschrieben werden.'),
+                ->setHelp('Diese Standardwerte können bei der Belegerstellung individuell überschrieben werden.'),
 
             AssociationField::new('languageDefault', 'Sprache')
                 ->setColumns(6)
@@ -154,6 +155,19 @@ class CustomerCrudController extends AbstractCrudController
             AssociationField::new('termOfPaymentDefault', 'Zahlungsbedingung')
                 ->setColumns(6)
                 ->setFormTypeOptions(['placeholder' => ''])
+                ->hideOnIndex(),
+            
+            FormField::addFieldset('Fusszeile')
+                ->setHelp('Sofern die Beleg-Fusszeile speziell für diesen Kunden angepasst werden soll, kann sie hiermit überschrieben werden.'),
+            
+            TextareaField::new('specialFooterColumn1', 'Fusszeile 1')
+                ->setColumns(4)
+                ->hideOnIndex(),
+            TextareaField::new('specialFooterColumn2', 'Fusszeile 2')
+                ->setColumns(4)
+                ->hideOnIndex(),
+            TextareaField::new('specialFooterColumn3', 'Fusszeile 3')
+                ->setColumns(4)
                 ->hideOnIndex(),
 
             FormField::addTab('Konto-/Lastschriftangaben'),

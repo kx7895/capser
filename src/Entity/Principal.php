@@ -380,24 +380,24 @@ class Principal
         return $this;
     }
 
-    public function getfooterColumn2(): ?string
+    public function getFooterColumn2(): ?string
     {
         return $this->footerColumn2;
     }
 
-    public function setfooterColumn2(?string $footerColumn2): static
+    public function setFooterColumn2(?string $footerColumn2): static
     {
         $this->footerColumn2 = $footerColumn2;
 
         return $this;
     }
 
-    public function getfooterColumn3(): ?string
+    public function getFooterColumn3(): ?string
     {
         return $this->footerColumn3;
     }
 
-    public function setfooterColumn3(?string $footerColumn3): static
+    public function setFooterColumn3(?string $footerColumn3): static
     {
         $this->footerColumn3 = $footerColumn3;
 
