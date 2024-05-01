@@ -13,7 +13,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -23,7 +22,8 @@ class CustomerController extends AbstractController
     public function __construct(
         private readonly CustomerRepository     $customerRepository,
         private readonly DataTableService       $dataTableService,
-        private readonly EntityManagerInterface $entityManager, private readonly PrincipalRepository $principalRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly PrincipalRepository $principalRepository,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]
@@ -134,7 +134,6 @@ class CustomerController extends AbstractController
         // TODO: Security - nur Customers für eigene Principals! Voters!
 
         if($this->isCsrfTokenValid('delete'.$customer->getId(), $request->get('_token'))) {
-            $id = $customer->getId();
             $name = $customer->getName();
             $this->entityManager->remove($customer);
             $this->entityManager->flush();
