@@ -22,7 +22,7 @@ class CustomerRepository extends ServiceEntityRepository
         parent::__construct($registry, Customer::class);
     }
 
-    public function findBySearch(?string $query, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
+    public function findBySearch(?string $query, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
     {
         $qb = $this->createQueryBuilder('c');
 
@@ -40,6 +40,14 @@ class CustomerRepository extends ServiceEntityRepository
                 ->setParameter('queryLike', '%' . $query . '%')
                 ->setParameter('queryExact', $query)
                 ->join('c.addressLineCountry', 'addressLineCountry');
+        }
+
+        // Nur für bestimmte Such-Parameter gibt es eine Definition, ansonsten wird schlicht nichts angewandt
+        foreach($queryParameters as $field => $value) {
+            if($field == 'principal') {
+                $qb->andWhere('c.principal = :principal')
+                    ->setParameter(':principal', $value);
+            }
         }
 
         if ($sort) {

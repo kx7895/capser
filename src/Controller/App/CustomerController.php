@@ -3,8 +3,10 @@
 namespace App\Controller\App;
 
 use App\Entity\Customer;
+use App\Entity\User;
 use App\Form\CustomerFormType;
 use App\Repository\CustomerRepository;
+use App\Repository\PrincipalRepository;
 use App\Service\DataTableService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,7 +23,7 @@ class CustomerController extends AbstractController
     public function __construct(
         private readonly CustomerRepository     $customerRepository,
         private readonly DataTableService       $dataTableService,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $entityManager, private readonly PrincipalRepository $principalRepository,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]
@@ -31,17 +33,39 @@ class CustomerController extends AbstractController
         #[MapQueryParameter] string $sort = 'name',
         #[MapQueryParameter] string $sortDirection = 'ASC',
         #[MapQueryParameter] string $query = null,
+        #[MapQueryParameter] string $queryPrincipalId = null,
     ): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        $allowedPrincipals = $user->getPrincipals();
+
         $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'createdAt', 'vatId']);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
 
-        // TODO: Security - nur Customers für eigene Principals! Voters!
-        $customers = $this->dataTableService->buildDataTable($this->customerRepository, $query, $sort, $sortDirection, $page, $itemsPerPage);
+        $queryPrincipal = null;
+        if((int)$queryPrincipalId) {
+            $queryPrincipal = $this->principalRepository->find($queryPrincipalId);
+            if(!$queryPrincipal)
+                return throw $this->createNotFoundException();
+            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals);
+        }
+
+        $queryParameters = [];
+        if($queryPrincipal) {
+            $queryParameters = [
+                'principal' => $queryPrincipal,
+            ];
+        }
+
+        // TODO: Security - nur Customers für eigene Principals (problematisch dann wenn kein Principal ausgewählt wurde)! Voters!
+        $customers = $this->dataTableService->buildDataTable($this->customerRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
 
         return $this->render('app/customer/index.html.twig', [
             'customers' => $customers,
 
+            'allowedPrincipals' => $allowedPrincipals,
+            'queryPrincipal' => $queryPrincipal,
             'page' => $page,
             'itemsPerPage' => $itemsPerPage,
             'sort' => $sort,

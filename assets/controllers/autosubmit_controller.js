@@ -14,4 +14,8 @@ export default class extends Controller {
     debouncedSubmit() {
         this.submit()
     }
+
+    submitOnChange() {
+        this.element.submit();
+    }
 }

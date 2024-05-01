@@ -35,10 +35,39 @@
             <span>Alle Kunden</span>
             <div class="d-flex">
                 <form method="GET" action="{{ path('app_customer_index') }}"
-                      class="mb-0"
+                      class="mb-0 d-flex"
                       data-controller="autosubmit" {# verbindet den Controller autosubmit_controller.js #}
                       data-turbo-frame="customer-index" {# data-turbo-frame="#" sorgt dafür, dass die Werte dieses Forms in jenen #-Turbo Frame übertragen werden, sodass dieses Form/Input ausserhalb des #-Turbo Frames liegen und dennoch auf ihn einwirken kann #}
                 >
+                    <button type="button" class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#searchModal">
+                        Filter
+                    </button>
+                    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="searchModalLabel">Filter</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pb-3">
+                                    <label for="queryPrincipalId" class="form-label">Mandant wählen</label>
+                                    <select id="queryPrincipalId" class="form-select" name="queryPrincipalId" data-action="change->autosubmit#submitOnChange">
+                                        <option value="">Alle Mandanten</option>
+                                        {% for principal in allowedPrincipals %}
+                                            <option value="{{ principal.id }}" {% if queryPrincipal == principal %}selected{% endif %}>
+                                                {{ principal.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+{#                                <div class="modal-footer">#}
+{#                                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Abbrechen</button>#}
+{#                                    <button type="button" class="btn btn-primary">Filter aktivieren</button>#}
+{#                                </div>#}
+                            </div>
+                        </div>
+                    </div>
+
                     <input type="search" name="query" value="{{ query }}" placeholder="Suche" autocomplete="off"
                            class="form-control form-control-sm" style="width: 300px; flex-grow: 1;"
                            data-action="autosubmit#debouncedSubmit" {# ruft den o.g. Controller und dort die Funktion debounceSubmit() automatisch (denn Stimulus erkennt bei inputs die richtigen Zeitpunkte selbst wann immer nötig) #}
