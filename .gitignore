@@ -14,5 +14,9 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-/public/images/logos/
-/public/images/profiles
+/public/images/logos/*
+!/public/images/logos/.gitkeep
+/public/images/profiles/*
+!/public/images/profiles/.gitkeep
+/public/files/*
+!/public/files/.gitkeep
