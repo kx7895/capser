@@ -272,6 +272,9 @@ class CustomerFormType extends AbstractType
                     return $repository->createQueryBuilder('entity')
                         ->orderBy('entity.name', 'ASC');
                 },
+                'choice_label' =>  function (TermOfPayment $termOfPayment) {
+                    return $termOfPayment->getPrincipal()->getShortName().' » '.$termOfPayment->getName().' ('.$termOfPayment->getDueDays().' Tage)';
+                },
                 'row_attr' => [
                     'class' => 'form-floating',
                 ],
@@ -293,6 +296,9 @@ class CustomerFormType extends AbstractType
                     return $repository->createQueryBuilder('entity')
                         ->orderBy('entity.name', 'ASC');
                 },
+                'choice_label' =>  function (AccountingPlanLedger $accountingPlanLedger) {
+                    return $accountingPlanLedger->getAccountingPlanGroup()->getAccountingPlan()->getPrincipal()->getShortName().' » '.$accountingPlanLedger->getName().' (#'.$accountingPlanLedger->getNumber().')';
+                },
                 'row_attr' => [
                     'class' => 'form-floating',
                 ],
@@ -309,7 +315,7 @@ class CustomerFormType extends AbstractType
                 ],
             ])
 
-            // unfortunately, it is necessary to specify the style-height of textares fixed according to https://getbootstrap.com/docs/5.3/forms/floating-labels/#textareas
+            // unfortunately, it is necessary to specify the style-height of textarea fixed according to https://getbootstrap.com/docs/5.3/forms/floating-labels/#textareas
             ->add('specialFooterColumn1', TextareaType::class, [
                 'row_attr' => [
                     'class' => 'form-floating',
