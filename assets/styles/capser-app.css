@@ -46,6 +46,17 @@
     background-color: var(--cp-color-primary);
 }
 
+/* SBAdmin Custom - Steps verschönern */
+.step-primary .step-item .step-item-link {
+    color: var(--cp-color-primary);
+}
+.step-primary .step-item .step-item-link::before {
+    background-color: var(--cp-color-primary);
+}
+.step-primary .step-item:not(:first-child)::before {
+    background-color: var(--cp-color-primary);
+}
+
 /* Bootstrap Custom - Etwas schlankere Tabellen */
 .table > :not(caption) > * > *, .datatable-table > :not(caption) > * > * {
     padding: 0.4rem 0.5rem;
@@ -60,6 +71,10 @@
 .bg-gradient-primary-to-secondary {
     background-color: var(--cp-color-primary) !important;
     background-image: linear-gradient(135deg, var(--cp-color-primary) 0%, var(--cp-color-primary-light) 100%) !important;
+}
+
+.text-primary {
+    color: var(--cp-color-primary) !important;
 }
 
 /*--------------------------------------------------------------

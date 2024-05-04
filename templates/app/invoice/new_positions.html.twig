@@ -1,0 +1,263 @@
+{% extends 'app/layout/_layout.html.twig' %}
+
+{% block title %}Neue Rechnung{% endblock %}
+
+{% block breadcrumb1 %}Dokumente{% endblock %}
+{% block breadcrumb2 %}Rechnungen{% endblock %}
+
+{% block content %}
+    {{ form_start(form) }}
+
+    <!--suppress CssUnusedSymbol -->
+    <style>
+        #principalLogo { max-height: 100px; }
+        #invoicePositionRows .form-control { padding: 2px 4px; }
+    </style>
+
+    <div class="step step-primary mb-5">
+        <div class="step-item">
+            <div class="step-item-link">
+                Grundlagen
+            </div>
+        </div>
+        <div class="step-item active">
+            <div class="step-item-link">
+                Positionen
+            </div>
+        </div>
+        <div class="step-item disabled">
+            <div class="step-item-link">
+                Abschliessen
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- FORM -->
+        <div class="col-xxl-9">
+
+            <div class="card">
+                <div class="card-body">
+                    {% if invoice.language.alpha2 != 'DE' %}
+                        <div class="row mb-3">
+                            <div class="col">
+                                <div class="alert alert-info" role="alert">
+                                    Dieser Beleg wird auf {{ invoice.language.name }} erstellt.
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-8 mt-5">
+                            <p class="xsmall mb-0">
+                                {{ [invoice.principal.name, invoice.principal.addressLine1, invoice.principal.addressLine2, invoice.principal.addressLine3, invoice.principal.addressLine4, invoice.principal.addressLineCountry.name]|filter(v => v is not null and v is not empty)|join(' | ') }}
+                            </p>
+                            <p>
+                                {{ [invoice.customer.name, invoice.customer.addressLine1, invoice.principal.addressLine2, invoice.principal.addressLine3, invoice.principal.addressLine4, invoice.principal.addressLineCountry.name]|filter(v => v is not null and v is not empty)|join('<br>')|raw }}
+                            </p>
+                        </div>
+                        <div class="col-4 text-end">
+                            {% if invoice.principal.logoPath != null %}
+                                <img src="/images/logos/{{ invoice.principal.logoPath }}" id="principalLogo" alt="{{ invoice.principal.name }} Logo">
+                            {% else %}
+                                <p class="h2 text-uppercase">{{ invoice.principal.name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row my-3 mt-5">
+                        <div class="col-12">
+                            <b>{{ invoice.invoiceType.name }}</b>
+                        </div>
+                        <div class="col-6">
+                            <div class="row mb-0">
+                                <dt class="col-4 mb-0">Belegdatum:</dt>
+                                <dl class="col-8 mb-0">{{ invoice.date|date('d.m.Y') }}</dl>
+                                <dt class="col-4 mb-0">
+                                    Belegnummer:
+                                    <a data-controller="tooltip"
+                                       data-action="mouseenter->tooltip#showTooltip mouseleave->tooltip#hideTooltip"
+                                       data-tooltip-content="Die Belegnummer wird bei Abschluss des Beleges automatisch vergeben."
+                                       class="text-primary ms-1">
+                                        <i class="fa-regular fa-circle-info"></i>
+                                    </a>
+                                </dt>
+                                <dl class="col-8 mb-0">{{ invoice.invoiceType.type }} <mark>ENTWURF</mark></dl>
+                                <dt class="col-4 mb-0">Leistungszeitraum:</dt>
+                                <dl class="col-8 mb-0">
+                                    {{ invoice.periodFrom|date('d.m.Y') }}
+                                    {% if invoice.periodFrom != invoice.periodTo %}
+                                        &nbsp;bis&nbsp;
+                                        {{ invoice.periodTo|date('d.m.Y') }}
+                                    {% endif %}
+                                </dl>
+                                <dt class="col-4 mb-0">Seite:</dt>
+                                <dl class="col-8 mb-0">1 von 1</dl>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row mb-0">
+                                <dt class="col-4 mb-0">Ihre Kundennummer:</dt>
+                                <dl class="col-8 mb-0">{{ invoice.customer.ledgerAccountNumber }}</dl>
+                                <dt class="col-4 mb-0">Ihre Kostenstelle:</dt>
+                                <dl class="col-8 mb-0">{{ invoice.costcenterExternal }}</dl>
+                                <dt class="col-4 mb-0">Ihre Referenz:</dt>
+                                <dl class="col-8 mb-0">{{ invoice.referenceExternal }}</dl>
+                                {% if invoice.customer.vatId is not null %}
+                                    <dt class="col-4 mb-0">Ihre UID:</dt>
+                                    <dl class="col-8 mb-0">{{ invoice.customer.vatId }}</dl>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col-12">
+                            {{ form_widget(form.introText) }}
+                        </div>
+                    </div>
+                    <div class="row my-3 mx-0">
+                        <!-- TODO: Sortierung mittels JavaScript Sortable -->
+                        <div class="col-12"
+                             data-controller="form-invoice-position-collection form-invoice-position-calculator"
+                             data-form-invoice-position-collection-index-value="{{ form.invoicePositions|length > 0 ? form.invoicePositions|last.vars.name + 1 : 0 }}"
+                             data-form-invoice-position-collection-prototype-value="
+<div class='row border-bottom py-1' data-index='__name__'>
+    <div class='col-1 px-1 d-flex align-items-center'>
+        <i class='fa-solid fa-bars'></i>
+        {{ form_widget(form.invoicePositions.vars.prototype.position)|e('html_attr') }}
+    </div>
+    <div class='col-5 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.text)|e('html_attr') }}</div>
+    <div class='col-1 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.amount)|e('html_attr') }}</div>
+    <div class='col-2 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.price)|e('html_attr') }}</div>
+    <div class='col-1 px-1 text-end sumHolder'>&nbsp;</div>
+    <div class='col-1 px-1'>&nbsp;</div>
+    <div class='col-1 px-1 d-flex align-items-center justify-content-end deleteInvoicePositionButtonHolder'></div>
+</div>"
+                              data-form-invoice-position-calculator-vat-rate-value="{{ invoice.vatRate }}">
+                            <div class="row border-bottom py-1 fw-bold">
+                                <div class="col-1 px-1">&nbsp;</div>
+                                <div class="col-5 px-1 d-flex align-items-center">Beschreibung</div>
+                                <div class="col-1 px-1 d-flex align-items-center">Menge</div>
+                                <div class="col-2 px-1">Preis<br>[{{ invoice.currency.alpha3 }}]</div>
+                                <div class="col-1 px-1">Gesamt<br>[{{ invoice.currency.alpha3 }}]</div>
+                                <div class="col-1 px-1">USt.<br>[%]</div>
+                                <div class="col-1 px-1 d-flex align-items-center justify-content-end" style="margin-top:-5px;">
+                                    <button type="button"
+                                            class="btn btn-primary btn-sm"
+                                            {{ stimulus_action('form_invoice_position_collection', 'addCollectionElement') }}>
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div {{ stimulus_target('form_invoice_position_collection', 'collectionContainer') }} id="invoicePositionRows">
+                                {% for invoicePosition in form.invoicePositions %}
+                                    <div class="row border-bottom py-1" data-index="{{ loop.index0 }}">
+                                        <div class="col-1 px-1 d-flex align-items-center">
+                                            <i class="fa-solid fa-bars"></i>
+                                            {{ form_widget(invoicePosition.position) }}
+                                        </div>
+                                        <div class="col-5 px-1">{{ form_widget(invoicePosition.text) }}</div>
+                                        <div class="col-1 px-1">{{ form_widget(invoicePosition.amount) }}</div>
+                                        <div class="col-2 px-1">{{ form_widget(invoicePosition.price) }}</div>
+                                        <div class="col-1 px-1 text-end sumHolder"></div>
+                                        <div class="col-1 px-1 text-end">{{ invoice.vatRate|number_format(2,',','.') }}</div>
+                                        <div class="col-1 px-1 d-flex align-items-center justify-content-end deleteInvoicePositionButtonHolder"></div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.invoicePositions|length == 0 %}
+                                {{ form_widget(form.invoicePositions) }}
+                            {% endif %}
+                            <div class="row border-bottom py-1">
+                                <div class="col-7 px-1 text-end fw-bold">Gesamt netto:</div>
+                                <div class="col-2 px-1 text-end fw-bold amountNetHolder"></div>
+                                <div class="col-3 px-1">&nbsp;</div>
+                            </div>
+                            <div class="row border-bottom py-1">
+                                <div class="col-7 px-1 text-end fw-bold">USt. {{ invoice.vatRate|number_format(2,',','.') }}:</div>
+                                <div class="col-2 px-1 text-end fw-bold amountTaxHolder"></div>
+                                <div class="col-3 px-1">&nbsp;</div>
+                            </div>
+                            <div class="row py-1">
+                                <div class="col-7 px-1 text-end fw-bold">Gesamt brutto:</div>
+                                <div class="col-2 px-1 text-end fw-bold amountGrossHolder"></div>
+                                <div class="col-3 px-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col">
+                            {% if taxSentence != null %}
+                                <p>{{ taxSentence }}</p>
+                            {% endif %}
+                            <p>
+                                {{ paymentSentence|replace({'_CURRENCY_': invoice.currency.name ~ ' (' ~ invoice.currency.alpha3 ~ ')' }) }}
+                            </p>
+                            {{ form_widget(form.outroText) }}
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col-4 xsmall">
+                            {% if invoice.customer.specialFooterColumn1 %}
+                                {{ invoice.customer.specialFooterColumn1|nl2br }}
+                            {% else %}
+                                {{ invoice.principal.footerColumn1|nl2br }}
+                            {% endif %}
+                        </div>
+                        <div class="col-4 xsmall text-muted">
+                            {% if invoice.customer.specialFooterColumn2 %}
+                                {{ invoice.customer.specialFooterColumn2|nl2br }}
+                            {% else %}
+                                {{ invoice.principal.footerColumn2|nl2br }}
+                            {% endif %}
+                        </div>
+                        <div class="col-4 xsmall text-muted">
+                            {% if invoice.customer.specialFooterColumn3 %}
+                                {{ invoice.customer.specialFooterColumn3|nl2br }}
+                            {% else %}
+                                {{ invoice.principal.footerColumn3|nl2br }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="col-xxl-3">
+            <!-- Large Screens -->
+            <div class="nav-sticky d-none d-xxl-block">
+                <div class="btn-group d-flex" role="group">
+                    {{ form_widget(form.returnXXL, {'attr': {'class': 'btn btn-outline-primary w-100'}}) }}
+                    {{ form_widget(form.finalizeXXL, {'attr': {'class': 'btn btn-primary w-100'}}) }}
+                </div>
+                {{ form_widget(form.submitXXL, {'attr': {'class': 'btn btn-light mt-3 w-100'}}) }}
+                <a type="button" id="invoice_positions_form_submitAndPreviewXXL_link" class="btn btn-light mt-3 w-100 btn"
+                    {{ stimulus_controller('submit-and-redirect') }}
+                    {{ stimulus_action('submit-and-redirect', 'redirect') }}
+                    data-submit-and-redirect-submit-value="invoice_positions_form_submitXXL"
+                    data-submit-and-redirect-href-value="{{ path('app_invoice_new_preview', { id: invoice.id }) }}">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Vorschau anzeigen
+                </a>
+            </div>
+            <!-- Other Screens -->
+            <div class="d-xxl-none">
+                <div class="text-center mt-5">
+                    {{ form_widget(form.return, {'attr': {'class': 'btn btn-outline-primary'}}) }}
+                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-light'}}) }}
+                    <a type="button" id="invoice_positions_form_submitAndPreview_link" class="btn btn-light btn"
+                            {{ stimulus_controller('submit-and-redirect') }}
+                            {{ stimulus_action('submit-and-redirect', 'redirect') }}
+                       data-submit-and-redirect-submit-value="invoice_positions_form_submit"
+                       data-submit-and-redirect-href-value="{{ path('app_invoice_new_preview', { id: invoice.id }) }}">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Vorschau anzeigen
+                    </a>
+                    {{ form_widget(form.finalize, {'attr': {'class': 'btn btn-primary'}}) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ form_end(form) }}
+{% endblock %}

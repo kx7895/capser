@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Entity\Customer;
 use App\Entity\Principal;
 use Doctrine\Common\Collections\Collection;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
@@ -23,6 +24,15 @@ class DataTableService {
         return null;
     }
 
+    public function validateCustomerSelect(?Customer $selectedCustomer, Collection $allowedPrincipals): ?Customer
+    {
+        if($allowedPrincipals->contains($selectedCustomer->getPrincipal())) {
+            return $selectedCustomer;
+        }
+
+        return null;
+    }
+
     public function validateSortDirection(string $selectedSortDirection, string $defaultSortDirection = 'ASC')
     {
         $availableSortOrders = ['ASC', 'DESC'];
@@ -32,7 +42,7 @@ class DataTableService {
     public function buildDataTable($repository, ?string $query, array $queryParameters, string $sort, string $sortDirection, int $page, int $itemsPerPage = 10)
     {
         return Pagerfanta::createForCurrentPageWithMaxPerPage(
-            new QueryAdapter($repository->findBySearch($query, $queryParameters, $sort, $sortDirection)),
+            new QueryAdapter($repository->findBySearch($query, $queryParameters, $sort, $sortDirection), true, true),
             $page,
             $itemsPerPage
         );

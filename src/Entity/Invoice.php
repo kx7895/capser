@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\InvoiceRepository;
+use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -13,6 +14,21 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: InvoiceRepository::class)]
 class Invoice
 {
+    public const VATRATES = [
+        '19,00 %' => 19, // DE
+        '8,10 %' => 8.1, // CH
+        '7,00 %' => 7, // DE
+        '5,00 %' => 5, // UAE
+        '2,60 %' => 2.6, // CH
+        '0,00 %' => 0 // allgemein
+    ];
+
+    public const VATTYPES = [
+        'Reguläre MwSt.' => 'REG', // Regular
+        'Reverse Charge' => 'RC', // Reverse Charge
+        'Keine MwSt.' => 'NOT' // No VAT
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -106,6 +122,9 @@ class Invoice
     private ?bool $sent = null;
 
     #[ORM\Column(nullable: true)]
+    private ?bool $reminded = null;
+
+    #[ORM\Column(nullable: true)]
     private ?bool $cancelled = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -119,6 +138,39 @@ class Invoice
 
     #[ORM\ManyToOne]
     private ?User $createdBy = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $hCustomerName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $hCustomerShortName = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $hPrincipalName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $hPrincipalShortName = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $paymentIsPaid = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?DateTimeInterface $paymentDate = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $paymentAmount = null;
+
+    #[ORM\ManyToOne]
+    private ?Currency $paymentCurrency = null;
+
+    #[ORM\ManyToOne]
+    private ?AccountingPlanLedger $paymentAccountingPlanLedger = null;
+
+    #[ORM\ManyToOne]
+    private ?User $paymentMarkedBy = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $paymentMarkedAt = null;
 
     public function __construct()
     {
@@ -300,6 +352,12 @@ class Invoice
         $this->customer = $customer;
 
         return $this;
+    }
+
+    public function getCustomerName(): ?string
+    {
+        return $this->getCustomer()?->getName();
+
     }
 
     public function getPrincipal(): ?Principal
@@ -542,6 +600,34 @@ class Invoice
         return $this;
     }
 
+    public function getSentLabel(): string
+    {
+        if($this->isSent())
+            return '<span class="badge text-bg-success">Verschickt</span>';
+        else
+            return '<span class="badge text-bg-light">Offen</span>';
+    }
+
+    public function isReminded(): ?bool
+    {
+        return $this->reminded;
+    }
+
+    public function setReminded(?bool $reminded): static
+    {
+        $this->reminded = $reminded;
+
+        return $this;
+    }
+
+    public function getRemindedLabel(): string
+    {
+        if($this->isReminded())
+            return '<span class="badge text-bg-success">Verschickt</span>';
+        else
+            return '-';
+    }
+
     public function isCancelled(): ?bool
     {
         return $this->cancelled;
@@ -600,6 +686,158 @@ class Invoice
         $this->createdBy = $createdBy;
 
         return $this;
+    }
+
+    public function getHCustomerName(): ?string
+    {
+        return $this->hCustomerName;
+    }
+
+    public function setHCustomerName(string $hCustomerName): static
+    {
+        $this->hCustomerName = $hCustomerName;
+
+        return $this;
+    }
+
+    public function getHCustomerShortName(): ?string
+    {
+        return $this->hCustomerShortName;
+    }
+
+    public function setHCustomerShortName(?string $hCustomerShortName): static
+    {
+        $this->hCustomerShortName = $hCustomerShortName;
+
+        return $this;
+    }
+
+    public function getHPrincipalName(): ?string
+    {
+        return $this->hPrincipalName;
+    }
+
+    public function setHPrincipalName(string $hPrincipalName): static
+    {
+        $this->hPrincipalName = $hPrincipalName;
+
+        return $this;
+    }
+
+    public function getHPrincipalShortName(): ?string
+    {
+        return $this->hPrincipalShortName;
+    }
+
+    public function setHPrincipalShortName(?string $hPrincipalShortName): static
+    {
+        $this->hPrincipalShortName = $hPrincipalShortName;
+
+        return $this;
+    }
+
+    public function isPaymentIsPaid(): ?bool
+    {
+        return $this->paymentIsPaid;
+    }
+
+    public function setPaymentIsPaid(?bool $paymentIsPaid): static
+    {
+        $this->paymentIsPaid = $paymentIsPaid;
+
+        return $this;
+    }
+
+    public function getPaymentDate(): ?DateTimeInterface
+    {
+        return $this->paymentDate;
+    }
+
+    public function setPaymentDate(?DateTimeInterface $paymentDate): static
+    {
+        $this->paymentDate = $paymentDate;
+
+        return $this;
+    }
+
+    public function getPaymentAmount(): ?float
+    {
+        return $this->paymentAmount;
+    }
+
+    public function setPaymentAmount(?float $paymentAmount): static
+    {
+        $this->paymentAmount = $paymentAmount;
+
+        return $this;
+    }
+
+    public function getPaymentCurrency(): ?Currency
+    {
+        return $this->paymentCurrency;
+    }
+
+    public function setPaymentCurrency(?Currency $paymentCurrency): static
+    {
+        $this->paymentCurrency = $paymentCurrency;
+
+        return $this;
+    }
+
+    public function getPaymentAccountingPlanLedger(): ?AccountingPlanLedger
+    {
+        return $this->paymentAccountingPlanLedger;
+    }
+
+    public function setPaymentAccountingPlanLedger(?AccountingPlanLedger $paymentAccountingPlanLedger): static
+    {
+        $this->paymentAccountingPlanLedger = $paymentAccountingPlanLedger;
+
+        return $this;
+    }
+
+    public function getPaymentMarkedBy(): ?User
+    {
+        return $this->paymentMarkedBy;
+    }
+
+    public function setPaymentMarkedBy(?User $paymentMarkedBy): static
+    {
+        $this->paymentMarkedBy = $paymentMarkedBy;
+
+        return $this;
+    }
+
+    public function getPaymentMarkedAt(): ?DateTimeImmutable
+    {
+        return $this->paymentMarkedAt;
+    }
+
+    public function setPaymentMarkedAt(?DateTimeImmutable $paymentMarkedAt): static
+    {
+        $this->paymentMarkedAt = $paymentMarkedAt;
+
+        return $this;
+    }
+
+    public function getPaymentLabel(): string
+    {
+        if($this->getPaymentStatus() == 'paid')
+            return '<span class="badge text-bg-success">Bezahlt</span>';
+        elseif($this->getPaymentStatus() == 'overdue')
+            return '<span class="badge text-bg-danger">Überfällig</span>';
+        else
+            return '<span class="badge text-bg-light">Offen</span>';
+    }
+
+    public function getPaymentStatus(): string
+    {
+        if($this->isPaymentIsPaid())
+            return 'paid';
+        elseif($this->getDue()->format('Ymd') < (new DateTime())->format('Ymd'))
+            return 'overdue';
+        else
+            return 'due';
     }
 
     public function __toString(): string

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Customer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -55,5 +56,16 @@ class CustomerRepository extends ServiceEntityRepository
         }
 
         return $qb;
+    }
+
+    public function findAllowed(Collection $allowedPrincipals): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->innerJoin('c.principal', 'p') // Verknüpfung mit der Principal-Entity
+            ->where('p IN (:allowedPrincipals)') // Bedingung, um nur erlaubte Principals zu berücksichtigen
+            ->setParameter(':allowedPrincipals', $allowedPrincipals)
+            ->getQuery();
+
+        return $qb->getResult();
     }
 }

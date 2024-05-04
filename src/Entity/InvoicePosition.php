@@ -2,11 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\InvoicePositionRepository;
+//use App\Repository\InvoicePositionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\Sortable\Entity\Repository\SortableRepository;
 
-#[ORM\Entity(repositoryClass: InvoicePositionRepository::class)]
+//#[ORM\Entity(repositoryClass: InvoicePositionRepository::class)]
+#[ORM\Entity(repositoryClass: SortableRepository::class)]
 class InvoicePosition
 {
     #[ORM\Id]
@@ -16,6 +19,7 @@ class InvoicePosition
 
     #[ORM\ManyToOne(inversedBy: 'invoicePositions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Gedmo\SortableGroup]
     private ?Invoice $invoice = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -32,6 +36,10 @@ class InvoicePosition
 
     #[ORM\Column(nullable: true)]
     private ?float $taxRate = null;
+
+    #[Gedmo\SortablePosition]
+    #[ORM\Column]
+    private ?int $position = null;
 
     public function getId(): ?int
     {
@@ -106,6 +114,18 @@ class InvoicePosition
     public function setTaxRate(?float $taxRate): static
     {
         $this->taxRate = $taxRate;
+
+        return $this;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): static
+    {
+        $this->position = $position;
 
         return $this;
     }

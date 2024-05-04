@@ -4,21 +4,6 @@
     * Licensed under SEE_LICENSE (https://github.com/StartBootstrap/sb-admin-pro/blob/master/LICENSE)
     */
     window.addEventListener('DOMContentLoaded', event => {
-    // Activate feather  // DISABLED KB 12.04.2024
-    // feather.replace();
-
-    // Enable tooltips globally  // DISABLED KB 15.04.2024
-    // var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    // var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    //     return new bootstrap.Tooltip(tooltipTriggerEl);
-    // });
-
-    // Enable popovers globally   // DISABLED KB 15.04.2024
-    // var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    // var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-    //     return new bootstrap.Popover(popoverTriggerEl);
-    // });
-
     // Toggle the side navigation
     const sidebarToggle = document.body.querySelector('#sidebarToggle');
     if (sidebarToggle) {

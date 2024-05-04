@@ -25,6 +25,9 @@ class AccountingPlanLedger
     #[ORM\OneToMany(targetEntity: Invoice::class, mappedBy: 'accountingPlanLedger')]
     private Collection $invoices;
 
+    #[ORM\Column]
+    private ?int $number = null;
+
     public function __construct()
     {
         $this->invoices = new ArrayCollection();
@@ -89,8 +92,20 @@ class AccountingPlanLedger
         return $this;
     }
 
+    public function getNumber(): ?int
+    {
+        return $this->number;
+    }
+
+    public function setNumber(int $number): static
+    {
+        $this->number = $number;
+
+        return $this;
+    }
+
     public function __toString(): string
     {
-        return $this->getName();
+        return $this->getName().' (#'.$this->getNumber().')';
     }
 }

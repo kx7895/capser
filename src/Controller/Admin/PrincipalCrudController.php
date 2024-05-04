@@ -107,8 +107,8 @@ class PrincipalCrudController extends AbstractCrudController
             FormField::addTab('Rechnungsangaben'),
 
             ImageField::new('logoPath', 'Logo-Dateiname (PNG oder JPG)')
-                ->setBasePath('images/profiles')
-                ->setUploadDir('public/images/profiles')
+                ->setBasePath('images/logos')
+                ->setUploadDir('public/images/logos')
                 ->setHelp('Beispiel: <i>atratoS.png</i> für <i>public/images/logos/<u>atratoS.png</u></i>')
                 ->setColumns(6)
                 ->hideOnIndex(),

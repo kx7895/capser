@@ -50,15 +50,17 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body pb-3">
-                                    <label for="queryPrincipalId" class="form-label">Mandant wählen</label>
-                                    <select id="queryPrincipalId" class="form-select" name="queryPrincipalId" data-action="change->autosubmit#submitOnChange">
-                                        <option value="">Alle Mandanten</option>
-                                        {% for principal in allowedPrincipals %}
-                                            <option value="{{ principal.id }}" {% if queryPrincipal == principal %}selected{% endif %}>
-                                                {{ principal.name }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="mb-3">
+                                        <label for="queryPrincipalId" class="form-label">Mandant wählen</label>
+                                        <select id="queryPrincipalId" class="form-select" name="queryPrincipalId" data-action="change->autosubmit#submitOnChange">
+                                            <option value="">Alle Mandanten</option>
+                                            {% for principal in allowedPrincipals %}
+                                                <option value="{{ principal.id }}" {% if queryPrincipal == principal %}selected{% endif %}>
+                                                    {{ principal.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
 {#                                <div class="modal-footer">#}
 {#                                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Abbrechen</button>#}

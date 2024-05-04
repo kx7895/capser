@@ -1,0 +1,439 @@
+{% extends 'app/layout/_layout.html.twig' %}
+
+{% block title %}{{ invoice.invoiceType.type }} {{ invoice.number }}{% endblock %}
+
+{% block breadcrumb1 %}Dokumente{% endblock %}
+{% block breadcrumb2 %}Rechnungen{% endblock %}
+
+{% macro listElement(label, value) %}
+    <div class="mb-2 row">
+        <div class="col-4 fw-bold">
+            {{ label }}:
+        </div>
+        <div class="col-8">
+            {{ value|raw }}
+        </div>
+    </div>
+{% endmacro %}
+
+{% block content %}
+    <style>
+        .icon-column {
+            width: 20px;
+            text-align: center;
+            display: inline-block;
+            margin-right: 5px;
+        }
+    </style>
+    {% if invoice.number %}
+        {% set draft = false %}
+    {% else %}
+        {% set draft = true %}
+    {% endif %}
+
+    <div class="row">
+
+        <!-- CONTENT -->
+        <div class="col-xxl-9">
+
+            <div class="row">
+
+                <!-- BELEGINFORMATIONEN -->
+                <div class="{% if draft %}col-12{% else %}col-xxl-6{% endif %}">
+                    <div class="card mb-4" id="sectionBeleginformationen">
+                        <div class="card-header">Beleginformationen</div>
+                        <div class="card-body">
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Basis</legend>
+                                {{ _self.listElement('Art', invoice.invoiceType.type ~ ' (' ~ invoice.invoiceType.name ~ ')') }}
+
+                                {% if draft %}
+                                    <span class="badge badge-primary">Entwurf</span>
+                                {% else %}
+                                    {{ _self.listElement('Nummer', invoice.number) }}
+                                {% endif %}
+
+                                {{ _self.listElement('Datum', invoice.date|date('d.m.Y')) }}
+
+                                {% if invoice.periodFrom == invoice.periodTo %}
+                                    {{ _self.listElement('Leistung', invoice.periodFrom|date('d.m.Y')) }}
+                                {% else %}
+                                    {{ _self.listElement('Leistung', invoice.periodFrom|date('d.m.Y') ~ ' - ' ~ invoice.periodTo|date('d.m.Y')) }}
+                                {% endif %}
+                            </fieldset>
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Rechnungssteller</legend>
+                                {{ _self.listElement('Mandant', invoice.hPrincipalName) }}
+                                {{ _self.listElement('Buchungskonto', invoice.accountingPlanLedger) }}
+                            </fieldset>
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Rechnungsempfänger</legend>
+                                {{ _self.listElement('Kunde', invoice.hCustomerName) }}
+                                {{ _self.listElement('Belegsprache', invoice.language.alpha3) }}
+                                {{ _self.listElement('E-Mail-Zustellung', invoice.sentLabel) }}
+                                {{ _self.listElement('Zahlungserinnerung', invoice.remindedLabel) }}
+                                {{ _self.listElement('Kostenstelle (ext.)', invoice.costcenterExternal) }}
+                                {{ _self.listElement('Referenz (ext.)', invoice.referenceExternal) }}
+                            </fieldset>
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Belegsummen {{ invoice.paymentLabel|raw }}</legend>
+                                {{ _self.listElement('Währung', invoice.currency.alpha3) }}
+                                {% if invoice.currency.alpha3 == 'CHF' %}
+                                    {% set format_params = {'decimal_point': '.', 'thousands_sep': ','} %}
+                                {% else %}
+                                    {% set format_params = {'decimal_point': ',', 'thousands_sep': '.'} %}
+                                {% endif %}
+                                {{ _self.listElement('Betrag', invoice.amountNet|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
+                                {{ _self.listElement('Brutto-Betrag', invoice.amountGross|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
+                                {{ _self.listElement('Steuersatz', invoice.vatRate|number_format(2, ',', '.') ~ ' %') }}
+                                {% if invoice.vatType == 'REG' %}
+                                    {{ _self.listElement('Steuerverfahren', 'Regulär') }}
+                                {% else %}
+                                    {{ _self.listElement('Steuerverfahren', invoice.vatType) }}
+                                {% endif %}
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DOKUMENTE -->
+                {% if draft == false %}
+                <div class="col-xxl-6">
+                    <div class="card mb-4" id="sectionDokumente">
+                        <div class="card-header">Dokumente</div>
+                        <div class="card-body">
+{#                            <style>#}
+{#                                iframe {#}
+{#                                    width: 100%;#}
+{#                                    height: 500px;#}
+{#                                    border: none;#}
+{#                                }#}
+{#                            </style>#}
+{#                            <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;"></iframe>#}
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Beleg</legend>
+                                <div class="row d-flex">
+                                    <div class="col-9 align-middle">
+                                        <a href="/{{ invoice.storageFilename }}" target="_blank">{{ invoice.niceFilename }}</a>
+                                    </div>
+                                    <div class="col-3 d-flex justify-content-end align-items-center text-nowrap">
+                                        <a href="/{{ invoice.storageFilename }}" target="_blank" role="button"
+                                           class="btn btn-outline-primary btn-xs me-1">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </a>
+                                        <a href="/{{ invoice.storageFilename }}" download="{{ invoice.niceFilename }}" role="button"
+                                           class="btn btn-outline-primary btn-xs">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            {% if invoice.invoiceAttachments|length > 0 %}
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6 d-flex justify-content-between align-items-center">
+                                    Anhänge
+                                    <buttn data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment"
+                                           class="btn btn-primary btn-xs">
+                                        Neuer Anhang
+                                    </buttn>
+                                </legend>
+                                {% for invoiceAttachment in invoice.invoiceAttachments %}
+                                <div class="row d-flex">
+                                    <div class="col-9">
+                                        <a href="/{{ invoiceAttachment.storageFilename }}" target="_blank">{{ invoiceAttachment.niceFilename }}</a>
+                                    </div>
+                                    <div class="col-3 d-flex justify-content-end align-items-center text-nowrap">
+                                        <a href="{{ path('app_invoice_attachment_delete', {
+                                            'id': invoice.id,
+                                            'idInvoiceAttachment': invoiceAttachment.id,
+                                            '_token': csrf_token('delete' ~ invoice.id),
+                                            ...app.request.query.all()
+                                        }) }}"
+                                           onclick="return confirm('Soll dieser Anhang wirklich unwiderruflich entfernt werden?');"
+                                            role="button" class="btn btn-outline-danger btn-xs me-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                        <a href="/{{ invoiceAttachment.storageFilename }}" target="_blank" role="button"
+                                           class="btn btn-outline-primary btn-xs me-1">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </a>
+                                        <a href="/{{ invoiceAttachment.storageFilename }}" download="{{ invoiceAttachment.niceFilename }}" role="button"
+                                           class="btn btn-outline-primary btn-xs">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </fieldset>
+                            {% endif %}
+
+                            <div class="modal fade" id="newInvoiceAttachment" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        {{ form_start(uploadAttachmentForm) }}
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Neuen Anhang hinzufügen</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-2 mt-1">
+                                                {{ form_widget(uploadAttachmentForm.upload) }}
+                                                <div id="invoice_attachment_form_upload_help" class="form-text mb-0 ms-1 help-text">Die Datei muss im PDF-Format vorliegen.</div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Abbrechen</button>
+                                            {{ form_widget(uploadAttachmentForm.submit) }}
+                                        </div>
+                                        {{ form_widget(uploadAttachmentForm) }}
+                                        {{ form_end(uploadAttachmentForm) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Leistungsdaten -->
+                <div class="col-12">
+                    <div class="card mb-4" id="sectionLeistungsdaten">
+                        <div class="card-header">Leistungsdaten</div>
+                        <div class="card-body">
+                            {% if invoice.introText %}
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Einleitungstext</legend>
+                                <p>{{ invoice.introText }}</p>
+                            </fieldset>
+                            {% endif %}
+                            {% if invoice.outroText %}
+                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                    <legend class="h6">Nachbemerkung</legend>
+                                    <p>{{ invoice.outroText }}</p>
+                                </fieldset>
+                            {% endif %}
+                            {% if invoice.invoicePositions|length > 0 %}
+                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                    <legend class="h6">Positionen</legend>
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Beschreibung</th>
+                                                <th scope="col">Menge</th>
+                                                <th scope="col">Preis</th>
+                                                <th scope="col">Gesamt</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for invoicePosition in invoice.invoicePositions %}
+                                                <tr>
+                                                    <td>{{ invoicePosition.text|nl2br }}</td>
+                                                    <td>{{ invoicePosition.amount|number_format(2, ',', '.') }}</td>
+                                                    <td>{{ invoicePosition.price|number_format(2, format_params.decimal_point, format_params.thousands_sep) }}</td>
+                                                    <td>{{ (invoicePosition.amount*invoicePosition.price)|number_format(2,  format_params.decimal_point, format_params.thousands_sep) }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </fieldset>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bezahlung -->
+                <div class="col-12">
+                    <div class="card mb-4" id="sectionBezahlung">
+                        <div class="card-header">Bezahlung</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    {{ _self.listElement('Status', invoice.paymentLabel) }}
+                                    {{ _self.listElement('Fälligkeit', invoice.due|date('d.m.Y')) }}
+                                    {{ _self.listElement('Bedingung', invoice.termOfPayment.name ~ ' (' ~ invoice.termOfPayment.dueDays ~ ' Tage)') }}
+                                </div>
+                                <div class="col-lg-6">
+                                    {% if invoice.paymentStatus == 'paid' %}
+                                        <fieldset class="border border-1 border-light mb-4 p-3">
+                                            <legend class="h6">Zahlungsdetails</legend>
+                                            {{ _self.listElement('Datum', invoice.paymentDate|date('d.m.Y')) }}
+                                            {{ _self.listElement('Währung', invoice.paymentCurrency.alpha3) }}
+                                            {{ _self.listElement('Betrag', invoice.paymentAmount|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
+                                            {{ _self.listElement('Konto', invoice.paymentAccountingPlanLedger.name) }}
+                                            {{ _self.listElement('Erfassung', invoice.paymentMarkedAt|date('d.m.Y, H:i') ~ ' (' ~ invoice.paymentMarkedBy.userIdentifier ~ ')') }}
+                                        </fieldset>
+                                    {% else %}
+                                        <fieldset class="border border-1 border-light mb-4 p-3">
+                                            <legend class="h6">Zahlung erfassen</legend>
+                                            {% if paymentForm %}
+                                                {{ form_start(paymentForm) }}
+                                                <div class="mb-2">
+                                                    {{ form_row(paymentForm.paymentDate) }}
+                                                </div>
+                                                <div class="mb-2">
+                                                    {{ form_row(paymentForm.paymentAmount) }}
+                                                </div>
+                                                <div class="mb-2">
+                                                    {{ form_row(paymentForm.paymentCurrency) }}
+                                                </div>
+                                                <div class="mb-2">
+                                                    {{ form_row(paymentForm.paymentAccountingPlanLedger) }}
+                                                </div>
+                                                <div class="d-flex justify-content-center">
+                                                    {{ form_widget(paymentForm.submit) }}
+                                                </div>
+                                                {{ form_widget(paymentForm) }}
+
+                                                {{ form_end(paymentForm) }}
+                                            {% endif %}
+                                        </fieldset>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weitere Details -->
+                <div class="col-12">
+                    <div class="card mb-4" id="sectionWeitereDetails">
+                        <div class="card-header">Weitere Details</div>
+                        <div class="card-body">
+                            <fieldset class="border border-1 border-light mb-4 p-3">
+                                <legend class="h6">Technische Details</legend>
+                                {{ _self.listElement('ID', invoice.id) }}
+                                {{ _self.listElement('Erstellung', invoice.createdAt|date('d.m.Y, H:i') ~ ' (' ~ invoice.createdBy.userIdentifier ~ ')') }}
+                            </fieldset>
+                            {% if invoice.invoiceReference %}
+                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                    <legend class="h6">Referenz</legend>
+                                    {{ _self.listElement('Beleg', invoice.invoiceReference.invoiceType.type ~ ' ' ~ invoice.invoiceReference.number) }}
+                                </fieldset>
+                            {% endif %}
+                            {% if invoice.invoiceMailings|length > 0 %}
+                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                    <legend class="h6">E-Mail-Berichte</legend>
+                                    <table class="table table-sm">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">Betreff</th>
+                                            <th scope="col">Empfänger</th>
+                                            <th scope="col">Nachricht</th>
+                                            <th scope="col">Zeitpunkt</th>
+                                            <th scope="col">Benutzer</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for invoiceMailing in invoice.invoiceMailings %}
+                                            <tr>
+                                                <td>{{ invoiceMailing.subject }}</td>
+                                                <td>
+                                                    {% for invoiceMailingRecipient in invoiceMailing.invoiceMailingRecipients %}
+                                                        {{ invoiceMailingRecipient.emailAddress }} <span class="badge rounded-pill text-bg-light">{{ invoiceMailingRecipient.emailAddressType }}</span><br>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    <a data-bs-toggle="modal" data-bs-target="#message{{ invoiceMailing.id }}" href="">
+                                                        Anzeigen
+                                                    </a>
+                                                    <div class="modal fade" id="message{{ invoiceMailing.id }}" tabindex="-1">
+                                                        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">{{ invoiceMailing.subject }}</h1>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    {{ invoiceMailing.message|nl2br }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ invoiceMailing.mailedAt|date('d.m.Y, H:i') }}</td>
+                                                <td>{{ invoiceMailing.mailedBy }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </fieldset>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- NAVIGATION -->
+        <div class="col-xxl-3">
+            <!-- Large Screens -->
+            <div class="nav-sticky d-none d-xxl-block">
+                <div class="btn-group d-flex" role="group">
+                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
+                    </a>
+                    <!-- ACTIONS -->
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Aktionen
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment">
+                                    <i class="fa-solid fa-paperclip icon-column"></i> Anhang hinzufügen
+                                </a>
+                            </li>
+                            {% if draft != true %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                        <i class="fa-regular fa-envelope icon-column"></i> Beleg per E-Mail versenden
+                                    </a>
+                                </li>
+                                {% if invoice.sent %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                            <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung per E-Mail versenden
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id, ...app.request.query.all() }) }}">
+                                        <i class="fa-regular fa-copy icon-column"></i> Kopieren
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
+                                    <i class="fa-regular fa-xmark icon-column"></i> Stornieren
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <ul class="nav flex-column" id="stickyNav">
+                            <li class="nav-item"><a class="nav-link" href="#sectionBeleginformationen">Beleginformationen</a></li>
+                            {% if draft == false %}<li class="nav-item"><a class="nav-link" href="#sectionDokumente">Dokumente</a></li>{% endif %}
+                            <li class="nav-item"><a class="nav-link" href="#sectionLeistungsdaten">Leistungsdaten</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionBezahlung">Bezahlung</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionWeitereDetails">Weitere Details</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Other Screens -->
+            <div class="d-xxl-none">
+                <div class="text-center mt-5">
+                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
+                    </a>
+
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

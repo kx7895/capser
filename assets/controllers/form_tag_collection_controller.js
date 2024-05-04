@@ -13,7 +13,7 @@ export default class extends Controller {
         this.addAllInitialDeleteButtons();
     }
 
-    addCollectionElement(event) {
+    addCollectionElement() {
         const newItemOuter = document.createElement('div');
         newItemOuter.classList.add('btn-group');
         newItemOuter.classList.add('mb-1');
@@ -40,7 +40,6 @@ export default class extends Controller {
         }
 
         newItem.innerHTML = prototypeValue.replace(/__name__/g, this.indexValue);
-        console.log(newItem);
 
         newItemOuter.appendChild(newItem);
 

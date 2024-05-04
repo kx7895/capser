@@ -48,15 +48,12 @@ class CustomerController extends AbstractController
             $queryPrincipal = $this->principalRepository->find($queryPrincipalId);
             if(!$queryPrincipal)
                 return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals);
+            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals); // TODO: Security - vllt. Voters?
         }
 
         $queryParameters = [];
-        if($queryPrincipal) {
-            $queryParameters = [
-                'principal' => $queryPrincipal,
-            ];
-        }
+        if($queryPrincipal)
+            $queryParameters['principal'] = $queryPrincipal;
 
         // TODO: Security - nur Customers für eigene Principals (problematisch dann wenn kein Principal ausgewählt wurde)! Voters!
         $customers = $this->dataTableService->buildDataTable($this->customerRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
