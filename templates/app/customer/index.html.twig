@@ -56,7 +56,7 @@
                                             <option value="">Alle Mandanten</option>
                                             {% for principal in allowedPrincipals %}
                                                 <option value="{{ principal.id }}" {% if queryPrincipal == principal %}selected{% endif %}>
-                                                    {{ principal.name }}
+                                                    {{ principal.name }}{% if principal.shortName %} ({{ principal.shortName }}){% endif %}
                                                 </option>
                                             {% endfor %}
                                         </select>
@@ -92,6 +92,7 @@
                                 <th>{{ _self.sortColumnHeader('vatId', 'UID', sort, sortDirection) }}</th>
                                 <th>Adresse</th>
                                 <th>{{ _self.sortColumnHeader('createdAt', 'Erfassung', sort, sortDirection) }}</th>
+                                <th>{{ _self.sortColumnHeader('hPrincipalName', 'Mandant', sort, sortDirection) }}</th>
                                 <th class="action-column"></th>
                             </tr>
                         </thead>
@@ -120,6 +121,7 @@
                                     {% if customer.addressLineCountry %}{{ customer.addressLineCountry.name }}{% endif %}
                                 </td>
                                 <td>{{ customer.createdAt|ago }}</td>
+                                <td>{{ customer.hPrincipalShortName }}</td>
                                 <td class="action-column">
                                     <a href="{{ path('app_customer_show', { 'id': customer.id, ...app.request.query.all() }) }}" target="_top">
                                         <i class="fa-solid fa-users-viewfinder"></i>

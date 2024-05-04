@@ -123,6 +123,12 @@ class Customer
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $specialFooterColumn3 = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $hPrincipalName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $hPrincipalShortName = null;
+
     public function __construct()
     {
         $this->customerInvoiceRecipients = new ArrayCollection();
@@ -605,11 +611,6 @@ class Customer
         return $this;
     }
 
-    public function __toString(): string
-    {
-        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
-    }
-
     public function getSpecialFooterColumn1(): ?string
     {
         return $this->specialFooterColumn1;
@@ -644,5 +645,34 @@ class Customer
         $this->specialFooterColumn3 = $specialFooterColumn3;
 
         return $this;
+    }
+
+    public function getHPrincipalName(): ?string
+    {
+        return $this->hPrincipalName;
+    }
+
+    public function setHPrincipalName(string $hPrincipalName): static
+    {
+        $this->hPrincipalName = $hPrincipalName;
+
+        return $this;
+    }
+
+    public function getHPrincipalShortName(): ?string
+    {
+        return $this->hPrincipalShortName;
+    }
+
+    public function setHPrincipalShortName(?string $hPrincipalShortName): static
+    {
+        $this->hPrincipalShortName = $hPrincipalShortName;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
     }
 }

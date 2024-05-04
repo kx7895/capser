@@ -40,7 +40,7 @@ class CustomerController extends AbstractController
         $user = $this->getUser();
         $allowedPrincipals = $user->getPrincipals();
 
-        $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'createdAt', 'vatId']);
+        $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'hPrincipalName', 'createdAt', 'vatId']);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
 
         $queryPrincipal = null;
@@ -79,6 +79,11 @@ class CustomerController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()) {
+            if($customer->getPrincipal()) {
+                $customer->setHPrincipalName($customer->getPrincipal()->getName());
+                $customer->setHPrincipalShortName($customer->getPrincipal()->getShortName());
+            }
+
             $this->entityManager->persist($customer);
             $this->entityManager->flush();
 
@@ -112,6 +117,12 @@ class CustomerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if($customer->getPrincipal()) {
+                $customer->setHPrincipalName($customer->getPrincipal()->getName());
+                $customer->setHPrincipalShortName($customer->getPrincipal()->getShortName());
+            }
+
+            $this->entityManager->persist($customer);
             $this->entityManager->flush();
 
             $this->addFlash('success', [$customer->getName(), 'Der Kunde wurde erfolgreich aktualisiert.']);
