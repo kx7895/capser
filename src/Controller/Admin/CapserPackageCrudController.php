@@ -29,9 +29,11 @@ class CapserPackageCrudController extends AbstractCrudController
             IdField::new('id')
                 ->hideOnForm(),
             TextField::new('name', 'Bezeichnung')
-                ->setColumns(12),
+                ->setColumns(12)
+                ->setRequired(true),
             DateField::new('validFrom', 'Gültig ab')
-                ->setColumns(4),
+                ->setColumns(4)
+                ->setRequired(true),
             DateField::new('validTo', 'Gültig bis')
                 ->setColumns(4),
         ];
