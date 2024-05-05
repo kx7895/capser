@@ -21,9 +21,9 @@ class CustomerController extends AbstractController
 {
     public function __construct(
         private readonly CustomerRepository     $customerRepository,
+        private readonly PrincipalRepository    $principalRepository,
         private readonly DataTableService       $dataTableService,
         private readonly EntityManagerInterface $entityManager,
-        private readonly PrincipalRepository $principalRepository,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]

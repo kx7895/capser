@@ -28,7 +28,7 @@ class CustomerRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c');
 
         if($query) {
-            $qb->andWhere('c.name LIKE :queryLike')
+            $qb->orWhere('c.name LIKE :queryLike')
                 ->orWhere('c.shortName LIKE :queryLike')
                 ->orWhere('c.addressLine1 LIKE :queryLike')
                 ->orWhere('c.addressLine2 LIKE :queryLike')
@@ -40,7 +40,8 @@ class CustomerRepository extends ServiceEntityRepository
                 ->orWhere('c.id = :queryExact')
                 ->setParameter('queryLike', '%' . $query . '%')
                 ->setParameter('queryExact', $query)
-                ->join('c.addressLineCountry', 'addressLineCountry');
+                ->leftJoin('c.addressLineCountry', 'addressLineCountry')
+            ;
         }
 
         // Nur für bestimmte Such-Parameter gibt es eine Definition, ansonsten wird schlicht nichts angewandt
