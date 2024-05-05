@@ -102,7 +102,7 @@ class InvoiceController extends AbstractController
 
         // TODO: Security - nur Invoices für Customers von eigenen Principals! Voters!
         $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
-
+dd($invoices);
         return $this->render('app/invoice/index.html.twig', [
             'invoices' => $invoices,
 
