@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Invoice;
 use App\Entity\InvoicePosition;
+use App\Entity\Unit;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
@@ -39,6 +41,21 @@ class InvoicePositionType extends AbstractType
                     'class' => 'h-100'
                 ]
             ])
+            ->add('unit', EntityType::class, [
+                'class' => Unit::class,
+                'query_builder' => function (EntityRepository $er) use ($options) {
+                    return $er
+                        ->createQueryBuilder('unit')
+                        ->andWhere('unit.principal = :principal')
+                        ->setParameter('principal', $options['principal'])
+                        ->orderBy('unit.name', 'ASC');
+                },
+                'choice_label' => 'name',
+                'label' => 'Einheit',
+                'attr' => [
+                    'class' => 'h-100',
+                ]
+            ])
             ->add('price', MoneyType::class, [
                 'currency' => false,
                 'scale' => 2,
@@ -55,6 +72,7 @@ class InvoicePositionType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => InvoicePosition::class,
+            'principal' => null,
         ]);
     }
 }

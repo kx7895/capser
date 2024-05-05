@@ -38,7 +38,7 @@ class InvoicePositionsFormType extends AbstractType
 
         ->add('invoicePositions', CollectionType::class, [
             'entry_type' => InvoicePositionType::class,
-            'entry_options' => ['label' => false],
+            'entry_options' => ['label' => false, 'principal' => $options['principal']],
             'allow_add' => true,
             'by_reference' => false,
             'allow_delete' => true,
@@ -82,6 +82,7 @@ class InvoicePositionsFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Invoice::class,
+            'principal' => null,
         ]);
     }
 }

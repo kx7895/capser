@@ -235,12 +235,20 @@ class InvoiceController extends AbstractController
 
         $totalSum = 0;
         foreach($invoice->getInvoicePositions() as $position) {
+            $unit = '';
+            if($position->getUnit()) {
+                $method = 'getName'.ucfirst(strtolower($invoice->getLanguage()->getAlpha2()));
+                if($method == 'getNameDe')
+                    $method = 'getName';
+                $unit = ($position->getUnit()->$method() ? $position->getUnit()->$method() : $position->getUnit()->getName());
+            }
+
             $pdfCreator->addPdfTableBodyRow([
                 $position->getText(),
                 number_format($position->getAmount(), 2, ',', '.'),
+                $unit,
                 number_format($position->getPrice(), 2, ',', '.'),
-                number_format($position->getPrice() * $position->getAmount(), 2, ',', '.'),
-                number_format($invoice->getVatRate(), 2, ',', '.')
+                number_format($position->getPrice() * $position->getAmount(), 2, ',', '.')
             ]);
             $totalSum += $position->getPrice() * $position->getAmount();
         }
@@ -449,6 +457,7 @@ class InvoiceController extends AbstractController
         elseif($step == 2)
             return $this->createForm(InvoicePositionsFormType::class, $invoice, [
                 'action' => $this->generateUrl('app_invoice_new_positions', $parameters),
+                'principal' => $invoice->getPrincipal(),
             ]);
         else
             throw new LogicException('Invalid Form Step for InvoiceForm.');

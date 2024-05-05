@@ -11,7 +11,7 @@
     <!--suppress CssUnusedSymbol -->
     <style>
         #principalLogo { max-height: 100px; }
-        #invoicePositionRows .form-control { padding: 2px 4px; }
+        #invoicePositionRows .form-control, #invoicePositionRows .form-select { padding: 2px 4px; }
     </style>
 
     <div class="step step-primary mb-5">
@@ -71,9 +71,9 @@
                         </div>
                         <div class="col-6">
                             <div class="row mb-0">
-                                <dt class="col-4 mb-0">Belegdatum:</dt>
-                                <dl class="col-8 mb-0">{{ invoice.date|date('d.m.Y') }}</dl>
-                                <dt class="col-4 mb-0">
+                                <dt class="col-5 mb-0">Belegdatum:</dt>
+                                <dl class="col-7 mb-0">{{ invoice.date|date('d.m.Y') }}</dl>
+                                <dt class="col-5 mb-0">
                                     Belegnummer:
                                     <a data-controller="tooltip"
                                        data-action="mouseenter->tooltip#showTooltip mouseleave->tooltip#hideTooltip"
@@ -82,30 +82,26 @@
                                         <i class="fa-regular fa-circle-info"></i>
                                     </a>
                                 </dt>
-                                <dl class="col-8 mb-0">{{ invoice.invoiceType.type }} <mark>ENTWURF</mark></dl>
-                                <dt class="col-4 mb-0">Leistungszeitraum:</dt>
-                                <dl class="col-8 mb-0">
-                                    {{ invoice.periodFrom|date('d.m.Y') }}
-                                    {% if invoice.periodFrom != invoice.periodTo %}
-                                        &nbsp;bis&nbsp;
-                                        {{ invoice.periodTo|date('d.m.Y') }}
-                                    {% endif %}
+                                <dl class="col-7 mb-0">{{ invoice.invoiceType.type }} <mark>ENTWURF</mark></dl>
+                                <dt class="col-5 mb-0">Leistungszeitraum:</dt>
+                                <dl class="col-7 mb-0">
+                                    {{ invoice.periodFrom|date('d.m.Y') }}{% if invoice.periodFrom != invoice.periodTo %} bis {{ invoice.periodTo|date('d.m.Y') }}{% endif %}
                                 </dl>
-                                <dt class="col-4 mb-0">Seite:</dt>
-                                <dl class="col-8 mb-0">1 von 1</dl>
+                                <dt class="col-5 mb-0">Seite:</dt>
+                                <dl class="col-7 mb-0">1 von 1</dl>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="row mb-0">
-                                <dt class="col-4 mb-0">Ihre Kundennummer:</dt>
-                                <dl class="col-8 mb-0">{{ invoice.customer.ledgerAccountNumber }}</dl>
-                                <dt class="col-4 mb-0">Ihre Kostenstelle:</dt>
-                                <dl class="col-8 mb-0">{{ invoice.costcenterExternal }}</dl>
-                                <dt class="col-4 mb-0">Ihre Referenz:</dt>
-                                <dl class="col-8 mb-0">{{ invoice.referenceExternal }}</dl>
+                                <dt class="col-5 mb-0">Ihre Kundennummer:</dt>
+                                <dl class="col-7 mb-0">{{ invoice.customer.ledgerAccountNumber }}</dl>
+                                <dt class="col-5 mb-0">Ihre Kostenstelle:</dt>
+                                <dl class="col-7 mb-0">{{ invoice.costcenterExternal }}</dl>
+                                <dt class="col-5 mb-0">Ihre Referenz:</dt>
+                                <dl class="col-7 mb-0">{{ invoice.referenceExternal }}</dl>
                                 {% if invoice.customer.vatId is not null %}
-                                    <dt class="col-4 mb-0">Ihre UID:</dt>
-                                    <dl class="col-8 mb-0">{{ invoice.customer.vatId }}</dl>
+                                    <dt class="col-5 mb-0">Ihre UID:</dt>
+                                    <dl class="col-7 mb-0">{{ invoice.customer.vatId }}</dl>
                                 {% endif %}
                             </div>
                         </div>
@@ -123,14 +119,14 @@
                              data-form-invoice-position-collection-prototype-value="
 <div class='row border-bottom py-1' data-index='__name__'>
     <div class='col-1 px-1 d-flex align-items-center'>
-        <i class='fa-solid fa-bars'></i>
+{#        <i class='fa-solid fa-bars'></i>#}
         {{ form_widget(form.invoicePositions.vars.prototype.position)|e('html_attr') }}
     </div>
     <div class='col-5 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.text)|e('html_attr') }}</div>
     <div class='col-1 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.amount)|e('html_attr') }}</div>
-    <div class='col-2 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.price)|e('html_attr') }}</div>
+    <div class='col-2 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.unit)|e('html_attr') }}</div>
+    <div class='col-1 px-1'>{{ form_widget(form.invoicePositions.vars.prototype.price)|e('html_attr') }}</div>
     <div class='col-1 px-1 text-end sumHolder'>&nbsp;</div>
-    <div class='col-1 px-1'>&nbsp;</div>
     <div class='col-1 px-1 d-flex align-items-center justify-content-end deleteInvoicePositionButtonHolder'></div>
 </div>"
                               data-form-invoice-position-calculator-vat-rate-value="{{ invoice.vatRate }}">
@@ -138,9 +134,9 @@
                                 <div class="col-1 px-1">&nbsp;</div>
                                 <div class="col-5 px-1 d-flex align-items-center">Beschreibung</div>
                                 <div class="col-1 px-1 d-flex align-items-center">Menge</div>
-                                <div class="col-2 px-1">Preis<br>[{{ invoice.currency.alpha3 }}]</div>
+                                <div class="col-2 px-1 d-flex align-items-center">Einheit</div>
+                                <div class="col-1 px-1">Preis<br>[{{ invoice.currency.alpha3 }}]</div>
                                 <div class="col-1 px-1">Gesamt<br>[{{ invoice.currency.alpha3 }}]</div>
-                                <div class="col-1 px-1">USt.<br>[%]</div>
                                 <div class="col-1 px-1 d-flex align-items-center justify-content-end" style="margin-top:-5px;">
                                     <button type="button"
                                             class="btn btn-primary btn-sm"
@@ -153,14 +149,14 @@
                                 {% for invoicePosition in form.invoicePositions %}
                                     <div class="row border-bottom py-1" data-index="{{ loop.index0 }}">
                                         <div class="col-1 px-1 d-flex align-items-center">
-                                            <i class="fa-solid fa-bars"></i>
+{#                                            <i class="fa-solid fa-bars"></i>#}
                                             {{ form_widget(invoicePosition.position) }}
                                         </div>
                                         <div class="col-5 px-1">{{ form_widget(invoicePosition.text) }}</div>
                                         <div class="col-1 px-1">{{ form_widget(invoicePosition.amount) }}</div>
-                                        <div class="col-2 px-1">{{ form_widget(invoicePosition.price) }}</div>
+                                        <div class="col-2 px-1">{{ form_widget(invoicePosition.unit) }}</div>
+                                        <div class="col-1 px-1">{{ form_widget(invoicePosition.price) }}</div>
                                         <div class="col-1 px-1 text-end sumHolder"></div>
-                                        <div class="col-1 px-1 text-end">{{ invoice.vatRate|number_format(2,',','.') }}</div>
                                         <div class="col-1 px-1 d-flex align-items-center justify-content-end deleteInvoicePositionButtonHolder"></div>
                                     </div>
                                 {% endfor %}

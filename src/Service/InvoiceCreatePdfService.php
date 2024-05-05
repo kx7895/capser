@@ -21,9 +21,9 @@ class InvoiceCreatePdfService
 
     private int $positionsCounter = 0;
 
-    private const WIDTHS = [94, 17, 24, 24, 17];
-    private const TABLEHEADS_DE = ['Beschreibung', 'Menge', 'Preis [_CURRENCY_]', 'Gesamt [_CURRENCY_]', 'USt. [%]'];
-    private const TABLEHEADS_EN = ['Position', 'Quantity', 'Price [_CURRENCY_]', 'Total [_CURRENCY_]', 'Tax [%]'];
+    private const WIDTHS = [95, 20, 23, 20, 20];
+    private const TABLEHEADS_DE = ['Beschreibung', 'Menge', 'Einheit', 'Preis [_CURRENCY_]', 'Gesamt [_CURRENCY_]'];
+    private const TABLEHEADS_EN = ['Position', 'Quantity', 'Unit', 'Price [_CURRENCY_]', 'Total [_CURRENCY_]'];
 
     public function __construct(Invoice $invoice)
     {
@@ -31,8 +31,7 @@ class InvoiceCreatePdfService
         $this->principal = $invoice->getPrincipal();
         $this->receiver = $invoice->getCustomer();
         $this->lang = ($this->invoice->getLanguage()->getAlpha2() == 'DE' ? 'DE' : 'EN');
-//        $this->currencySymbol = ($invoice->getCurrency()->getAlpha3() == 'EUR' ? chr(128).' ' : $invoice->getCurrency()->getSymbol());
-        $this->currencySymbol = $invoice->getCurrency()->getAlpha3();
+        $this->currencySymbol = ($invoice->getCurrency()->getAlpha3() == 'EUR' ? chr(128).' ' : $invoice->getCurrency()->getSymbol());
         $this->currencyName = $invoice->getCurrency()->getName();
 
         $this->pdf = new Fpdf('P', 'mm', 'A4');
@@ -188,7 +187,7 @@ class InvoiceCreatePdfService
         $this->pdf->SetFont('Arial', 'B', 9);
         $i = 0;
         foreach(($this->lang == 'DE' ? self::TABLEHEADS_DE : self::TABLEHEADS_EN) as $value)
-            $this->pdf->Cell(self::WIDTHS[$i++], 5, (str_replace('_CURRENCY_', $this->currencySymbol, $value)), 'B', 0, 'L');
+            $this->pdf->Cell(self::WIDTHS[$i++], 5, str_replace('_CURRENCY_', $this->currencySymbol, $value), 'B', 0, 'L');
         $this->pdf->Ln();
     }
 
@@ -199,7 +198,7 @@ class InvoiceCreatePdfService
         $i = 0;
         foreach($values as $value) {
             $align = ($i > 0 ? 'R' : 'L');
-            if($i == 0) {
+            if($i == 0 || $i == 2) {
                 $xBeforeMultiCell = $this->pdf->GetX();
                 $yBeforeMultiCell = $this->pdf->GetY();
                 $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value));
@@ -235,24 +234,21 @@ class InvoiceCreatePdfService
 
     public function addPdfTableSumRows(float $sumNet, float $taxRate, float $sumGross): void
     {
-        $width_a = self::WIDTHS[0] + self::WIDTHS[1] + self::WIDTHS[2];
+        $width_a = self::WIDTHS[0] + self::WIDTHS[1] + self::WIDTHS[2] + self::WIDTHS[3];
 
         // Summenzeile Netto
         $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt netto' : 'Total net').':', 'R', true, true);
-        $this->addPdfTableBodyElement(self::WIDTHS[3], number_format($sumNet, 2, ',', '.'), 'R', true, true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], '', '', true, true);
+        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet, 2, ',', '.'), 'R', true, true);
         $this->pdf->Ln();
 
         // Summenzeile Steuer
         $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'USt.' : 'Tax').' '.number_format($taxRate, 2, ',', '.').' %:', 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[3], number_format($sumNet * $taxRate / 100, 2, ',', '.'), 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], '', '', true);
+        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet * $taxRate / 100, 2, ',', '.'), 'R', true);
         $this->pdf->Ln();
 
         // Summenzeile Brutto
         $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt brutto' : 'Total gross').':', 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[3], number_format($sumGross, 2, ',', '.'), 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], '', '', true);
+        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
         $this->pdf->Ln();
     }
 
@@ -261,7 +257,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         foreach($conditions AS $condition) {
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencyName.' ('.$this->currencySymbol.')', $condition)));
+            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencyName.' ('.utf8_encode($this->currencySymbol).')', $condition)));
             $this->pdf->Ln();
         }
     }

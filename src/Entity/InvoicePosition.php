@@ -41,6 +41,9 @@ class InvoicePosition
     #[ORM\Column]
     private ?int $position = null;
 
+    #[ORM\ManyToOne]
+    private ?Unit $unit = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -133,5 +136,17 @@ class InvoicePosition
     public function __toString(): string
     {
         return $this->getText();
+    }
+
+    public function getUnit(): ?Unit
+    {
+        return $this->unit;
+    }
+
+    public function setUnit(?Unit $unit): static
+    {
+        $this->unit = $unit;
+
+        return $this;
     }
 }
