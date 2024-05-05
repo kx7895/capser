@@ -126,21 +126,34 @@
                                 <td>{{ invoice.invoiceType.type }}</td>
                                 <td>
                                     {% if draft %}
-                                        <i>Entwurf</i>
+                                        <span class="badge text-bg-light">Entwurf</span>
                                     {% else %}
                                         {{ invoice.number }}
                                     {% endif %}
                                 </td>
                                 <td>{{ invoice.customerName }}</td>
-                                <td>{{ invoice.currency.alpha3 }} {{ invoice.amountNet|number_format(2, ',', '.') }}</td>
-                                <td>{{ invoice.paymentLabel|raw }}</td>
+                                <td>
+                                    {% if draft == false %}
+                                        {{ invoice.currency.alpha3 }} {{ invoice.amountNet|number_format(2, ',', '.') }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if draft == false %}
+                                        {{ invoice.paymentLabel|raw }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ invoice.createdAt|ago }}</td>
                                 <td class="action-column">
                                     {% if draft %}
+                                        <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id), ...queryParams }) }}"
+                                           target="_top"
+                                           onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+
                                         <a href="{{ path('app_invoice_new_basics', { 'id': invoice.id, ...queryParams }) }}" target="_top">
                                             <i class="fa-regular fa-square-caret-right"></i>
                                         </a>
-                                        {# TODO: DELETE-ICON #}
                                     {% else %}
                                         <a href="{{ path('app_invoice_show', { 'id': invoice.id, ...queryParams }) }}" target="_top">
                                             <i class="fa-solid fa-circle-info"></i>

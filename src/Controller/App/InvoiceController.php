@@ -122,7 +122,7 @@ class InvoiceController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid()) {
             // define due date
-            $due = $invoice->getDate();
+            $due = clone $invoice->getDate();
             if($invoice->getTermOfPayment() && $invoice->getTermOfPayment()->getDueDays() > 0)
                 $due = $due->modify('+'.$invoice->getTermOfPayment()->getDueDays().' days');
             $invoice->setDue($due);
@@ -405,10 +405,15 @@ class InvoiceController extends AbstractController
         // TODO: Security - nur Customers für eigene Principals! Voters!
 
         if($this->isCsrfTokenValid('delete'.$invoice->getId(), $request->get('_token'))) {
-            if($invoice->getNumber())
+            if($invoice->getNumber()) {
                 $name = $invoice->getInvoiceType()->getType().' '.$invoice->getNumber();
-            else
+                if(!$this->isGranted('ROLE_SUPERADMIN')) {
+                    $this->addFlash('danger', [$name, 'Finalisierte Belege können nicht storniert werden.']);
+                    return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
+                }
+            } else {
                 $name = $invoice->getInvoiceType()->getName().' für '.$invoice->getCustomerName().', Entwurf';
+            }
 
             $this->entityManager->remove($invoice);
             $this->entityManager->flush();
