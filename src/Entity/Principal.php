@@ -138,6 +138,12 @@ class Principal
     #[ORM\OneToMany(targetEntity: Invoice::class, mappedBy: 'principal', cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $invoices;
 
+    /**
+     * @var Collection<int, Unit>
+     */
+    #[ORM\OneToMany(targetEntity: Unit::class, mappedBy: 'principal')]
+    private Collection $units;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
@@ -145,6 +151,7 @@ class Principal
         $this->tags = new ArrayCollection();
         $this->customers = new ArrayCollection();
         $this->invoices = new ArrayCollection();
+        $this->units = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -722,5 +729,35 @@ class Principal
     public function __toString(): string
     {
         return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
+    }
+
+    /**
+     * @return Collection<int, Unit>
+     */
+    public function getUnits(): Collection
+    {
+        return $this->units;
+    }
+
+    public function addUnit(Unit $unit): static
+    {
+        if (!$this->units->contains($unit)) {
+            $this->units->add($unit);
+            $unit->setPrincipal($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUnit(Unit $unit): static
+    {
+        if ($this->units->removeElement($unit)) {
+            // set the owning side to null (unless already changed)
+            if ($unit->getPrincipal() === $this) {
+                $unit->setPrincipal(null);
+            }
+        }
+
+        return $this;
     }
 }

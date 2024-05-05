@@ -14,6 +14,7 @@ use App\Entity\Language;
 use App\Entity\Principal;
 use App\Entity\Tag;
 use App\Entity\TermOfPayment;
+use App\Entity\Unit;
 use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -86,6 +87,7 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Mandanten', null, Principal::class),
             MenuItem::linkToCrud('Mandanten-Kontenpläne', null, AccountingPlan::class),
             MenuItem::linkToCrud('Tags', null, Tag::class),
+            MenuItem::linkToCrud('Rechnungseinheiten', null, Unit::class),
             MenuItem::linkToCrud('Zahlungsbedingungen', null, TermOfPayment::class),
         ];
     }
