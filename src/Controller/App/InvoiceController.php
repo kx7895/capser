@@ -92,17 +92,9 @@ class InvoiceController extends AbstractController
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
 
-        // DEBUG
-        $query = null;
-        $queryParameters = [];
-        $sort = 'id';
-        $sortDirection = 'ASC';
-        $page = 1;
-        $itemsPerPage = 10;
-
         // TODO: Security - nur Invoices für Customers von eigenen Principals! Voters!
         $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
-dd($invoices);
+
         return $this->render('app/invoice/index.html.twig', [
             'invoices' => $invoices,
 
