@@ -163,7 +163,7 @@
             <div class="card-footer">
                 <div class="d-flex align-items-center gap-3">
                     {% if invoices.hasPreviousPage %}
-                        <a href="{{ pagerfanta_page_url(customers, invoices.previousPage) }}" class="btn btn-sm btn-primary">
+                        <a href="{{ pagerfanta_page_url(invoices, invoices.previousPage) }}" class="btn btn-sm btn-primary">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     {% endif %}
@@ -171,7 +171,7 @@
                         Seite {{ invoices.currentPage }}/{{ invoices.nbPages }}
                     </div>
                     {% if invoices.hasNextPage %}
-                        <a href="{{ pagerfanta_page_url(customers, invoices.nextPage) }}" class="btn btn-sm btn-primary">
+                        <a href="{{ pagerfanta_page_url(invoices, invoices.nextPage) }}" class="btn btn-sm btn-primary">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     {% endif %}
