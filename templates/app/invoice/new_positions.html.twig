@@ -54,7 +54,7 @@
                                 {{ [invoice.principal.name, invoice.principal.addressLine1, invoice.principal.addressLine2, invoice.principal.addressLine3, invoice.principal.addressLine4, invoice.principal.addressLineCountry.name]|filter(v => v is not null and v is not empty)|join(' | ') }}
                             </p>
                             <p>
-                                {{ [invoice.customer.name, invoice.customer.addressLine1, invoice.principal.addressLine2, invoice.principal.addressLine3, invoice.principal.addressLine4, invoice.principal.addressLineCountry.name]|filter(v => v is not null and v is not empty)|join('<br>')|raw }}
+                                {{ [invoice.customer.name, invoice.customer.addressLine1, invoice.customer.addressLine2, invoice.customer.addressLine3, invoice.customer.addressLine4, invoice.customer.addressLineCountry.name]|filter(v => v is not null and v is not empty)|join('<br>')|raw }}
                             </p>
                         </div>
                         <div class="col-4 text-end">
