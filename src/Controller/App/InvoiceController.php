@@ -27,6 +27,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -90,6 +91,14 @@ class InvoiceController extends AbstractController
             $queryParameters['principal'] = $queryPrincipal;
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
+
+        // DEBUG
+        $query = null;
+        $queryParameters = [];
+        $sort = 'id';
+        $sortDirection = 'ASC';
+        $page = 1;
+        $itemsPerPage = 10;
 
         // TODO: Security - nur Invoices für Customers von eigenen Principals! Voters!
         $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
@@ -362,7 +371,7 @@ class InvoiceController extends AbstractController
         return $this->invoiceActionHelper($invoice, $request, 'remind');
     }
 
-    private function invoiceActionHelper(Invoice $invoice, Request $request, string $action): mixed
+    private function invoiceActionHelper(Invoice $invoice, Request $request, string $action): RedirectResponse
     {
         if($action == 'mail') {
             if($this->invoiceCreateService->sendToCustomer($invoice))
