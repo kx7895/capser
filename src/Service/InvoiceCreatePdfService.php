@@ -197,8 +197,8 @@ class InvoiceCreatePdfService
         $yAfterMultiCell = $this->pdf->GetY(); // just as fallback, never required or used
         $i = 0;
         foreach($values as $value) {
-            $align = ($i > 0 ? 'R' : 'L');
-            if($i == 0 || $i == 2) {
+            $align = (in_array($i, [0,2]) ? 'L' : 'R');
+            if($i == 0) {
                 $xBeforeMultiCell = $this->pdf->GetX();
                 $yBeforeMultiCell = $this->pdf->GetY();
                 $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value));
