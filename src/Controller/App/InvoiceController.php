@@ -482,13 +482,14 @@ class InvoiceController extends AbstractController
         if($invoice == null) {
             if($createWhenMissing) {
                 $invoice = new Invoice();
-                $invoice->setCreatedAt(new DateTimeImmutable()); // TODO: Mit Doctrine Extensions Timestampable arbeiten
-                $invoice->setCreatedBy($this->getUser()); // TODO: Mit Doctrine Extensions Blamable arbeiten
+                $invoice->setCreatedAt(new DateTimeImmutable());
+                $invoice->setCreatedBy($this->getUser());
                 if(count($allowedPrincipals) === 1)
                     $invoice->setPrincipal($allowedPrincipals[0]);
                 $invoice->setDate(new DateTimeImmutable());
                 $invoice->setPeriodFrom((new DateTimeImmutable())->modify('first day of this month'));
                 $invoice->setPeriodTo((new DateTimeImmutable())->modify('last day of this month'));
+                $invoice->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type' => 'RE']));
                 $invoice->setLanguage($user->getLanguage()); // TODO: Abhängig vom Kunden, nicht vom Benutzer
                 $invoice->setCurrency($this->currencyRepository->findOneBy(['alpha3' => 'EUR'])); // TODO: Abhängig vom Kunden, nicht Standard
                 $invoice->setVatType('RC'); // TODO: Abhängig vom Kunden, nicht Standard
