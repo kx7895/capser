@@ -4,56 +4,109 @@ namespace App\Form;
 
 use App\Entity\AccountingPlanLedger;
 use App\Entity\Currency;
+use App\Entity\Customer;
 use App\Entity\Invoice;
 use App\Entity\InvoiceType;
-use App\Entity\User;
+use App\Entity\Principal;
+use App\Entity\TermOfPayment;
 use App\Form\Field\CustomDateType;
 use App\Form\Field\CustomerFieldType;
 use App\Form\Field\LanguageFieldType;
 use App\Form\Field\PrincipalFieldType;
 use App\Form\Field\TermOfPaymentFieldType;
+use App\Repository\AccountingPlanLedgerRepository;
 use App\Repository\CurrencyRepository;
 use App\Repository\InvoiceTypeRepository;
-use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfonycasts\DynamicForms\DependentField;
+use Symfonycasts\DynamicForms\DynamicFormBuilder;
 
 class InvoiceFormType extends AbstractType
 {
-    public function __construct(
-        private readonly Security $security,
-    ) {}
-
-    private function getAllowedPrincipals(): Collection
-    {
-        /** @var User $user */
-        $user = $this->security->getUser();
-        return $user->getPrincipals();
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder
-            /* RECHNUNGSSTELLER */
-            ->add('principal', PrincipalFieldType::class)
-            ->add('accountingPlanLedger', EntityType::class, [
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'class' => AccountingPlanLedger::class,
-                'choice_label' => 'id',
-                'label' => 'Buchungskonto',
-                'required' => false,
-            ])
+        $builder = new DynamicFormBuilder($builder);
 
-            /* RECHNUNGSEMPFÄNGER */
-            ->add('customer', CustomerFieldType::class)
+        /* RECHNUNGSSTELLER */
+        /* Mandant */
+        $builder
+            ->add('principal', PrincipalFieldType::class);
+        /* Buchungskonto */
+        $builder
+            ->addDependent('accountingPlanLedger', 'principal', function(DependentField $field, ?Principal $principal) {
+                $sharedOptions = [
+                    'label' => 'Buchungskonto',
+                    'row_attr' => [
+                        'class' => 'form-floating',
+                    ],
+                ];
+                if($principal === null)
+                    $field->add(TextType::class, [
+                        ...$sharedOptions,
+                        'disabled' => true,
+                    ]);
+                else
+                    $field->add(EntityType::class, [
+                        ...$sharedOptions,
+                        'class' => AccountingPlanLedger::class,
+                        'query_builder' => function (AccountingPlanLedgerRepository $repository) use ($principal) {
+                            $qb = $repository
+                                ->createQueryBuilder('aPL')
+                                ->join('aPL.accountingPlanGroup', 'aPLG')
+                                ->join('aPLG.accountingPlan', 'aP')
+                                ->join('aP.principal', 'p');
+                            $qb
+                                ->andWhere($qb->expr()->eq('p', ':principal'))
+                                ->setParameter('principal', $principal)
+                                ->orderBy('aPL.number', 'ASC');
+                            return $qb;
+                        },
+                        'choice_label' => function (AccountingPlanLedger $entity) {
+                            return $entity->getName().' (#'.$entity->getNumber().')';
+                        },
+                        'placeholder' => 'Bitte wählen...',
+                        'autocomplete' => true,
+                        'tom_select_options' => [
+                            'hideSelected' => true,
+                            'plugins' => [
+                                'dropdown_input',
+                                'clear_button',
+                            ],
+                        ],
+                        'required' => false,
+                    ]);
+            });
+
+        /* RECHNUNGSEMPFÄNGER */
+        /* Kunde */
+        $builder
+            ->addDependent('customer', 'principal', function(DependentField $field, ?Principal $principal) {
+                if($principal === null)
+                    $field->add(TextType::class, [
+                        'label' => 'Kunde <span class="text-muted">*</span>',
+                        'label_html' => true,
+                        'row_attr' => [
+                            'class' => 'form-floating',
+                        ],
+                        'disabled' => true,
+                    ]);
+                else
+                    $field
+                        ->add(CustomerFieldType::class, [
+                            'selectedPrincipal' => $principal,
+                            'choice_label' =>  function (Customer $entity) {
+                                return ($entity->getShortName() ?: $entity->getName()).' (#'.$entity->getLedgerAccountNumber().')';
+                            },
+                        ]);
+            });
+        /* Sprache, Kostenstelle (extern), Referenz (extern) */
+        $builder
             ->add('language', LanguageFieldType::class, [
                 'label' => 'Belegsprache <span class="text-danger">*</span>',
             ])
@@ -70,9 +123,10 @@ class InvoiceFormType extends AbstractType
                 ],
                 'label' => 'Referenz (extern)',
                 'required' => false,
-            ])
+            ]);
 
-            /* RECHNUNGSKOPF */
+        /* RECHNUNGSKOPF */
+        $builder
             ->add('invoiceType', EntityType::class, [
                 'class' => InvoiceType::class,
                 'query_builder' => function (InvoiceTypeRepository $repository) {
@@ -86,9 +140,8 @@ class InvoiceFormType extends AbstractType
                 'expanded' => true,
                 'multiple' => false,
                 'required' => true,
-                'attr' => [
-                    'data-controller' => 'radio-to-button',
-                ],
+                'choice_attr' => function() { return ['class' => 'btn-check']; },
+                'label_attr' => [ 'class' => 'btn btn-light me-1' ],
             ])
             ->add('date', CustomDateType::class)
             ->add('periodFrom', CustomDateType::class, [
@@ -106,9 +159,10 @@ class InvoiceFormType extends AbstractType
                 ],
                 'required' => false,
                 'label' => 'Einleitungstext'
-            ])
+            ]);
 
-            /* RECHNUNGSSTAMM */
+        /* RECHNUNGSSTAMM */
+        $builder
             ->add('currency', EntityType::class, [
                 'class' => Currency::class,
                 'query_builder' => function (CurrencyRepository $repository) {
@@ -116,33 +170,32 @@ class InvoiceFormType extends AbstractType
                         ->orderBy('currency.name', 'ASC');
                 },
                 'choice_label' => 'name',
-                'label' => 'Währung <span class="text-danger">*</span>',
-                'label_html' => true,
+                'label' => false,
                 'expanded' => true,
-                'attr' => [
-                    'data-controller' => 'radio-to-button',
-                ],
-            ])
-            ->add('vatRate', ChoiceType::class, [
-                'choices' => Invoice::VATRATES,
-                'expanded' => true,
-                'label' => 'MwSt-Satz <span class="text-danger">*</span>',
-                'label_html' => true,
-                'attr' => [
-                    'data-controller' => 'radio-to-button',
-                ],
+                'choice_attr' => function() { return ['class' => 'btn-check']; },
+                'label_attr' => [ 'class' => 'btn btn-light me-1', ],
+                'required' => true,
             ])
             ->add('vatType', ChoiceType::class, [
                 'choices' => Invoice::VATTYPES,
+                'label' => false,
                 'expanded' => true,
-                'label' => 'MwSt-Art <span class="text-danger">*</span>',
-                'label_html' => true,
-                'attr' => [
-                    'data-controller' => 'radio-to-button',
-                ],
+                'choice_attr' => function() { return ['class' => 'btn-check']; },
+                'label_attr' => ['class' => 'btn btn-light me-1 mb-2', ],
+                'required' => true,
             ])
+            ->add('vatRate', ChoiceType::class, [
+                'choices' => Invoice::VATRATES,
+                'label' => false,
+                'expanded' => true,
+                'choice_attr' => function() { return ['class' => 'btn-check']; },
+                'label_attr' => ['class' => 'btn btn-light me-1 mb-2', ],
+                'required' => true,
+            ]);
 
-            /* RECHNUNGSFUSS */
+        /* RECHNUNGSFUSS */
+        /* Einleitungstext */
+        $builder
             ->add('outroText', TextareaType::class, [
                 'row_attr' => [
                     'class' => 'form-floating',
@@ -152,9 +205,28 @@ class InvoiceFormType extends AbstractType
                 ],
                 'required' => false,
                 'label' => 'Nachbemerkung'
-            ])
-            ->add('termOfPayment', TermOfPaymentFieldType::class)
-        ;
+            ]);
+        /* Zahlungsbedingung */
+        $builder
+            ->addDependent('termOfPayment', 'principal', function(DependentField $field, ?Principal $principal) {
+                if($principal === null)
+                    $field->add(TextType::class, [
+                        'label' => 'Zahlungsbedingung <span class="text-muted">*</span>',
+                        'label_html' => true,
+                        'row_attr' => [
+                            'class' => 'form-floating',
+                        ],
+                        'disabled' => true,
+                    ]);
+                else
+                    $field
+                        ->add(TermOfPaymentFieldType::class, [
+                            'selectedPrincipal' => $principal,
+                            'choice_label' =>  function (TermOfPayment $entity) {
+                                return $entity->getName().' ('.$entity->getDueDays().' Tage)';
+                            },
+                        ]);
+            });
     }
 
     public function configureOptions(OptionsResolver $resolver): void

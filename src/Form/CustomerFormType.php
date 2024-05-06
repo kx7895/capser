@@ -42,11 +42,10 @@ class CustomerFormType extends AbstractType
                 },
                 'expanded' => true,
                 'multiple' => false,
-                'required' => true,
                 'label' => false,
-                'attr' => [
-                    'data-controller' => 'radio-to-button',
-                ],
+                'choice_attr' => function() {  return ['class' => 'btn-check']; },
+                'label_attr' => ['class' => 'btn btn-light me-2', ],
+                'required' => true,
             ])
             ->add('name', TextType::class, [
                 'row_attr' => [

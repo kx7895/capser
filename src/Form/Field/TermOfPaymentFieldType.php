@@ -2,10 +2,12 @@
 
 namespace App\Form\Field;
 
+use App\Entity\Principal;
 use App\Entity\TermOfPayment;
 use App\Entity\User;
 use App\Repository\TermOfPaymentRepository;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
@@ -33,14 +35,7 @@ class TermOfPaymentFieldType extends AbstractType
                 'class' => 'form-floating',
             ],
             'class' => TermOfPayment::class,
-            'query_builder' => function (TermOfPaymentRepository $repository) use ($allowedPrincipals) {
-                return $repository->createQueryBuilder('termOfPayment')
-                    ->join('termOfPayment.principal', 'principal')
-                    ->andWhere('principal IN (:allowedPrincipals)')
-                    ->orderBy('principal.name', 'ASC')
-                    ->addOrderBy('termOfPayment.name', 'ASC')
-                    ->setParameter('allowedPrincipals', $allowedPrincipals);
-            },
+            'selectedPrincipal' => null,
             'choice_label' =>  function (TermOfPayment $termOfPayment) {
                 return $termOfPayment->getPrincipal()->getShortName().' » '.$termOfPayment->getName().' ('.$termOfPayment->getDueDays().' Tage)';
             },
@@ -57,6 +52,29 @@ class TermOfPaymentFieldType extends AbstractType
             ],
             'required' => true,
         ]);
+
+        $resolver->setNormalizer('query_builder', function ($options) use ($allowedPrincipals) {
+            $repository = $options['em']->getRepository(TermOfPayment::class);
+
+            return $this->createTermOfPaymentQueryBuilder($repository, $allowedPrincipals, $options['selectedPrincipal']);
+        });
+    }
+
+    private function createTermOfPaymentQueryBuilder(TermOfPaymentRepository $repository, Collection $allowedPrincipals, ?Principal $principal): QueryBuilder
+    {
+        $qb = $repository->createQueryBuilder('termOfPayment')
+            ->join('termOfPayment.principal', 'principal')
+            ->andWhere('principal IN (:allowedPrincipals)')
+            ->orderBy('principal.name', 'ASC')
+            ->addOrderBy('termOfPayment.name', 'ASC')
+            ->setParameter('allowedPrincipals', $allowedPrincipals);
+
+        if($principal) {
+            $qb->andWhere('termOfPayment.principal = :principal')
+                ->setParameter('principal', $principal);
+        }
+
+        return $qb;
     }
 
     public function getParent(): string

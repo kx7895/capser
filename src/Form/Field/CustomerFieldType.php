@@ -3,9 +3,11 @@
 namespace App\Form\Field;
 
 use App\Entity\Customer;
+use App\Entity\Principal;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
@@ -33,16 +35,9 @@ class CustomerFieldType extends AbstractType
                 'class' => 'form-floating',
             ],
             'class' => Customer::class,
-            'query_builder' => function (CustomerRepository $repository) use ($allowedPrincipals) {
-                return $repository->createQueryBuilder('customer')
-                    ->join('customer.principal', 'principal')
-                    ->andWhere('principal IN (:allowedPrincipals)')
-                    ->orderBy('principal.name', 'ASC')
-                    ->addOrderBy('customer.name', 'ASC')
-                    ->setParameter('allowedPrincipals', $allowedPrincipals);
-            },
-            'choice_label' =>  function (Customer $customer) {
-                return $customer->getPrincipal()->getShortName().' » '.$customer->getName();
+            'selectedPrincipal' => null,
+            'choice_label' =>  function (Customer $entity) {
+                return $entity->getPrincipal()->getShortName().' » '.($entity->getShortName() ?: $entity->getName()).' (#'.$entity->getLedgerAccountNumber().')';
             },
             'label' => 'Kunde <span class="text-danger">*</span>',
             'label_html' => true,
@@ -57,6 +52,29 @@ class CustomerFieldType extends AbstractType
             ],
             'required' => true,
         ]);
+
+        $resolver->setNormalizer('query_builder', function ($options) use ($allowedPrincipals) {
+            $repository = $options['em']->getRepository(Customer::class);
+
+            return $this->createCustomerQueryBuilder($repository, $allowedPrincipals, $options['selectedPrincipal']);
+        });
+    }
+
+    private function createCustomerQueryBuilder(CustomerRepository $repository, Collection $allowedPrincipals, ?Principal $principal): QueryBuilder
+    {
+        $qb = $repository->createQueryBuilder('customer')
+            ->join('customer.principal', 'principal')
+            ->andWhere('principal IN (:allowedPrincipals)')
+            ->orderBy('principal.name', 'ASC')
+            ->addOrderBy('customer.name', 'ASC')
+            ->setParameter('allowedPrincipals', $allowedPrincipals);
+
+        if($principal) {
+            $qb->andWhere('customer.principal = :principal')
+                ->setParameter('principal', $principal);
+        }
+
+        return $qb;
     }
 
     public function getParent(): string

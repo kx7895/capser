@@ -2,10 +2,6 @@
 # CHANGED BOOTSTRAP/SBADMIN
 --------------------------------------------------------------*/
 
-.toast {
-    transition-: opacity 0.4s ease;
-}
-
 /* SBAdmin Custom - Logo im Menü (Kopf) verschönern */
 .topnav .navbar-brand {
     font-family: "Raleway", sans-serif;
@@ -87,7 +83,10 @@
 .ts-dropdown .active {
     color: #343a40 !important;
 }
-/* Fix in Zusammenhang mit: https://github.com/orchidjs/tom-select/issues/579 */
+.ts-control {
+    color: #69707a !important;
+}
+    /* Fix in Zusammenhang mit: https://github.com/orchidjs/tom-select/issues/579 */
 .form-floating .ts-control {
     padding-top: 1.625rem;
     padding-bottom: .625rem;

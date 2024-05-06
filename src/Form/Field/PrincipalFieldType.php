@@ -39,8 +39,8 @@ class PrincipalFieldType extends AbstractType
                     ->setParameter('principals', $allowedPrincipals)
                     ->orderBy('principal.name', 'ASC');
             },
-            'choice_label' => function (Principal $principal) {
-                return $principal->getName().($principal->getShortName() ? ' ('.$principal->getShortName().')' : '');
+            'choice_label' =>  function (Principal $entity) {
+                return ($entity->getShortName() ?: $entity->getName()).' (#'.$entity->getId().')';
             },
             'label' => 'Mandant <span class="text-danger">*</span>',
             'label_html' => true,

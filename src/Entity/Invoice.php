@@ -377,7 +377,7 @@ class Invoice
         return $this->date;
     }
 
-    public function setDate(DateTimeInterface $date): static
+    public function setDate(?DateTimeInterface $date): static
     {
         $this->date = $date;
 
@@ -413,7 +413,7 @@ class Invoice
         return $this->periodFrom;
     }
 
-    public function setPeriodFrom(DateTimeInterface $periodFrom): static
+    public function setPeriodFrom(?DateTimeInterface $periodFrom): static
     {
         $this->periodFrom = $periodFrom;
 
@@ -425,7 +425,7 @@ class Invoice
         return $this->periodTo;
     }
 
-    public function setPeriodTo(DateTimeInterface $periodTo): static
+    public function setPeriodTo(?DateTimeInterface $periodTo): static
     {
         $this->periodTo = $periodTo;
 
