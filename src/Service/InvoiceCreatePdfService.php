@@ -194,6 +194,8 @@ class InvoiceCreatePdfService
     public function addPdfTableBodyRow(array $values): void
     {
         $this->pdf->SetFont('Arial', '', 9);
+        if($this->positionsCounter != 0)
+            $this->pdf->Ln(3);
         $yAfterMultiCell = $this->pdf->GetY(); // just as fallback, never required or used
         $i = 0;
         foreach($values as $value) {
@@ -201,7 +203,7 @@ class InvoiceCreatePdfService
             if($i == 0) {
                 $xBeforeMultiCell = $this->pdf->GetX();
                 $yBeforeMultiCell = $this->pdf->GetY();
-                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value));
+                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value), 0, $align);
                 $yAfterMultiCell = $this->pdf->GetY();
                 $this->pdf->SetXY($xBeforeMultiCell+self::WIDTHS[$i], $yBeforeMultiCell);
             } else {
@@ -213,7 +215,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         $this->positionsCounter++;
 
-        if($this->positionsCounter == 19) {
+        if($this->positionsCounter == 5) {
             $this->addPdfFooter();
 
             $this->pdf->AddPage();
