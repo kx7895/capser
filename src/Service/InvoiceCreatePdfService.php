@@ -273,7 +273,14 @@ class InvoiceCreatePdfService
         $x = $this->pdf->GetX();
         $y = $this->pdf->GetY();
 
-        $this->pdf->MultiCell(60, 3, utf8_decode($this->lang == 'DE' ? $this->principal->getFooterColumn1() : $this->principal->getFooterColumn1EN()), 'T');
+        $footerColumn1 = null;
+        if($this->receiver->getSpecialFooterColumn1())
+            $footerColumn1 = $this->receiver->getSpecialFooterColumn1();
+        elseif($this->lang == 'DE')
+            $footerColumn1 = $this->principal->getFooterColumn1();
+        else
+            $footerColumn1 = $this->principal->getFooterColumn1En();
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn1), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
@@ -281,12 +288,26 @@ class InvoiceCreatePdfService
         $x = $this->pdf->GetX();
         $y = $this->pdf->GetY();
 
-        $this->pdf->MultiCell(60, 3, utf8_decode($this->lang == 'DE' ? $this->principal->getFooterColumn2() : $this->principal->getFooterColumn2EN()), 'T');
+        $footerColumn2 = null;
+        if($this->receiver->getSpecialFooterColumn2())
+            $footerColumn2 = $this->receiver->getSpecialFooterColumn2();
+        elseif($this->lang == 'DE')
+            $footerColumn2 = $this->principal->getFooterColumn2();
+        else
+            $footerColumn2 = $this->principal->getFooterColumn2En();
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn2), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
 
-        $this->pdf->MultiCell(60, 3, utf8_decode($this->lang == 'DE' ? $this->principal->getFooterColumn3() : $this->principal->getFooterColumn3EN()), 'T');
+        $footerColumn3 = null;
+        if($this->receiver->getSpecialFooterColumn3())
+            $footerColumn3 = $this->receiver->getSpecialFooterColumn3();
+        elseif($this->lang == 'DE')
+            $footerColumn3 = $this->principal->getFooterColumn3();
+        else
+            $footerColumn3 = $this->principal->getFooterColumn3En();
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn3), 'T');
 
         $this->pdf->SetTextColor(0, 0, 0);
     }
