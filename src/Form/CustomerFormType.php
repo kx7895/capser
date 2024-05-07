@@ -10,6 +10,7 @@ use App\Entity\CustomerType;
 use App\Entity\Language;
 use App\Entity\Principal;
 use App\Entity\TermOfPayment;
+use App\Entity\User;
 use App\Repository\AccountingPlanLedgerRepository;
 use App\Repository\CountryRepository;
 use App\Repository\CurrencyRepository;
@@ -17,7 +18,9 @@ use App\Repository\CustomerTypeRepository;
 use App\Repository\LanguageRepository;
 use App\Repository\PrincipalRepository;
 use App\Repository\TermOfPaymentRepository;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
@@ -30,8 +33,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class CustomerFormType extends AbstractType
 {
+    public function __construct(
+        private readonly Security $security,
+    ) {}
+
+    private function getAllowedPrincipals(): Collection
+    {
+        /** @var User $user */
+        $user = $this->security->getUser();
+        return $user->getPrincipals();
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $allowedPrincipals = $this->getAllowedPrincipals();
+
         $builder
             /* BASISANGABEN */
             ->add('customerType', EntityType::class, [
@@ -76,9 +92,14 @@ class CustomerFormType extends AbstractType
                     'class' => 'form-floating',
                 ],
                 'class' => Principal::class,
-                'query_builder' => function (PrincipalRepository $repository) { // TODO: Security - nur eigene Principals anzeigen
-                    return $repository->createQueryBuilder('entity')
-                        ->orderBy('entity.name', 'ASC');
+                'query_builder' => function (PrincipalRepository $repository) use ($allowedPrincipals) {
+                    return $repository->createQueryBuilder('principal')
+                        ->where('principal IN (:allowedPrincipals)')
+                        ->setParameter('allowedPrincipals', $allowedPrincipals)
+                        ->orderBy('principal.name', 'ASC');
+                },
+                'choice_label' =>  function (Principal $principal) {
+                    return ($principal->getShortName() ?: $principal->getName()).' (#'.$principal->getId().')';
                 },
                 'label' => 'Mandant <span class="text-danger">*</span>',
                 'label_html' => true,

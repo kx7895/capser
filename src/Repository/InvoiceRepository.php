@@ -1,9 +1,10 @@
-<?php
+<?php /** @noinspection PhpMultipleClassDeclarationsInspection */
 
 namespace App\Repository;
 
 use App\Entity\Invoice;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
@@ -25,34 +26,41 @@ class InvoiceRepository extends ServiceEntityRepository
         parent::__construct($registry, Invoice::class);
     }
 
-    public function findBySearch(?string $query, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
+    public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
     {
 
-        $qb = $this->createQueryBuilder('c');
+        $qb = $this->createQueryBuilder('i');
+
+        $qb
+            ->innerJoin('i.principal', 'p')
+            ->where('p IN (:allowedPrincipals)')
+            ->setParameter('allowedPrincipals', $allowedPrincipals);
 
         if($query) {
-            $qb->andWhere('c.number LIKE :queryLike')
-                ->orWhere('c.id = :queryExact')
-                ->orWhere('customer.name LIKE :queryLike')
-                ->orWhere('customer.shortName LIKE :queryLike')
-                ->setParameter('queryLike', '%' . $query . '%')
-                ->setParameter('queryExact', $query)
-                ->join('c.customer', 'customer');
+            $qb
+                ->andWhere($qb->expr()->orX(
+                    $qb->expr()->eq('i.id', ':queryExact'),
+                    $qb->expr()->like('i.number', ':queryLike'),
+                    $qb->expr()->like('i.hCustomerName', ':queryLike'),
+                    $qb->expr()->like('i.hCustomerShortName', ':queryLike'),
+                ))
+                ->setParameter('queryLike', '%'.$query.'%')
+                ->setParameter('queryExact', $query) ;
         }
 
         // Nur für bestimmte Such-Parameter gibt es eine Definition, ansonsten wird schlicht nichts angewandt
         foreach($queryParameters as $field => $value) {
             if($field == 'principal') {
-                $qb->andWhere('c.principal = :principal')
+                $qb->andWhere('i.principal = :principal')
                     ->setParameter(':principal', $value);
             } elseif($field == 'customer') {
-                $qb->andWhere('c.customer = :customer')
+                $qb->andWhere('i.customer = :customer')
                     ->setParameter(':customer', $value);
             }
         }
 
         if($sort)
-            $qb->orderBy('c.'.$sort, $direction);
+            $qb->orderBy('i.'.$sort, $direction);
 
         return $qb;
     }

@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMultipleClassDeclarationsInspection */
 
 namespace App\Repository;
 
@@ -23,25 +23,32 @@ class CustomerRepository extends ServiceEntityRepository
         parent::__construct($registry, Customer::class);
     }
 
-    public function findBySearch(?string $query, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
+    public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
     {
         $qb = $this->createQueryBuilder('c');
 
+        $qb
+            ->innerJoin('c.principal', 'p')
+            ->where('p IN (:allowedPrincipals)')
+            ->setParameter('allowedPrincipals', $allowedPrincipals);
+
         if($query) {
-            $qb->orWhere('c.name LIKE :queryLike')
-                ->orWhere('c.shortName LIKE :queryLike')
-                ->orWhere('c.addressLine1 LIKE :queryLike')
-                ->orWhere('c.addressLine2 LIKE :queryLike')
-                ->orWhere('c.addressLine3 LIKE :queryLike')
-                ->orWhere('c.addressLine4 LIKE :queryLike')
-                ->orWhere('addressLineCountry.name LIKE :queryLike')
-                ->orWhere('c.ledgerAccountNumber = :queryExact')
-                ->orWhere('c.vatId = :queryLike')
-                ->orWhere('c.id = :queryExact')
-                ->setParameter('queryLike', '%' . $query . '%')
-                ->setParameter('queryExact', $query)
+            $qb
                 ->leftJoin('c.addressLineCountry', 'addressLineCountry')
-            ;
+                ->andWhere($qb->expr()->orX(
+                    $qb->expr()->like('c.name', ':queryLike'),
+                    $qb->expr()->like('c.shortName', ':queryLike'),
+                    $qb->expr()->like('c.addressLine1', ':queryLike'),
+                    $qb->expr()->like('c.addressLine2', ':queryLike'),
+                    $qb->expr()->like('c.addressLine3', ':queryLike'),
+                    $qb->expr()->like('c.addressLine4', ':queryLike'),
+                    $qb->expr()->like('c.vatId', ':queryLike'),
+                    $qb->expr()->like('addressLineCountry.name', ':queryLike'),
+                    $qb->expr()->eq('c.id', ':queryExact'),
+                    $qb->expr()->eq('c.ledgerAccountNumber', ':queryExact'),
+                ))
+                ->setParameter('queryLike', '%'.$query.'%')
+                ->setParameter('queryExact', $query) ;
         }
 
         // Nur für bestimmte Such-Parameter gibt es eine Definition, ansonsten wird schlicht nichts angewandt
@@ -52,7 +59,7 @@ class CustomerRepository extends ServiceEntityRepository
             }
         }
 
-        if ($sort) {
+        if($sort) {
             $qb->orderBy('c.' . $sort, $direction);
         }
 

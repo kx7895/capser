@@ -12,7 +12,7 @@ class DataTableService {
 
     public function validateSort(string $selectedSort, array $availableSorts, string $defaultSort = null)
     {
-        return in_array($selectedSort, $availableSorts) ? $selectedSort : ($defaultSort ? $defaultSort : $availableSorts[0]);
+        return in_array($selectedSort, $availableSorts) ? $selectedSort : ($defaultSort ?: $availableSorts[0]);
     }
 
     public function validatePrincipalSelect(?Principal $selectedPrincipal, Collection $allowedPrincipals): ?Principal
@@ -33,16 +33,16 @@ class DataTableService {
         return null;
     }
 
-    public function validateSortDirection(string $selectedSortDirection, string $defaultSortDirection = 'ASC')
+    public function validateSortDirection(string $selectedSortDirection, string $defaultSortDirection = 'ASC'): string
     {
         $availableSortOrders = ['ASC', 'DESC'];
         return in_array($selectedSortDirection, $availableSortOrders) ? $selectedSortDirection : $defaultSortDirection;
     }
 
-    public function buildDataTable($repository, ?string $query, array $queryParameters, string $sort, string $sortDirection, int $page, int $itemsPerPage = 10)
+    public function buildDataTable($repository, Collection $allowedPrincipals, ?string $query, array $queryParameters, string $sort, string $sortDirection, int $page, int $itemsPerPage = 10): Pagerfanta
     {
         return Pagerfanta::createForCurrentPageWithMaxPerPage(
-            new QueryAdapter($repository->findBySearch($query, $queryParameters, $sort, $sortDirection), true, true),
+            new QueryAdapter($repository->findBySearch($query, $allowedPrincipals, $queryParameters, $sort, $sortDirection), true, true),
             $page,
             $itemsPerPage
         );

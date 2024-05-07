@@ -75,7 +75,7 @@ class InvoiceController extends AbstractController
             $queryPrincipal = $this->principalRepository->find($queryPrincipalId);
             if(!$queryPrincipal)
                 return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals); // TODO: Security - vielleicht als Voters?
+            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals);
         }
 
         $queryCustomer = null;
@@ -83,7 +83,7 @@ class InvoiceController extends AbstractController
             $queryCustomer = $this->customerRepository->find($queryCustomerId);
             if(!$queryCustomer)
                 return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validateCustomerSelect($queryCustomer, $allowedPrincipals); // TODO: Security - vielleicht als Voters?
+            $queryPrincipal = $this->dataTableService->validateCustomerSelect($queryCustomer, $allowedPrincipals);
         }
 
         $queryParameters = [];
@@ -92,8 +92,7 @@ class InvoiceController extends AbstractController
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
 
-        // TODO: Security - nur Invoices für Customers von eigenen Principals! Voters!
-        $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
+        $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
 
         return $this->render('app/invoice/index.html.twig', [
             'invoices' => $invoices,
