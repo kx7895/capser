@@ -155,6 +155,12 @@
                                             <i class="fa-regular fa-square-caret-right"></i>
                                         </a>
                                     {% else %}
+                                        <a href="/{{ invoice.storageFilename }}" target="_blank">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </a>
+                                        <a href="/{{ invoice.storageFilename }}" download="{{ invoice.niceFilename }}">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
                                         <a href="{{ path('app_invoice_show', { 'id': invoice.id, ...queryParams }) }}" target="_top">
                                             <i class="fa-solid fa-circle-info"></i>
                                         </a>
