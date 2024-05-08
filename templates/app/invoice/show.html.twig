@@ -45,6 +45,12 @@
                         <div class="card-body">
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6">Basis</legend>
+                                {% if invoice.cancelled %}
+                                    <div class="mb-2">
+                                        {{ invoice.cancelledLabel|raw }}
+                                    </div>
+                                {% endif %}
+
                                 {{ _self.listElement('Art', invoice.invoiceType.type ~ ' (' ~ invoice.invoiceType.name ~ ')') }}
 
                                 {% if draft %}
@@ -60,6 +66,16 @@
                                 {% else %}
                                     {{ _self.listElement('Leistung', invoice.periodFrom|date('d.m.Y') ~ ' - ' ~ invoice.periodTo|date('d.m.Y')) }}
                                 {% endif %}
+                                {% if invoice.invoiceType.type == 'RK' and invoice.invoiceReference %}
+                                    <div class="mb-2 row">
+                                        <div class="col-4 fw-bold">
+                                            Referenz:
+                                        </div>
+                                        <div class="col-8">
+                                            <a href="{{ path('app_invoice_show', { id: invoice.invoiceReference.id, ...app.request.query.all()  }) }}">{{ invoice.invoiceReference.invoiceType.type }} {{ invoice.invoiceReference.number }}</a>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </fieldset>
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6">Rechnungssteller</legend>
@@ -72,8 +88,8 @@
                                 {{ _self.listElement('Belegsprache', invoice.language.alpha3) }}
                                 {{ _self.listElement('E-Mail-Zustellung', invoice.sentLabel) }}
                                 {{ _self.listElement('Zahlungserinnerung', invoice.remindedLabel) }}
-                                {{ _self.listElement('Kostenstelle (ext.)', invoice.costcenterExternal) }}
-                                {{ _self.listElement('Referenz (ext.)', invoice.referenceExternal) }}
+                                {{ _self.listElement('Kostenstelle', invoice.costcenterExternal) }}
+                                {{ _self.listElement('Referenz', invoice.referenceExternal) }}
                             </fieldset>
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6">Belegsummen {{ invoice.paymentLabel|raw }}</legend>
@@ -87,9 +103,9 @@
                                 {{ _self.listElement('Brutto-Betrag', invoice.amountGross|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
                                 {{ _self.listElement('Steuersatz', invoice.vatRate|number_format(2, ',', '.') ~ ' %') }}
                                 {% if invoice.vatType == 'REG' %}
-                                    {{ _self.listElement('Steuerverfahren', 'Regulär') }}
+                                    {{ _self.listElement('Steuerart', 'Regulär') }}
                                 {% else %}
-                                    {{ _self.listElement('Steuerverfahren', invoice.vatType) }}
+                                    {{ _self.listElement('Steuerart', invoice.vatType) }}
                                 {% endif %}
                             </fieldset>
                         </div>

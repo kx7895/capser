@@ -370,19 +370,35 @@ class InvoiceController extends AbstractController
         return $this->invoiceActionHelper($invoice, $request, 'remind');
     }
 
+    #[Route('/{id}/cancel', name: 'cancel', methods: ['GET'])]
+    public function cancelInvoice(Invoice $invoice, Request $request): Response
+    {
+        // TODO: Security - nur Invoices für eigene Principals! Voters!
+        return $this->invoiceActionHelper($invoice, $request, 'cancel');
+    }
+
     private function invoiceActionHelper(Invoice $invoice, Request $request, string $action): RedirectResponse
     {
+        $success = $successMessage = $failMessage = null;
+
         if($action == 'mail') {
-            if($this->invoiceCreateService->sendToCustomer($invoice))
-                $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Beleg wurde erfolgreich wurde erfolgreich per E-Mail verschickt.']);
-            else
-                $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Beleg konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.']);
+            $success = $this->invoiceCreateService->sendToCustomer($invoice);
+            $successMessage = 'Der Beleg wurde erfolgreich wurde erfolgreich per E-Mail verschickt.';
+            $failMessage = 'Der Beleg konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.';
         } elseif($action == 'remind') {
-            if($this->invoiceCreateService->sendToCustomer($invoice, true))
-                $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Die Zahlungserinnerung wurde erfolgreich wurde erfolgreich per E-Mail verschickt.']);
-            else
-                $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Die Zahlungserinnerung konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.']);
+            $success = $this->invoiceCreateService->sendToCustomer($invoice, true);
+            $successMessage = 'Die Zahlungserinnerung wurde erfolgreich wurde erfolgreich per E-Mail verschickt.';
+            $failMessage = 'Die Zahlungserinnerung konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.';
+        } elseif($action == 'cancel') {
+            $success = $this->invoiceCreateService->cancel($invoice);
+            $successMessage = 'Die Rechnung wurde erfolgreich storniert.';
+            $failMessage = 'Die Rechnung konnte nicht storniert werden, es ist ein Fehler aufgetreten.';
         }
+
+        if($success && $successMessage)
+            $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), $successMessage]);
+        elseif($failMessage)
+            $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), $failMessage]);
 
         return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
     }
@@ -429,12 +445,6 @@ class InvoiceController extends AbstractController
         }
 
         return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
-    }
-
-    #[Route('/{id}/cancel', name: 'cancel', methods: ['GET'])]
-    public function cancel(Invoice $invoice, Request $request): Response
-    {
-        return $this->render('app/layout/betatest.html.twig');
     }
 
     #[Route('/{id}/copy', name: 'copy', methods: ['GET'])]

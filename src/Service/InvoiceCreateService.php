@@ -6,7 +6,9 @@ use App\Entity\Customer;
 use App\Entity\Invoice;
 use App\Entity\InvoiceMailing;
 use App\Entity\InvoiceMailingRecipient;
+use App\Entity\InvoicePosition;
 use App\Repository\InvoiceRepository;
+use App\Repository\InvoiceTypeRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -33,7 +35,7 @@ class InvoiceCreateService
         private readonly LoggerInterface        $logger,
         private readonly MailerInterface        $mailer,
         private readonly string                 $mailer_email,
-        private readonly string                 $mailer_name,
+        private readonly string                 $mailer_name, private readonly InvoiceTypeRepository $invoiceTypeRepository,
     ) {}
 
     /**
@@ -81,7 +83,7 @@ class InvoiceCreateService
         $lang = $invoice->getLanguage()->getAlpha2();
         $type = $invoice->getInvoiceType()->getType();
 
-        if(in_array($type, ['CR', 'RV', 'GU', 'ST'])) {
+        if(in_array($type, ['CR', 'RV', 'GU', 'ST', 'RK'])) {
             return ($lang == 'DE' ? 'Die Verrechnung dieser Gutschrift erfolgt mit der nächstmöglichen Rechnung.' : 'We settle this amount against your next invoice.');
         } elseif($invoice->getDate() == $invoice->getDue()) {
             return ($lang == 'DE' ? 'Der Gesamtbetrag ist sofort zur Zahlung fällig. Bitte überweisen Sie den Gesamtbetrag in _CURRENCY_ auf das unten angegebene Konto.' : 'The total amount is due for immediate payment. Please transfer the total amount in _CURRENCY_ to the account indicated below.');
@@ -300,6 +302,88 @@ Service: '.$this->mailer_name.' Mailing System ('.$this->mailer_email.')');
         $this->entityManager->persist($invoiceMailing);
 //        $this->entityManager->flush();
         // TODO: Prüfe ob hier ein flush nötig ist, oder ob dies immer in den aufrufenden Funktionen erfolgen kann.
+    }
+
+    public function cancel(Invoice $invoice): bool
+    {
+        if($invoice->getInvoiceType()->getType() != 'RE' || $invoice->isCancelled()) {
+            $this->logger->info('Erstellung Rechnungskorrektur abgebrochen, ID #'.$invoice->getId().'.');
+            return false;
+        }
+
+        $credit = new Invoice();
+        $credit->setInvoiceReference($invoice);
+        $credit->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type'=>'RK']));
+        $credit->setPrincipal($invoice->getPrincipal());
+        $credit->setCustomer($invoice->getCustomer());
+        $credit->setDate(new DateTimeImmutable());
+        $credit->setNumber($this->buildInvoiceNumber((int)$credit->getPrincipal()->getFibuDocumentNumberRange()));
+        $credit->setPeriodFrom($invoice->getPeriodFrom());
+        $credit->setPeriodTo($invoice->getPeriodTo());
+        $credit->setDue(new DateTimeImmutable());
+        $credit->setVatType($invoice->getVatType());
+        $credit->setVatRate($invoice->getVatRate());
+        $credit->setAmountNet($invoice->getAmountNet());
+        $credit->setAmountGross($invoice->getAmountGross());
+        $credit->setCostcenterExternal($invoice->getCostcenterExternal());
+        $credit->setReferenceExternal($invoice->getReferenceExternal());
+        $credit->setNiceFilename($this->buildInvoiceNiceFilename($credit));
+        $credit->setStorageFilename($this->buildInvoiceStorageFilename($credit));
+        $credit->setCreatedAt(new DateTimeImmutable());
+        $credit->setCreatedBy($this->security->getUser());
+        $credit->setHCustomerName($credit->getCustomer()->getName());
+        $credit->setHCustomerShortName($credit->getCustomer()->getShortName());
+        $credit->setHPrincipalName($credit->getPrincipal()->getName());
+        $credit->setHPrincipalShortName($credit->getPrincipal()->getShortName());
+        $credit->setLanguage($invoice->getLanguage());
+        $credit->setCurrency($invoice->getCurrency());
+        $credit->setAccountingPlanLedger($invoice->getAccountingPlanLedger());
+        $credit->setTermOfPayment($invoice->getTermOfPayment());
+        $this->entityManager->persist($credit);
+
+        $creditPosition = new InvoicePosition();
+        $creditPosition->setText(($invoice->getLanguage()->getAlpha2() == 'DE' ? 'Gutschrift zur Rechnung' : 'Cancellation for invoice').' '.$invoice->getInvoiceType()->getType().' '.$invoice->getNumber());
+        $creditPosition->setAmount(1);
+        $creditPosition->setPrice($invoice->getAmountNet());
+        $credit->addInvoicePosition($creditPosition);
+
+        $invoice->setCancelled(true);
+        $this->entityManager->persist($invoice);
+
+        // PDF CREATION
+        $pdfCreator = new InvoiceCreatePdfService($credit);
+
+        $pdfCreator->addPdfHeaderAddress();
+        $pdfCreator->addPdfHeaderInvoiceOverview();
+
+        $pdfCreator->addPdfTableHeadRow();
+
+        foreach($credit->getInvoicePositions() as $position) {
+            $unit = '';
+            $pdfCreator->addPdfTableBodyRow([
+                $position->getText(),
+                number_format($position->getAmount(), 2, ',', '.'),
+                $unit,
+                number_format($position->getPrice(), 2, ',', '.'),
+                number_format($position->getPrice() * $position->getAmount(), 2, ',', '.')
+            ]);
+        }
+
+        $pdfCreator->addPdfTableSumRows($credit->getAmountNet(), $credit->getVatRate(), $credit->getAmountGross());
+
+        $pdfCreator->addPdfConditions([$this->getVatSentence($credit), $this->getPaymentSentence($credit), $credit->getOutroText()]);
+        $pdfCreator->addPdfFooter();
+
+        $pdf = $pdfCreator->getPdf();
+
+        $pdf->Output('F', $this->buildFullPathToFile($credit->getStorageFilename()));
+        unset($pdf);
+
+        $this->sendToFibu($credit);
+
+        $this->entityManager->flush();
+
+        return true;
     }
 
 }

@@ -640,6 +640,14 @@ class Invoice
         return $this;
     }
 
+    public function getCancelledLabel(): string
+    {
+        if($this->isCancelled())
+            return '<span class="badge text-bg-warning">Storniert</span>';
+        else
+            return '';
+    }
+
     public function getNiceFilename(): ?string
     {
         return $this->niceFilename;
