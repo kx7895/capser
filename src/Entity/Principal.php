@@ -726,11 +726,6 @@ class Principal
         return $this;
     }
 
-    public function __toString(): string
-    {
-        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
-    }
-
     /**
      * @return Collection<int, Unit>
      */
@@ -759,5 +754,10 @@ class Principal
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName()).' (#'.$this->getId().')';
     }
 }

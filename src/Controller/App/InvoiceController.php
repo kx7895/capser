@@ -2,7 +2,6 @@
 
 namespace App\Controller\App;
 
-use App\Entity\Customer;
 use App\Entity\Invoice;
 use App\Entity\InvoiceAttachment;
 use App\Entity\User;

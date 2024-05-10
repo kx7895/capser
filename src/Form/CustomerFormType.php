@@ -98,9 +98,6 @@ class CustomerFormType extends AbstractType
                         ->setParameter('allowedPrincipals', $allowedPrincipals)
                         ->orderBy('principal.name', 'ASC');
                 },
-                'choice_label' =>  function (Principal $principal) {
-                    return ($principal->getShortName() ?: $principal->getName()).' (#'.$principal->getId().')';
-                },
                 'label' => 'Mandant <span class="text-danger">*</span>',
                 'label_html' => true,
                 'placeholder' => 'Bitte wählen...',

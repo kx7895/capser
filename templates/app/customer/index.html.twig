@@ -56,7 +56,7 @@
                                             <option value="">Alle Mandanten</option>
                                             {% for principal in allowedPrincipals %}
                                                 <option value="{{ principal.id }}" {% if queryPrincipal == principal %}selected{% endif %}>
-                                                    {{ principal.name }}{% if principal.shortName %} ({{ principal.shortName }}){% endif %}
+                                                    {{ principal }}
                                                 </option>
                                             {% endfor %}
                                         </select>
