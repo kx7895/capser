@@ -101,7 +101,7 @@ class InvoiceFormType extends AbstractType
                         ->add(CustomerFieldType::class, [
                             'selectedPrincipal' => $principal,
                             'choice_label' =>  function (Customer $entity) {
-                                return ($entity->getShortName() ?: $entity->getName()).' (#'.$entity->getLedgerAccountNumber().')';
+                                return $entity;
                             },
                         ]);
             });
@@ -227,6 +227,13 @@ class InvoiceFormType extends AbstractType
                             },
                         ]);
             });
+
+        $builder
+            ->add('invoiceReference', EntityType::class, [
+                'class' => Invoice::class,
+                'required' => false,
+            ])
+;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

@@ -68,10 +68,12 @@ class CustomerRepository extends ServiceEntityRepository
 
     public function findAllowed(Collection $allowedPrincipals): array
     {
-        $qb = $this->createQueryBuilder('c')
-            ->innerJoin('c.principal', 'p') // Verknüpfung mit der Principal-Entity
-            ->where('p IN (:allowedPrincipals)') // Bedingung, um nur erlaubte Principals zu berücksichtigen
+        $qb = $this->createQueryBuilder('customer')
+            ->innerJoin('customer.principal', 'principal') // Verknüpfung mit der Principal-Entity
+            ->where('principal IN (:allowedPrincipals)') // Bedingung, um nur erlaubte Principals zu berücksichtigen
             ->setParameter(':allowedPrincipals', $allowedPrincipals)
+            ->orderBy('principal.name', 'ASC')
+            ->addOrderBy('customer.name', 'ASC')
             ->getQuery();
 
         return $qb->getResult();

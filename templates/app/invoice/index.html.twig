@@ -74,7 +74,7 @@
                                             <option value="">Alle Kunden</option>
                                             {% for customer in allowedCustomers %}
                                                 <option value="{{ customer.id }}" {% if queryCustomer == customer %}selected{% endif %}>
-                                                    {{ customer.name }} ({{ customer.principal.name }})
+                                                    {{ customer.principal }} » {{ customer }}
                                                 </option>
                                             {% endfor %}
                                         </select>

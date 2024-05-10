@@ -673,6 +673,6 @@ class Customer
 
     public function __toString(): string
     {
-        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName());
+        return ($this->getShortName() <> '' ? $this->getShortName() : $this->getName()).' (#'.$this->getId().')';
     }
 }

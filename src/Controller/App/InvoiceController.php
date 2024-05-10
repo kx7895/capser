@@ -4,6 +4,8 @@ namespace App\Controller\App;
 
 use App\Entity\Invoice;
 use App\Entity\InvoiceAttachment;
+use App\Entity\InvoicePosition;
+use App\Entity\Tag;
 use App\Entity\User;
 use App\Form\InvoiceAttachmentFormType;
 use App\Form\InvoiceFormType;
@@ -130,6 +132,18 @@ class InvoiceController extends AbstractController
             $invoice->setHCustomerShortName($invoice->getCustomer()->getShortName());
             $invoice->setHPrincipalName($invoice->getPrincipal()->getName());
             $invoice->setHPrincipalShortName($invoice->getPrincipal()->getShortName());
+
+            // copy positions if reference invoice exists
+            if($invoice->getInvoiceReference()) {
+                foreach($invoice->getInvoiceReference()->getInvoicePositions() as $referenceInvoicePosition) {
+                    $invoicePosition = new InvoicePosition();
+                    $invoicePosition->setPosition($referenceInvoicePosition->getPosition());
+                    $invoicePosition->setText($referenceInvoicePosition->getText());
+                    $invoicePosition->setAmount($referenceInvoicePosition->getAmount());
+                    $invoicePosition->setPrice($referenceInvoicePosition->getPrice());
+                    $invoice->addInvoicePosition($invoicePosition);
+                }
+            }
 
             $this->entityManager->persist($invoice);
             $this->entityManager->flush();
@@ -449,7 +463,7 @@ class InvoiceController extends AbstractController
     #[Route('/{id}/copy', name: 'copy', methods: ['GET'])]
     public function copy(Invoice $invoice, Request $request): Response
     {
-        return $this->render('app/layout/betatest.html.twig');
+        return $this->redirectToRoute('app_invoice_new_basics', ['invoiceReference' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
     }
 
     private function createInvoiceForm(Request $request, Invoice $invoice, int $step = null): FormInterface
@@ -485,6 +499,36 @@ class InvoiceController extends AbstractController
         if($request->query->has('id')) {
             // TODO: Security - Nur wenn für Rechnung berechtigt.
             $invoice = $this->invoiceRepository->find($request->query->get('id'));
+        }
+
+        $invoiceReference = null;
+        if($request->query->has('invoiceReference')) {
+            // TODO: Security - Nur wenn für Rechnung berechtigt.
+            $invoiceReference = $this->invoiceRepository->find($request->query->get('invoiceReference'));
+        }
+
+        if($invoiceReference && $invoice == null && $createWhenMissing) {
+            $invoice = new Invoice();
+            $invoice->setInvoiceReference($invoiceReference);
+            $invoice->setPrincipal($invoiceReference->getPrincipal());
+            $invoice->setCustomer($invoiceReference->getCustomer());
+            $invoice->setDate(new DateTimeImmutable());
+            $invoice->setInvoiceType($invoiceReference->getInvoiceType());
+            $invoice->setPeriodFrom($invoiceReference->getPeriodFrom());
+            $invoice->setPeriodTo($invoiceReference->getPeriodTo());
+            $invoice->setLanguage($invoiceReference->getLanguage());
+            $invoice->setIntroText($invoiceReference->getIntroText());
+            $invoice->setOutroText($invoiceReference->getOutroText());
+            $invoice->setCurrency($invoiceReference->getCurrency());
+            $invoice->setAccountingPlanLedger($invoiceReference->getAccountingPlanLedger());
+            $invoice->setTermOfPayment($invoiceReference->getTermOfPayment());
+            $invoice->setVatType($invoiceReference->getVatType());
+            $invoice->setVatRate($invoiceReference->getVatRate());
+            $invoice->setCostcenterExternal($invoiceReference->getCostcenterExternal());
+            $invoice->setReferenceExternal($invoiceReference->getReferenceExternal());
+            $invoice->setCreatedAt(new DateTimeImmutable());
+            $invoice->setCreatedBy($this->getUser());
+            return $invoice;
         }
 
         if($invoice == null) {

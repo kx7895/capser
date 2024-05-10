@@ -37,7 +37,7 @@ class CustomerFieldType extends AbstractType
             'class' => Customer::class,
             'selectedPrincipal' => null,
             'choice_label' =>  function (Customer $entity) {
-                return $entity->getPrincipal()->getShortName().' » '.($entity->getShortName() ?: $entity->getName()).' (#'.$entity->getLedgerAccountNumber().')';
+                return $entity->getPrincipal().' » '.$entity;
             },
             'label' => 'Kunde <span class="text-danger">*</span>',
             'label_html' => true,
