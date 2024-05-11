@@ -58,6 +58,11 @@ a:hover {
     --bs-btn-disabled-border-color: var(--cp-color-primary-light);
 }
 
+.form-check-input:checked {
+    background-color: var(--cp-color-primary);
+    border-color: var(--cp-color-primary);
+}
+
 /*--------------------------------------------------------------
 # OWN ELEMENTS
 --------------------------------------------------------------*/
