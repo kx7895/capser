@@ -4,6 +4,7 @@
 {% block bodyCssClass %}nav-fixed{% endblock %}
 
 {% block body %}
+    <div data-controller="sidebar">
     <div class="toast-container pt-9 px-4 top-0 end-0">
         {% for label, messages in app.flashes %}
             {% for message in messages %}
@@ -85,5 +86,6 @@
                 </div>
             </footer>
         </div>
+    </div>
     </div>
 {% endblock %}
