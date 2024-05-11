@@ -129,10 +129,17 @@
                                         {{ invoice.number }}
                                     {% endif %}
                                 </td>
-                                <td>{{ invoice.customerName }}</td>
+                                <td>
+                                    {{ invoice.customerName }}
+                                    {% if invoice.customerShortName %}
+                                        <br>
+                                        <span class="text-muted">{{ invoice.customerShortName }}</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if draft == false %}
                                         {{ invoice.currency.alpha3 }} {{ invoice.amountNet|number_format(2, ',', '.') }}
+                                        <br><span class="text-muted">{{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}</span>
                                     {% endif %}
                                 </td>
                                 <td>

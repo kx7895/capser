@@ -357,7 +357,11 @@ class Invoice
     public function getCustomerName(): ?string
     {
         return $this->getCustomer()?->getName();
+    }
 
+    public function getCustomerShortName(): ?string
+    {
+        return $this->getCustomer()?->getShortName();
     }
 
     public function getPrincipal(): ?Principal
