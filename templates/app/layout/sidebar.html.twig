@@ -1,75 +1,64 @@
 <nav class="sidenav shadow-right sidenav-light">
     <div class="sidenav-menu">
         <div class="nav accordion" id="accordionSidenav">
-            <!-- Sidenav Menu Heading (Account)-->
-            <!-- * * Note: * * Visible only on and above the sm breakpoint-->
-{#            <div class="sidenav-menu-heading d-sm-none">Account</div>#}
-            <!-- Sidenav Link (Alerts)-->
-            <!-- * * Note: * * Visible only on and above the sm breakpoint-->
-{#            <a class="nav-link d-sm-none" href="#!">#}
-{#                <div class="nav-link-icon">#}
-{#                    <i class="fa-regular fa-bell"></i>#}
-{#                </div>#}
-{#                Alerts#}
-{#                <span class="badge bg-warning-soft text-warning ms-auto">4 New!</span>#}
-{#            </a>#}
-            <!-- Sidenav Link (Messages)-->
-            <!-- * * Note: * * Visible only on and above the sm breakpoint-->
-{#            <a class="nav-link d-sm-none" href="#!">#}
-{#                <div class="nav-link-icon">#}
-{#                    <i class="fa-regular fa-envelope"></i>#}
-{#                </div>#}
-{#                Messages#}
-{#                <span class="badge bg-success-soft text-success ms-auto">2 New!</span>#}
-{#            </a>#}
             <div class="sidenav-menu-heading">Core</div>
             <a class="nav-link{% if (app.request.pathInfo == path('index') or app.request.pathInfo == path('app_index')) %} active{% endif %}" href="{{ path('app_index') }}">
                 <div class="nav-link-icon"><i class="fa-solid fa-house"></i></div>
                 Start
             </a>
 
-            {% set finance_documents_all = ('/app/document' in app.request.pathInfo) %}
             {% set finance_invoices = ('/app/invoice' in app.request.pathInfo) %}
-            {% set finance_documents = (finance_documents_all or finance_invoices) %}
+            {% set finance_documents = (finance_invoices) %}
 
             {% set finance_customers = ('/app/customer' in app.request.pathInfo) %}
             {% set finance_suppliers = ('/app/supplier' in app.request.pathInfo) %}
             {% set finance_contacts = (finance_customers or finance_suppliers) %}
 
-            {% set finance = (finance_documents or finance_contacts) %}
+            {% set finance_unpaid_customers = ('/app/analysis/liquidity/unpaid/customers' in app.request.pathInfo) %}
+            {% set finance_liquidity = (finance_unpaid_customers) %}
+            {% set finance_analysis = (finance_liquidity) %}
 
             <div class="sidenav-menu-heading">Finanzen</div>
-            <a class="nav-link {% if finance %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                <div class="nav-link-icon"><i class="fa-solid fa-coins"></i></div>
-                Finanzen
+
+            <a class="nav-link {% if finance_documents %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseFinanceDocuments" aria-expanded="false" aria-controls="collapseFinanceDocuments">
+                <div class="nav-link-icon"><i class="fa-solid fa-file"></i></div>
+                Dokumente
                 <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
-            <div class="collapse{% if finance %} show{% endif %}" id="collapseFinance" data-bs-parent="#accordionSidenav">
-                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavFinanceMenu">
-                    <a class="nav-link {% if finance_documents %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#pagesCollapseDocuments" aria-expanded="false" aria-controls="pagesCollapseDocuments">
-                        Dokumente
-                        <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                    </a>
-                    <div class="collapse{% if finance_documents %} show{% endif %}" id="pagesCollapseDocuments" data-bs-parent="#accordionSidenavFinanceMenu">
-                        <nav class="sidenav-menu-nested nav">
-{#                            <a class="nav-link{% if finance_documents_all %} active{% endif %}" href="{{ path('app_document_all') }}">Alle</a>#}
-{#                            <a class="nav-link" href="#!">Offerten</a>#}
-                            <a class="nav-link{% if finance_invoices %} active{% endif %}" href="{{ path('app_invoice_index') }}">Rechnungen</a>
-{#                            <a class="nav-link" href="#!">Verträge</a>#}
-                        </nav>
-                    </div>
+            <div class="collapse{% if finance_documents %} show{% endif %}" id="collapseFinanceDocuments" data-bs-parent="#accordionSidenav">
+                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavFinanceDocumentsMenu">
+                    <a class="nav-link{% if finance_invoices %} active{% endif %}" href="{{ path('app_invoice_index') }}">Rechnungen</a>
+                </nav>
+            </div>
 
-                    <a class="nav-link {% if finance_contacts %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#pagesCollapseContacts" aria-expanded="false" aria-controls="pagesCollapseContacts">
-                        Kontakte
+            <a class="nav-link {% if finance_contacts %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseFinanceContacts" aria-expanded="false" aria-controls="collapseFinanceContacts">
+                <div class="nav-link-icon"><i class="fa-solid fa-person"></i></div>
+                Kontakte
+                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+            </a>
+            <div class="collapse{% if finance_contacts %} show{% endif %}" id="collapseFinanceContacts" data-bs-parent="#accordionSidenav">
+                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavFinanceContactsMenu">
+                    <a class="nav-link{% if finance_customers %} active{% endif %}" href="{{ path('app_customer_index') }}">Kunden</a>
+                    <a class="nav-link{% if finance_suppliers %} active{% endif %}" href="{{ path('app_supplier_index') }}">Lieferanten</a>
+                </nav>
+            </div>
+
+            <a class="nav-link {% if finance_analysis %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseFinanceAnalysis" aria-expanded="false" aria-controls="collapseFinanceAnalysis">
+                <div class="nav-link-icon"><i class="fa-solid fa-chart-line"></i></div>
+                Auswertungen
+                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+            </a>
+            <div class="collapse{% if finance_analysis %} show{% endif %}" id="collapseFinanceAnalysis" data-bs-parent="#accordionSidenav">
+                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavFinanceAnalysisMenu">
+                    <a class="nav-link {% if finance_liquidity %}active{% else %}collapsed{% endif %}" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#pagesCollapseFinanceAnalysisLiquidity" aria-expanded="false" aria-controls="pagesCollapseFinanceAnalysisLiquidity">
+                        Liquidität
                         <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                     </a>
-                    <div class="collapse{% if finance_contacts %} show{% endif %}" id="pagesCollapseContacts" data-bs-parent="#accordionSidenavFinanceMenu">
+                    <div class="collapse{% if finance_liquidity %} show{% endif %}" id="pagesCollapseFinanceAnalysisLiquidity" data-bs-parent="#accordionSidenavFinanceMenu">
                         <nav class="sidenav-menu-nested nav">
-                            <a class="nav-link{% if finance_customers %} active{% endif %}" href="{{ path('app_customer_index') }}">Kunden</a>
-{#                            <a class="nav-link{% if finance_suppliers %} active{% endif %}" href="{{ path('app_supplier_index') }}">Lieferanten</a>#}
+                            <a class="nav-link{% if finance_unpaid_customers %} active{% endif %}" href="{{ path('app_analysis_liquidity_unpaid_customers') }}">OP (Debitoren)</a>
                         </nav>
                     </div>
-{#                    <a class="nav-link" href="#!">Einstellungen</a>#}
                 </nav>
             </div>
         </div>
@@ -84,37 +73,3 @@
         </div>
     </div>
 </nav>
-
-
-
-
-
-
-
-
-
-{#    <li class="nav-item">#}
-{#        <a class="nav-link {% if ('/app/documents' not in app.request.pathInfo) %}collapsed{% endif %}" data-bs-target="#documents-nav" data-bs-toggle="collapse" href="#">#}
-{#            <i class="bi bi-files"></i><span>Dokumente</span><i class="bi bi-chevron-down ms-auto"></i>#}
-{#        </a>#}
-{#        <ul id="documents-nav" class="nav-content collapse {% if ('/app/documents' in app.request.pathInfo) %}show{% endif %}" data-bs-parent="#sidebar-nav">#}
-{#            <li>#}
-{#                <a href="{{ path('app_document_index') }}" class="{% if (app.request.pathInfo == path('app_document_index')) %}active{% endif %}">#}
-{#                    <span>Alle Dokumente</span>#}
-{#                </a>#}
-{#            </li>#}
-{#        </ul>#}
-{#    </li>#}
-
-{#    <li class="nav-item">#}
-{#        <a class="nav-link {% if ('/app/contacts' not in app.request.pathInfo) %}collapsed{% endif %}" data-bs-target="#customers-nav" data-bs-toggle="collapse" href="#">#}
-{#            <i class="bi bi-people"></i><span>Kontakte</span><i class="bi bi-chevron-down ms-auto"></i>#}
-{#        </a>#}
-{#        <ul id="customers-nav" class="nav-content collapse {% if ('/app/contacts' in app.request.pathInfo) %}show{% endif %}" data-bs-parent="#sidebar-nav">#}
-{#            <li>#}
-{#                <a href="{{ path('app_contact_index') }}" class="{% if (app.request.pathInfo == path('app_contact_index')) %}active{% endif %}">#}
-{#                    <span>Alle Kontakte</span>#}
-{#                </a>#}
-{#            </li>#}
-{#        </ul>#}
-{#    </li>#}

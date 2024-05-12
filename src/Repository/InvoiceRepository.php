@@ -56,6 +56,19 @@ class InvoiceRepository extends ServiceEntityRepository
             } elseif($field == 'customer') {
                 $qb->andWhere('i.customer = :customer')
                     ->setParameter(':customer', $value);
+            } elseif($field == 'draft') {
+                if($value === false) {
+                    $qb->andWhere($qb->expr()->isNotNull('i.number'));
+                }
+            } elseif($field == 'paid') {
+                if($value === false) {
+                    $qb->andWhere(
+                        $qb->expr()->orX(
+                            $qb->expr()->isNull('i.paymentIsPaid'),
+                            $qb->expr()->eq('i.paymentIsPaid', '0')
+                        )
+                    );
+                }
             }
         }
 

@@ -376,6 +376,16 @@ class Invoice
         return $this;
     }
 
+    public function getPrincipalName(): ?string
+    {
+        return $this->getPrincipal()?->getName();
+    }
+
+    public function getPrincipalShortName(): ?string
+    {
+        return $this->getPrincipal()?->getShortName();
+    }
+
     public function getDate(): ?DateTimeInterface
     {
         return $this->date;
