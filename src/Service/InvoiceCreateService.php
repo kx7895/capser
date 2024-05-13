@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\File;
@@ -30,12 +31,13 @@ class InvoiceCreateService
 
     public function __construct(
         private readonly InvoiceRepository      $invoiceRepository,
+        private readonly InvoiceTypeRepository  $invoiceTypeRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly Security               $security,
         private readonly LoggerInterface        $logger,
         private readonly MailerInterface        $mailer,
         private readonly string                 $mailer_email,
-        private readonly string                 $mailer_name, private readonly InvoiceTypeRepository $invoiceTypeRepository,
+        private readonly string                 $mailer_name,
     ) {}
 
     /**
@@ -151,6 +153,9 @@ class InvoiceCreateService
     {
         $email = new Email();
 
+        // FROM
+        $email->from(new Address($this->mailer_email, $invoice->getPrincipal()->getName()));
+
         // TO
         $receivers = [];
         if($invoice->getPrincipal()->getFibuRecipientEmail1())
@@ -167,14 +172,13 @@ class InvoiceCreateService
 
         // TEXT
         $email->subject($invoice->getPrincipal()->getName().' | Beleg '.$document);
-        $email->text('Sehr geehrte Damen und Herren,
+        $email->text('Sehr geehrte Damen und Herren
 
-zur Ablage und/oder weiteren buchhalterischen Verarbeitung, erhalten Sie anliegend den Beleg mit der Belegnummer '.$document.'.
+Zur Ablage und/oder weiteren buchhalterischen Verarbeitung, erhalten Sie anliegend den Beleg mit der Belegnummer '.$document.' vom '.$invoice->getDate()->format('d.m.Y').'..
 
 Mit freundlichen Grüssen
-'.$invoice->getPrincipal()->getName().'
-
-Service: '.$this->mailer_name.' System-Mailer ('.$this->mailer_email.')');
+'.$this->mailer_name.' Automailer
+Im Auftrag von: '.$invoice->getPrincipal()->getName());
 
         // ATTACHMENT
         $email->addPart(new DataPart(new File($this->buildFullPathToFile($invoice->getStorageFilename())), $invoice->getNiceFilename()));
@@ -193,6 +197,9 @@ Service: '.$this->mailer_name.' System-Mailer ('.$this->mailer_email.')');
     {
         $email = new Email();
 
+        // FROM
+        $email->from(new Address($this->mailer_email, $invoice->getPrincipal()->getName()));
+
         // TO
         $tos = [];
         $_tos = $invoice->getCustomer()->getCustomerInvoiceRecipients();
@@ -206,43 +213,76 @@ Service: '.$this->mailer_name.' System-Mailer ('.$this->mailer_email.')');
 
         $document = $invoice->getInvoiceType()->getType().' '.$invoice->getNumber();
 
+        $principalFooter = $invoice->getPrincipal()->getName();
+        if($invoice->getPrincipal()->getAddressLine1())
+            $principalFooter .= '
+'.$invoice->getPrincipal()->getAddressLine1();
+        if($invoice->getPrincipal()->getAddressLine2())
+            $principalFooter .= '
+'.$invoice->getPrincipal()->getAddressLine2();
+        if($invoice->getPrincipal()->getAddressLine3())
+            $principalFooter .= '
+'.$invoice->getPrincipal()->getAddressLine3();
+        if($invoice->getPrincipal()->getAddressLine4())
+            $principalFooter .= '
+'.$invoice->getPrincipal()->getAddressLine4();
+        if($invoice->getPrincipal()->getAddressLineCountry())
+            $principalFooter .= '
+'.$invoice->getPrincipal()->getAddressLineCountry()->getName();
+        $principalFooter .= '
+';
+
         // TEXT
-        if($invoice->getLanguage()->getAlpha2() == 'DE') {
+        if($invoice->getLanguage()->getAlpha3() == 'DEU') {
             if($sendAsReminder) {
                 $subject = $invoice->getPrincipal()->getName().' | Zahlungserinnerung '.$document;
                 $message = 'wir möchten Sie mit dieser Nachricht daran erinnern, dass unsere Rechnung '.$document.' vom '.$invoice->getDate()->format('d.m.Y').' noch zur Zahlung fällig ist und Sie bitten, den offenen Betrag zu begleichen.';
             } else {
                 $subject = $invoice->getPrincipal()->getName().' | Beleg '.$document;
-                $message = 'anliegend erhalten Sie unseren Beleg mit der Belegnummer '.$document.'.';
+                $message = 'anliegend erhalten Sie unseren Beleg mit der Belegnummer '.$document.' vom '.$invoice->getDate()->format('d.m.Y').'.';
             }
-
             $email->subject($subject);
             $email->text('Sehr geehrte Damen und Herren,
 
 '.$message.'
 
-Mit freundlichen Grüssen
-'.$invoice->getPrincipal()->getName().'
+Mit freundlichen Grüßen
 
-Service: '.$this->mailer_name.' System-Mailer ('.$this->mailer_email.')');
+'.$principalFooter);
+
+        } elseif($invoice->getLanguage()->getAlpha3() == 'GSW') {
+            if($sendAsReminder) {
+                $subject = $invoice->getPrincipal()->getName().' | Zahlungserinnerung '.$document;
+                $message = 'Wir möchten Sie mit dieser Nachricht daran erinnern, dass unsere Rechnung '.$document.' vom '.$invoice->getDate()->format('d.m.Y').' noch zur Zahlung fällig ist und Sie bitten, den offenen Betrag zu begleichen.';
+            } else {
+                $subject = $invoice->getPrincipal()->getName().' | Beleg '.$document;
+                $message = 'Anliegend erhalten Sie unseren Beleg mit der Belegnummer '.$document.' vom '.$invoice->getDate()->format('d.m.Y').'.';
+            }
+            $email->subject($subject);
+            $email->text('Sehr geehrte Damen und Herren
+
+'.$message.'
+
+Mit freundlichen Grüssen
+
+'.$principalFooter);
         } else {
             if($sendAsReminder) {
                 $subject = $invoice->getPrincipal()->getName().' | Payment Reminder '.$document;
                 $message = 'We would like to remind you that our invoice '.$document.' (date: '.$invoice->getDate()->format('Y-m-d').') is still due for payment and ask you to settle the outstanding amount.';
             } else {
                 $subject = $invoice->getPrincipal()->getName().' | Document '.$document;
-                $message = 'Please find enclosed the document '.$document.'.';
+                $message = 'Please find enclosed the document '.$document.' (date: '.$invoice->getDate()->format('Y-m-d').').';
             }
 
             $email->subject($subject);
-            $email->text('Dear Sir or Madam, Dear All,
+            $email->text('Dear Sir or Madam,
 
 '.$message.'
 
-Kind Regards,
-'.$invoice->getPrincipal()->getName().'
+Yours sincerely,
 
-Service: '.$this->mailer_name.' Mailing System ('.$this->mailer_email.')');
+'.$principalFooter);
         }
 
         // ATTACHMENT
