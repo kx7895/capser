@@ -424,6 +424,14 @@
                                     <i class="fa-regular fa-xmark icon-column"></i> Stornieren
                                 </a>
                             </li>
+                            {% if is_granted('ROLE_SUPERADMIN') %}
+                                <li>
+                                    <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id), ...app.request.query.all() }) }}"
+                                       onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>
