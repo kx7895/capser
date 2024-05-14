@@ -19,9 +19,9 @@
     </span>
 {% endmacro %}
 
-{% macro sortColumnHeader(sortName, sortNiceName, sort, sortDirection) %}
+{% macro sortColumnHeader(sortName, sortNiceName, sort, sortDirection, urlQueryParts) %}
     <a href="{{ path('app_invoice_index', {
-        ...app.request.query.all(),
+        ...urlQueryParts,
         sort: sortName,
         sortDirection: sort == sortName and sortDirection == 'ASC' ? 'DESC' : 'ASC',
     }) }}">
@@ -30,13 +30,6 @@
 {% endmacro %}
 
 {% block content %}
-    {% set queryParams = {} %}
-    {% for key, value in app.request.query.all() %}
-        {% if key != 'id' %}
-            {% set queryParams = queryParams|merge({(key): value}) %}
-        {% endif %}
-    {% endfor %}
-
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="d-none d-lg-block">Alle Rechnungen und Korrekturbelege</span>
@@ -94,20 +87,20 @@
         <turbo-frame data-turbo-action="advance" id="invoice-index">
             <div class="card-body">
                 <div class="w-100 text-end mt-n2 mb-1">
-                    <a class="btn btn btn-primary" href="{{ path('app_invoice_new_basics', queryParams) }}" target="_top"><i class="fas fa-plus me-1"></i> Neue Rechnung</a>
+                    <a class="btn btn btn-primary" href="{{ path('app_invoice_new_basics', urlQueryParts) }}" target="_top"><i class="fas fa-plus me-1"></i> Neue Rechnung</a>
                 </div>
                 <div class="table-responsive-lg">
                     <table class="table table-hover" id="invoices">
                         <thead>
                             <tr>
                                 {% if is_granted('ROLE_SUPERADMIN') %}<th class="id-column"></th>{% endif %}
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('date', 'Datum', sort, sortDirection) }}</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('invoiceType', 'Typ', sort, sortDirection) }}</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('number', 'Nummer', sort, sortDirection) }}</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection) }}</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('amountNet', 'Betrag', sort, sortDirection) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('date', 'Datum', sort, sortDirection, urlQueryParts) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('invoiceType', 'Typ', sort, sortDirection, urlQueryParts) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('number', 'Nummer', sort, sortDirection, urlQueryParts) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection, urlQueryParts) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('amountNet', 'Betrag', sort, sortDirection, urlQueryParts) }}</th>
                                 <th>Zahlung</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection, urlQueryParts) }}</th>
                                 <th class="action-column"></th>
                             </tr>
                         </thead>
@@ -150,13 +143,13 @@
                                 <td>{{ invoice.createdAt|ago }}</td>
                                 <td class="action-column">
                                     {% if draft %}
-                                        <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id), ...queryParams }) }}"
+                                        <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id), ...urlQueryParts }) }}"
                                            target="_top"
                                            onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
 
-                                        <a href="{{ path('app_invoice_new_basics', { 'id': invoice.id, ...queryParams }) }}" target="_top">
+                                        <a href="{{ path('app_invoice_new_basics', { 'id': invoice.id, ...urlQueryParts }) }}" target="_top">
                                             <i class="fa-regular fa-square-caret-right"></i>
                                         </a>
                                     {% else %}
@@ -166,7 +159,7 @@
                                         <a href="/{{ invoice.storageFilename }}" download="{{ invoice.niceFilename }}">
                                             <i class="fa-solid fa-download"></i>
                                         </a>
-                                        <a href="{{ path('app_invoice_show', { 'id': invoice.id, ...queryParams }) }}" target="_top">
+                                        <a href="{{ path('app_invoice_show', { 'id': invoice.id, ...urlQueryParts }) }}" target="_top">
                                             <i class="fa-solid fa-circle-info"></i>
                                         </a>
                                     {% endif %}

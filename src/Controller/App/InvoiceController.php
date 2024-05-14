@@ -5,7 +5,6 @@ namespace App\Controller\App;
 use App\Entity\Invoice;
 use App\Entity\InvoiceAttachment;
 use App\Entity\InvoicePosition;
-use App\Entity\Tag;
 use App\Entity\User;
 use App\Form\InvoiceAttachmentFormType;
 use App\Form\InvoiceFormType;
@@ -16,7 +15,6 @@ use App\Repository\CustomerRepository;
 use App\Repository\InvoiceAttachmentRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\InvoiceTypeRepository;
-use App\Repository\PrincipalRepository;
 use App\Service\DataTableService;
 use App\Service\InvoiceCreatePdfService;
 use App\Service\InvoiceCreateService;
@@ -44,7 +42,6 @@ class InvoiceController extends AbstractController
         private readonly InvoiceRepository           $invoiceRepository,
         private readonly InvoiceTypeRepository       $invoiceTypeRepository,
         private readonly InvoiceAttachmentRepository $invoiceAttachmentRepository,
-        private readonly PrincipalRepository         $principalRepository,
         private readonly DataTableService            $dataTableService,
         private readonly InvoiceCreateService        $invoiceCreateService,
         private readonly EntityManagerInterface      $entityManager,
@@ -68,30 +65,25 @@ class InvoiceController extends AbstractController
         $allowedPrincipals = $user->getPrincipals();
         $allowedCustomers = $this->customerRepository->findAllowed($allowedPrincipals);
 
+        $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
+        $queryCustomer = $this->dataTableService->processCustomerSelect($queryCustomerId, $allowedPrincipals);
+
         $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountNet', 'createdAt']);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
-
-        $queryPrincipal = null;
-        if((int)$queryPrincipalId) {
-            $queryPrincipal = $this->principalRepository->find($queryPrincipalId);
-            if(!$queryPrincipal)
-                return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals);
-        }
-
-        $queryCustomer = null;
-        if((int)$queryCustomerId) {
-            $queryCustomer = $this->customerRepository->find($queryCustomerId);
-            if(!$queryCustomer)
-                return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validateCustomerSelect($queryCustomer, $allowedPrincipals);
-        }
 
         $queryParameters = [];
         if($queryPrincipal)
             $queryParameters['principal'] = $queryPrincipal;
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
+
+        $urlQueryParts = [
+            'queryPrincipalId' => $queryPrincipalId,
+            'queryCustomerId' => $queryCustomerId,
+            'query' => $query,
+            'sort' => $sort,
+            'sortDirection' => $sortDirection,
+        ];
 
         $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
 
@@ -102,11 +94,13 @@ class InvoiceController extends AbstractController
             'queryPrincipal' => $queryPrincipal,
             'allowedCustomers' => $allowedCustomers,
             'queryCustomer' => $queryCustomer,
+            'query' => $query,
             'page' => $page,
             'itemsPerPage' => $itemsPerPage,
             'sort' => $sort,
             'sortDirection' => $sortDirection,
-            'query' => $query,
+
+            'urlQueryParts' => $urlQueryParts,
         ]);
     }
 

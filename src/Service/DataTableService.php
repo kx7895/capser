@@ -24,20 +24,6 @@ class DataTableService {
         return in_array($selectedSort, $availableSorts) ? $selectedSort : ($defaultSort ?: $availableSorts[0]);
     }
 
-
-    /**
-     * @deprecated Wird mittelfristig ersetzt, ab 13.05.2024 ist processPrincipalSelect zu bevorzugen.
-     * @todo Wird mittelfristig ersetzt, ab 13.05.2024 ist processPrincipalSelect zu bevorzugen.
-     */
-    public function validatePrincipalSelect(?Principal $selectedPrincipal, Collection $allowedPrincipals): ?Principal
-    {
-        if($allowedPrincipals->contains($selectedPrincipal)) {
-            return $selectedPrincipal;
-        }
-
-        return null;
-    }
-
     public function processPrincipalSelect(?string $queryPrincipalId, Collection $allowedPrincipals): bool|null|Principal
     {
         $queryPrincipalId = (int)$queryPrincipalId;
@@ -57,19 +43,6 @@ class DataTableService {
 
             return $queryPrincipal;
         }
-    }
-
-    /**
-     * @deprecated Wird mittelfristig ersetzt, ab 13.05.2024 ist processCustomerSelect zu bevorzugen.
-     * @todo Wird mittelfristig ersetzt, ab 13.05.2024 ist processCustomerSelect zu bevorzugen.
-     */
-    public function validateCustomerSelect(?Customer $selectedCustomer, Collection $allowedPrincipals): ?Customer
-    {
-        if($allowedPrincipals->contains($selectedCustomer->getPrincipal())) {
-            return $selectedCustomer;
-        }
-
-        return null;
     }
 
     public function processCustomerSelect(?string $queryCustomerId, Collection $allowedPrincipals): bool|null|Customer
