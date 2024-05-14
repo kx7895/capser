@@ -40,22 +40,23 @@ class CustomerController extends AbstractController
         $user = $this->getUser();
         $allowedPrincipals = $user->getPrincipals();
 
+        $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
+
         $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'hPrincipalName', 'createdAt', 'vatId']);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
-
-        $queryPrincipal = null;
-        if((int)$queryPrincipalId) {
-            $queryPrincipal = $this->principalRepository->find($queryPrincipalId);
-            if(!$queryPrincipal)
-                return throw $this->createNotFoundException();
-            $queryPrincipal = $this->dataTableService->validatePrincipalSelect($queryPrincipal, $allowedPrincipals);
-        }
 
         $queryParameters = [];
         if($queryPrincipal)
             $queryParameters['principal'] = $queryPrincipal;
 
         $customers = $this->dataTableService->buildDataTable($this->customerRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
+
+        $urlQueryParts = [
+            'queryPrincipalId' => $queryPrincipalId,
+            'query' => $query,
+            'sort' => $sort,
+            'sortDirection' => $sortDirection,
+        ];
 
         return $this->render('app/customer/index.html.twig', [
             'customers' => $customers,
@@ -67,6 +68,8 @@ class CustomerController extends AbstractController
             'sort' => $sort,
             'sortDirection' => $sortDirection,
             'query' => $query,
+
+            'urlQueryParts' => $urlQueryParts,
         ]);
     }
 
@@ -94,16 +97,6 @@ class CustomerController extends AbstractController
         return $this->render('app/customer/new.html.twig', [
             'customer' => $customer,
             'form' => $form,
-        ]);
-    }
-
-    #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Customer $customer): Response
-    {
-        // TODO: Security - nur Customers für eigene Principals! Voters!
-
-        return $this->render('app/customer/show.html.twig', [
-            'customer' => $customer,
         ]);
     }
 

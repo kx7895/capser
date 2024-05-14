@@ -68,56 +68,6 @@
                 </div>
             </div>
         </fieldset>
-
-        {% if showSingleSubmitButtons %}
-            <div class="text-center mt-1">
-                <button class="btn btn-primary">
-                    {{ button_label|default('Speichern') }}
-                </button>
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="card mb-4" id="sectionZahlungsdaten">
-    <div class="card-header">Zahlungsdaten</div>
-    <div class="card-body">
-        <fieldset class="border border-1 border-light mb-4 p-3">
-            <legend class="h6">Kontoverbindung</legend>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    {{ form_row(form.bankAccountHolder) }}
-                </div>
-                <div class="col-md-6">
-                    {{ form_row(form.bankAccountBank) }}
-                </div>
-                <div class="col-md-6">
-                    {{ form_row(form.bankAccountIban) }}
-                </div>
-                <div class="col-md-6">
-                    {{ form_row(form.bankAccountBic) }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset class="border border-1 border-light mb-4 p-3">
-            <legend class="h6">Lastschriftmandat</legend>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    {{ form_row(form.bankDirectAuthorizationNumber) }}
-                </div>
-                <div class="col-md-4">
-                    {{ form_row(form.bankDirectAuthorizationDate) }}
-                </div>
-            </div>
-        </fieldset>
-
-        {% if showSingleSubmitButtons %}
-            <div class="text-center mt-1">
-                <button class="btn btn-primary">
-                    {{ button_label|default('Speichern') }}
-                </button>
-            </div>
-        {% endif %}
     </div>
 </div>
 
@@ -157,14 +107,81 @@
                 </div>
             </div>
         </fieldset>
+    </div>
+</div>
 
-        {% if showSingleSubmitButtons %}
-            <div class="text-center mt-1">
-                <button class="btn btn-primary">
-                    {{ button_label|default('Speichern') }}
-                </button>
+<div class="card mb-4" id="sectionCustomerInvoiceRecipients">
+    <div class="card-header">Rechnungsempfänger</div>
+    <div class="card-body">
+        <fieldset class="border border-1 border-light mb-4 p-3"
+                {{ stimulus_controller('form_customer_invoice_recipient_collection') }}
+                  data-form-customer-invoice-recipient-collection-index-value="{{ form.customerInvoiceRecipients|length > 0 ? form.customerInvoiceRecipients|last.vars.name + 1 : 0 }}"
+                  data-form-customer-invoice-recipient-collection-prototype-value="
+<div class='row border-bottom' data-index='__name__'>
+    <div class='col-6 py-1'>{{ form_widget(form.customerInvoiceRecipients.vars.prototype.name, {'attr': {'class': 'form-control-sm'}})|e('html_attr') }}</div>
+    <div class='col-5 py-1'>{{ form_widget(form.customerInvoiceRecipients.vars.prototype.email, {'attr': {'class': 'form-control-sm'}})|e('html_attr') }}</div>
+    <div class='col-1 d-flex align-items-center justify-content-end deleteCustomerInvoiceRecipientButtonHolder'></div>
+</div>"
+        >
+            <legend class="h6">E-Mail-Empfänger</legend>
+            <div class="row border-bottom fw-bold">
+                <div class="col-6">Name</div>
+                <div class="col-5">E-Mail</div>
+                <div class="col-1 d-flex align-items-center justify-content-end" style="margin-top:-5px;">
+                    <button type="button"
+                            class="btn btn-success btn-xs"
+                            {{ stimulus_action('form_customer_invoice_recipient_collection', 'addCollectionElement') }}>
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
             </div>
-        {% endif %}
+            <div {{ stimulus_target('form_customer_invoice_recipient_collection', 'collectionContainer') }} id="customerInvoiceRecipientRows">
+                {% for customerInvoiceRecipient in form.customerInvoiceRecipients %}
+                    <div class="row border-bottom" data-index="{{ loop.index0 }}">
+                        <div class="col-6 py-1">{{ form_widget(customerInvoiceRecipient.name, {'attr': {'class': 'form-control-sm'}}) }}</div>
+                        <div class="col-5 py-1">{{ form_widget(customerInvoiceRecipient.email, {'attr': {'class': 'form-control-sm'}}) }}</div>
+                        <div class="col-1 d-flex align-items-center justify-content-end deleteCustomerInvoiceRecipientButtonHolder"></div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if form.customerInvoiceRecipients|length == 0 %}
+                {{ form_widget(form.customerInvoiceRecipients) }}
+            {% endif %}
+        </fieldset>
+    </div>
+</div>
+
+<div class="card mb-4" id="sectionZahlungsdaten">
+    <div class="card-header">Zahlungsdaten</div>
+    <div class="card-body">
+        <fieldset class="border border-1 border-light mb-4 p-3">
+            <legend class="h6">Kontoverbindung</legend>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_row(form.bankAccountHolder) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.bankAccountBank) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.bankAccountIban) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.bankAccountBic) }}
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="border border-1 border-light mb-4 p-3">
+            <legend class="h6">Lastschriftmandat</legend>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    {{ form_row(form.bankDirectAuthorizationNumber) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.bankDirectAuthorizationDate) }}
+                </div>
+            </div>
+        </fieldset>
     </div>
 </div>
 
@@ -194,14 +211,6 @@
         {% if form.tags|length == 0 %}
             {{ form_widget(form.tags) }}
         {% endif %}
-
-        {% if showSingleSubmitButtons %}
-            <div class="text-center mt-1">
-                <button class="btn btn-primary">
-                    {{ button_label|default('Speichern') }}
-                </button>
-            </div>
-        {% endif %}
     </div>
 </div>
 
@@ -220,5 +229,3 @@
     </div>
 </div>
 {% endif %}
-
-{{ form_widget(form) }}

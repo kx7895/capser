@@ -26,6 +26,7 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -364,6 +365,14 @@ class CustomerFormType extends AbstractType
                 'required' => false,
             ])
 
+            /* INVOICE RECEIVERS */
+            ->add('customerInvoiceRecipients', CollectionType::class, [
+                'entry_type' => CustomerInvoiceRecipientType::class,
+//                'entry_options' => ['label' => false],
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+            ])
 
             /* TAGS */
             ->add('tags', CollectionType::class, [
@@ -373,6 +382,16 @@ class CustomerFormType extends AbstractType
                 'allow_delete' => true,
                 'by_reference' => false,
             ])
+
+            ->add('submitXXL', SubmitType::class, [
+                'label' => '<i class="fa-regular fa-floppy-disk me-1"></i> Speichern',
+                'label_html' => true,
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => '<i class="fa-regular fa-floppy-disk me-1"></i> Speichern',
+                'label_html' => true,
+            ])
+
         ;
     }
 

@@ -7,7 +7,6 @@
 
 {% block content %}
     <!--suppress HtmlUnknownAnchorTarget -->
-    {% set showSingleSubmitButtons = true %}
 
     {{ form_start(form) }}
 
@@ -18,8 +17,45 @@
             </div>
         </div>
         <div class="col-xxl-3">
-            <div class="nav-sticky">
-                <div class="btn-group w-100 mb-4" role="group">
+            <!-- Large Screens -->
+            <div class="nav-sticky d-none d-xxl-block">
+                <div class="btn-group d-flex" role="group">
+                    <a class="btn btn-outline-primary w-100" href="{{ path('app_customer_index', { ...app.request.query.all() }) }}">
+                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
+                    </a>
+                    {% if form.vars.data.id|default %}
+                        <a class="btn btn-outline-primary" href="{{ path('app_customer_delete', {
+                            'id': customer.id,
+                            '_token': csrf_token('delete' ~ customer.id),
+                            ...app.request.query.all()
+                        }) }}" onclick="return confirm('Soll dieser Kunde wirklich gelöscht werden? Dieser Schritt kann nicht rückgängig gemacht werden.');">
+                            <i class="fa-solid fa-trash me-1"></i> Löschen
+                        </a>
+                    {% endif %}
+                    {{ form_widget(form.submitXXL, {'attr': {'class': 'btn btn-primary w-100'}}) }}
+                </div>
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <ul class="nav flex-column" id="stickyNav">
+                            <li class="nav-item"><a class="nav-link" href="#sectionStammdaten">Stammdaten</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionRechnungsstandards">Rechnungsstandards</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionCustomerInvoiceRecipients">Rechnungsempfänger</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#sectionZahlungsdaten">Zahlungsdaten</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#sectionTags">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        Tags
+                                        <span class="badge bg-primary-soft text-primary">{{ customer.tags|length }}</span>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Other Screens -->
+            <div class="d-xxl-none">
+                <div class="text-center mt-5">
                     <a class="btn btn-outline-primary" href="{{ path('app_customer_index', { ...app.request.query.all() }) }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
@@ -32,26 +68,7 @@
                             <i class="fa-solid fa-trash me-1"></i> Löschen
                         </a>
                     {% endif %}
-                    <button class="btn btn-primary">
-                        <i class="fa-regular fa-save me-1"></i> Speichern
-                    </button>
-                </div>
-                <div class="card d-none d-xxl-block">
-                    <div class="card-body">
-                        <ul class="nav flex-column" id="stickyNav">
-                            <li class="nav-item"><a class="nav-link" href="#sectionStammdaten">Stammdaten</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#sectionZahlungsdaten">Zahlungsdaten</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#sectionRechnungsstandards">Rechnungsstandards</a></li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#sectionTags">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        Tags
-                                        <span class="badge bg-primary-soft text-primary">{{ customer.tags|length }}</span>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
                 </div>
             </div>
         </div>
