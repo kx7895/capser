@@ -23,17 +23,17 @@
                     <a class="btn btn-outline-primary w-100" href="{{ path('app_customer_index', { ...app.request.query.all() }) }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
-                    {% if form.vars.data.id|default %}
-                        <a class="btn btn-outline-primary" href="{{ path('app_customer_delete', {
-                            'id': customer.id,
-                            '_token': csrf_token('delete' ~ customer.id),
-                            ...app.request.query.all()
-                        }) }}" onclick="return confirm('Soll dieser Kunde wirklich gelöscht werden? Dieser Schritt kann nicht rückgängig gemacht werden.');">
-                            <i class="fa-solid fa-trash me-1"></i> Löschen
-                        </a>
-                    {% endif %}
                     {{ form_widget(form.submitXXL, {'attr': {'class': 'btn btn-primary w-100'}}) }}
                 </div>
+                {% if form.vars.data.id|default %}
+                    <a class="btn btn-light mt-3 w-100" href="{{ path('app_customer_delete', {
+                        'id': customer.id,
+                        '_token': csrf_token('delete' ~ customer.id),
+                        ...app.request.query.all()
+                    }) }}" onclick="return confirm('Soll dieser Kunde wirklich gelöscht werden? Dieser Schritt kann nicht rückgängig gemacht werden.');">
+                        <i class="fa-solid fa-trash me-1"></i> Löschen
+                    </a>
+                {% endif %}
                 <div class="card mt-3">
                     <div class="card-body">
                         <ul class="nav flex-column" id="stickyNav">
