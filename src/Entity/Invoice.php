@@ -862,6 +862,11 @@ class Invoice
             return 'due';
     }
 
+    public function isInvoice(): bool
+    {
+        return in_array($this->getInvoiceType()->getType(), ['IN', 'RE', 'RG']);
+    }
+
     public function __toString(): string
     {
         return $this->getInvoiceType()->getType().' '.($this->getNumber() <> '' ? $this->getNumber() : 'PREVIEW');

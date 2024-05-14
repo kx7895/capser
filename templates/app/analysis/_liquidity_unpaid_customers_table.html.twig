@@ -1,0 +1,107 @@
+{% macro sortArrow(sortName, sort, sortDirection) %}
+    <span class="ms-1">
+    {% if sort == sortName %}
+        {% if sortDirection == 'ASC' %}
+            <i class="fa-solid fa-sort-up"></i>
+        {% else %}
+            <i class="fa-solid fa-sort-down"></i>
+        {% endif %}
+    {% else %}
+        <i class="fa-solid fa-sort"></i>
+    {% endif %}
+    </span>
+{% endmacro %}
+
+{% macro sortColumnHeader(sortName, sortNiceName, sort, sortDirection, urlQueryParts) %}
+    <a href="{{ path('app_analysis_liquidity_unpaid_customers', {
+        ...urlQueryParts,
+        sort: sortName,
+        sortDirection: sort == sortName and sortDirection == 'ASC' ? 'DESC' : 'ASC',
+    }) }}">
+        {{ sortNiceName}} {{ _self.sortArrow(sortName, sort, sortDirection) }}
+    </a>
+{% endmacro %}
+
+<turbo-frame data-turbo-action="advance" id="invoice-unpaid">
+    <div class="card-body">
+        <div class="table-responsive-lg">
+            <table class="table table-hover mb-1" id="invoices-unpaid">
+                <thead>
+                <tr>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('date', 'Datum', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('number', 'Beleg', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('hPrincipalShortName', 'Mandant', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('periodFrom', 'Leistung', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('amountGross', 'Offener Betrag', sort, sortDirection, urlQueryParts) }}</th>
+                    <th class="text-nowrap">{{ _self.sortColumnHeader('due', 'Fälligkeit', sort, sortDirection, urlQueryParts) }}</th>
+                    <th>Status</th>
+                    <th class="action-column"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for invoice in rows %}
+                    <tr>
+                        <td>{{ invoice.date|date('d.m.Y') }}</td>
+                        <td>{{ invoice.invoiceType.type }} {{ invoice.number }}</td>
+                        <td>
+                            {{ invoice.customerName }}
+                            {% if invoice.customerShortName %}
+                                <br>
+                                <span class="text-muted">{{ invoice.customerShortName }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if invoice.principalShortName %}
+                                {{ invoice.principalShortName }}
+                            {% else %}
+                                {{ invoice.principalName }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ invoice.periodFrom|date('d.m.Y') }}
+                            {% if invoice.periodFrom != invoice.periodTo %}
+                                <br> &dash; {{ invoice.periodTo|date('d.m.Y') }}
+                            {% endif %}
+                        </td>
+                        <td>{{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}</td>
+                        <td>{{ invoice.due|date('d.m.Y') }}</td>
+                        <td>{{ invoice.paymentLabel|raw }}</td>
+                        <td class="action-column">
+                            <a href="/{{ invoice.storageFilename }}" target="_blank">
+                                <i class="fa-regular fa-eye"></i>
+                            </a>
+                            <a href="{{ path('app_invoice_show', { 'id': invoice.id }) }}" target="_blank">
+                                <i class="fa-solid fa-square-arrow-up-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="100%" class="text-muted text-center">
+                            Keine Einträge gefunden.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex align-items-center gap-3">
+            {% if rows.hasPreviousPage %}
+                <a href="{{ pagerfanta_page_url(rows, rows.previousPage) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+            <div class="text-muted small">
+                Seite {{ rows.currentPage }}/{{ rows.nbPages }}
+            </div>
+            {% if rows.hasNextPage %}
+                <a href="{{ pagerfanta_page_url(rows, rows.nextPage) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</turbo-frame>

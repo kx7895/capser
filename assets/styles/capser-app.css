@@ -118,3 +118,39 @@
 .table .action-column a:not(:last-of-type) {
     margin-right: 0.3rem;
 }
+
+.row .collapse-arrow {
+    display: inline-block;
+    margin-left: auto;
+    transition: transform 0.15s ease;
+    color: #a7aeb8;
+    cursor: pointer;
+}
+.row.collapsed .collapse-arrow {
+    transform: rotate(-90deg);
+}
+
+/** TODO: hier brauchen wir noch eine etwas schönere Lösung, weil die fehlenden Pixel am Ende der Zeile mit Weissraum unschick aufgefüllt werden */
+.row .collapse-arrow-col {
+    max-width: 40px;
+}
+
+.div-table {
+    .row > * {
+        padding: 0.4rem 0.5rem;
+    }
+
+    .div-table-head {
+        color: var(--cp-color-primary-light);
+        font-weight: 700;
+        border-bottom-color: rgb(224, 229, 236);
+        border-bottom-style: solid;
+        border-bottom-width: 1px;
+    }
+
+    .div-table-body {
+        border-bottom-color: rgb(224, 229, 236);
+        border-bottom-style: solid;
+        border-bottom-width: 1px;
+    }
+}

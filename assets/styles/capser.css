@@ -63,6 +63,10 @@ a:hover {
     border-color: var(--cp-color-primary);
 }
 
+.border-primary {
+    border-color: var(--cp-color-primary) !important;
+}
+
 /*--------------------------------------------------------------
 # OWN ELEMENTS
 --------------------------------------------------------------*/

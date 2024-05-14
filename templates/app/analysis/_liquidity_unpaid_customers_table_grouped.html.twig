@@ -1,0 +1,95 @@
+<turbo-frame data-turbo-action="advance" id="invoice-unpaid">
+    <div class="card-body" id="invoices-unpaid">
+        <div class="div-table">
+            <div class="row div-table-head">
+                <div class="col-1 collapse-arrow-col"></div>
+                <div class="col-4">Kunde</div>
+                <div class="col-2">Mandant</div>
+                <div class="col-1">Konto</div>
+                <div class="col-2 text-end">Betrag (netto)</div>
+                <div class="col-2 text-end">Betrag (brutto)</div>
+            </div>
+            {% for row in rows %}
+                <div class="row fw-bold div-table-body collapsed" data-bs-toggle="collapse" data-bs-target=".row{{ loop.index }}">
+                    <div class="col-1 text-end collapse-arrow-col">
+                        <div class="collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                    </div>
+                    <div class="col-4">
+                        {{ row.customer.name }}
+                        {% if row.customer.shortName %}
+                            <br>
+                            <span class="text-muted">{{ row.customer.shortName }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-2">
+                        {% if row.customer.principal.shortName %}{{ row.customer.principal.shortName }}{% else %}{{ row.customer.principal.name }}{% endif %}
+                    </div>
+                    <div class="col-1">
+                        {{ row.customer.ledgerAccountNumber }}
+                    </div>
+                    <div class="col-2 text-end">
+                        {% if row.currency.alpha3 == 'CHF' %}
+                            CHF {{ row.sumAmountNet|number_format(2, '.', ',') }}
+                        {% else %}
+                            {{ row.sumAmountNet|number_format(2, ',', '.') }} {{ row.currency.alpha3 }}
+                        {% endif %}
+                    </div>
+                    <div class="col-2 text-end">
+                        {% if row.currency.alpha3 == 'CHF' %}
+                            CHF {{ row.sumAmountGross|number_format(2, '.', ',') }}
+                        {% else %}
+                            {{ row.sumAmountGross|number_format(2, ',', '.') }} {{ row.currency.alpha3 }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row border-bottom border-light collapse row{{ loop.index }}">
+                    <div class="col-12 p-0">
+                        <div class="row mx-0 small div-table-head">
+                            <div class="col-1 collapse-arrow-col"></div>
+                            <div class="col-4 border-bottom border-light">Beleg</div>
+                            <div class="col-2 border-bottom border-light">Datum</div>
+                            <div class="col-1 border-bottom border-light">Fälligkeit</div>
+                            <div class="col-2 border-bottom border-light text-end">Betrag (netto)</div>
+                            <div class="col-2 border-bottom border-light text-end">Betrag (brutto)</div>
+                        </div>
+                        {% for invoice in row.invoices %}
+                            <div class="row mx-0 small">
+                                <div class="col-1 collapse-arrow-col border-0">
+                                </div>
+                                <div class="col-4 {% if not loop.last %}border-bottom border-light{% endif %}">
+                                    {{ invoice.invoiceType.type }} {{invoice.number }}
+                                </div>
+                                <div class="col-2 {% if not loop.last %}border-bottom border-light{% endif %}">
+                                    {{ invoice.date|date('d.m.Y') }}
+                                </div>
+                                <div class="col-1 {% if not loop.last %}border-bottom border-light{% endif %}">
+                                    {{ invoice.due|date('d.m.Y') }}
+                                </div>
+                                <div class="col-2 {% if not loop.last %}border-bottom border-light{% endif %} text-end">
+                                    {% if invoice.currency.alpha3 == 'CHF' %}
+                                        CHF {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountNet|number_format(2, '.', ',') }}
+                                    {% else %}
+                                        {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountNet|number_format(2, ',', '.') }} {{ invoice.currency.alpha3 }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-2 {% if not loop.last %}border-bottom border-light{% endif %} text-end">
+                                    {% if invoice.currency.alpha3 == 'CHF' %}
+                                        CHF {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountGross|number_format(2, '.', ',') }}
+                                    {% else %}
+                                        {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountGross|number_format(2, ',', '.') }} {{ invoice.currency.alpha3 }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="row">
+                    <div class="col text-muted text-center">
+                        Keine Einträge gefunden.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</turbo-frame>

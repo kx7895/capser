@@ -26,13 +26,13 @@ class InvoiceRepository extends ServiceEntityRepository
         parent::__construct($registry, Invoice::class);
     }
 
-    public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
+    public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $sortDirection = 'ASC'): QueryBuilder
     {
-
         $qb = $this->createQueryBuilder('i');
 
         $qb
             ->innerJoin('i.principal', 'p')
+            ->innerJoin('i.customer', 'c')
             ->where('p IN (:allowedPrincipals)')
             ->setParameter('allowedPrincipals', $allowedPrincipals);
 
@@ -43,6 +43,7 @@ class InvoiceRepository extends ServiceEntityRepository
                     $qb->expr()->like('i.number', ':queryLike'),
                     $qb->expr()->like('i.hCustomerName', ':queryLike'),
                     $qb->expr()->like('i.hCustomerShortName', ':queryLike'),
+                    $qb->expr()->eq('c.ledgerAccountNumber', ':queryExact'),
                 ))
                 ->setParameter('queryLike', '%'.$query.'%')
                 ->setParameter('queryExact', $query) ;
@@ -73,9 +74,40 @@ class InvoiceRepository extends ServiceEntityRepository
         }
 
         if($sort)
-            $qb->orderBy('i.'.$sort, $direction);
+            $qb->orderBy('i.'.$sort, $sortDirection);
 
         return $qb;
+    }
+
+    public function findUnpaidGroupedByCustomers(?string $query, Collection $allowedPrincipals, array $queryParameters): array
+    {
+        $qb = $this->findBySearch($query, $allowedPrincipals, $queryParameters);
+
+        $customers = [];
+        /** @var Invoice $invoice */
+        foreach($qb->getQuery()->getResult() as $invoice) {
+            $unique = 'CUSTOMER'.$invoice->getCustomer()->getId().'#'.'CURRENCY'.$invoice->getCurrency()->getId();
+
+            $amountNet = ($invoice->isInvoice() ? $invoice->getAmountNet() : $invoice->getAmountNet()*-1);
+            $amountGross = ($invoice->isInvoice() ? $invoice->getAmountGross() : $invoice->getAmountGross()*-1);
+
+            if(isset($customers[$unique])) {
+                $customers[$unique]['sumAmountNet'] += $amountNet;
+                $customers[$unique]['sumAmountGross'] += $amountGross;
+                $customers[$unique]['invoices'][] = $invoice;
+
+            } else {
+                $customers[$unique] = [
+                    'customer' => $invoice->getCustomer(),
+                    'currency' => $invoice->getCurrency(),
+                    'sumAmountNet' => $amountNet,
+                    'sumAmountGross' => $amountGross,
+                    'invoices' => [$invoice],
+                ];
+            }
+        }
+
+        return $customers;
     }
 
     /**
