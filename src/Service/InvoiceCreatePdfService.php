@@ -30,7 +30,7 @@ class InvoiceCreatePdfService
         $this->invoice = $invoice;
         $this->principal = $invoice->getPrincipal();
         $this->receiver = $invoice->getCustomer();
-        $this->lang = ($this->invoice->getLanguage()->getAlpha2() == 'DE' ? 'DE' : 'EN');
+        $this->lang = (($this->invoice->getLanguage()->getAlpha2() == 'DE' || $this->invoice->getLanguage()->getAlpha2() == 'CH') ? 'DE' : 'EN');
         $this->currencySymbol = ($invoice->getCurrency()->getAlpha3() == 'EUR' ? chr(128).' ' : $invoice->getCurrency()->getSymbol());
         $this->currencyName = $invoice->getCurrency()->getName();
 
