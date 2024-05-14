@@ -39,7 +39,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    {% if invoice.language.alpha2 != 'DE' %}
+                    {% if invoice.language.alpha3 != 'DEU' and invoice.language.alpha3 != 'GSW' %}
                         <div class="row mb-3">
                             <div class="col">
                                 <div class="alert alert-info" role="alert">

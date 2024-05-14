@@ -245,7 +245,7 @@ class InvoiceController extends AbstractController
             $unit = '';
             if($position->getUnit()) {
                 $method = 'getName'.ucfirst(strtolower($invoice->getLanguage()->getAlpha2()));
-                if($method == 'getNameDe')
+                if($method == 'getNameDe' || $method == 'getNameCh')
                     $method = 'getName';
                 $unit = ($position->getUnit()->$method() ? $position->getUnit()->$method() : $position->getUnit()->getName());
             }
