@@ -134,10 +134,11 @@ class InvoiceController extends AbstractController
             $invoice->setHPrincipalShortName($invoice->getPrincipal()->getShortName());
 
             // copy positions if reference invoice exists
-            if($invoice->getInvoiceReference()) {
+            if($invoice->getInvoiceReference() && $invoice->getInvoicePositions()->count() == 0) {
                 foreach($invoice->getInvoiceReference()->getInvoicePositions() as $referenceInvoicePosition) {
                     $invoicePosition = new InvoicePosition();
                     $invoicePosition->setPosition($referenceInvoicePosition->getPosition());
+                    $invoicePosition->setUnit($referenceInvoicePosition->getUnit());
                     $invoicePosition->setText($referenceInvoicePosition->getText());
                     $invoicePosition->setAmount($referenceInvoicePosition->getAmount());
                     $invoicePosition->setPrice($referenceInvoicePosition->getPrice());
