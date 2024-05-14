@@ -105,7 +105,7 @@ class InvoiceCreateService
         if($invoice->getVatType() == null)
             return null;
 
-        if($invoice->getLanguage()->getAlpha2() == 'DE') {
+        if($invoice->getLanguage()->getAlpha2() == 'DE' || $invoice->getLanguage()->getAlpha2() == 'CH') {
             if($invoice->getVatType() == 'RC')
                 return self::TAXTYPE_RC_DE;
             elseif($invoice->getVatType() == 'NOT')
@@ -129,14 +129,6 @@ class InvoiceCreateService
      */
     public function getVatType(Customer $customer, float $taxRate): ?string
     {
-        if($customer->getPrincipal()->getAddressLine3() == 'Deutschland') {
-            if($customer->getAddressLineCountry()->getAlpha3() == 'ARE' || $customer->getAddressLineCountry()->getAlpha3() == 'PAK')
-                return 'NOT';
-
-            if(!empty($customer->getVatId()) && $taxRate == 0)
-                return 'RC';
-        }
-
         return null;
     }
 
