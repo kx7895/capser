@@ -259,7 +259,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         foreach($conditions AS $condition) {
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencyName.' ('.utf8_encode($this->currencySymbol).')', $condition)));
+            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencyName.' ('.utf8_encode($this->currencySymbol).')', $condition)), 0, 'L');
             $this->pdf->Ln();
         }
     }
