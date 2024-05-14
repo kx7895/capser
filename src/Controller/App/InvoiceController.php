@@ -451,6 +451,12 @@ class InvoiceController extends AbstractController
                 $name = $invoice->getInvoiceType()->getName().' für '.$invoice->getCustomerName().', Entwurf';
             }
 
+            $copiedInvoices = $this->invoiceRepository->findBy(['invoiceReference' => $invoice]);
+            foreach($copiedInvoices as $copiedInvoice) {
+                $copiedInvoice->setInvoiceReference(null);
+                $this->entityManager->persist($copiedInvoice);
+            }
+
             $this->entityManager->remove($invoice);
             $this->entityManager->flush();
 
