@@ -14,7 +14,6 @@ class InvoiceCreatePdfService
 
     private string $lang;
     private string $currencySymbol;
-    private string $currencyName;
     private Customer $receiver;
     private Principal $principal;
     private Invoice $invoice;
@@ -31,8 +30,7 @@ class InvoiceCreatePdfService
         $this->principal = $invoice->getPrincipal();
         $this->receiver = $invoice->getCustomer();
         $this->lang = (($this->invoice->getLanguage()->getAlpha2() == 'DE' || $this->invoice->getLanguage()->getAlpha2() == 'CH') ? 'DE' : 'EN');
-        $this->currencySymbol = ($invoice->getCurrency()->getAlpha3() == 'EUR' ? chr(128).' ' : $invoice->getCurrency()->getSymbol());
-        $this->currencyName = $invoice->getCurrency()->getName();
+        $this->currencySymbol = $invoice->getCurrency()->getAlpha3();
 
         $this->pdf = new Fpdf('P', 'mm', 'A4');
         $this->pdf->SetMargins(17, 5);
@@ -119,7 +117,11 @@ class InvoiceCreatePdfService
 
         // Überschrift
         $this->pdf->SetFont('Arial', 'B', 11);
-        $this->pdf->Cell($cell1+$cell2, 5, ($this->lang == 'DE' ? $this->invoice->getInvoiceType()->getName() : $this->invoice->getInvoiceType()->getName()));
+        $method = 'getName'.ucfirst(strtolower($this->lang));
+        if($method == 'getNameDe' || $method == 'getNameCh')
+            $method = 'getName';
+        $invoiceType = ($this->invoice->getInvoiceType()->$method() ? $this->invoice->getInvoiceType()->$method() : $this->invoice->getInvoiceType()->getName());
+        $this->pdf->Cell($cell1+$cell2, 5, $invoiceType);
         $this->pdf->Ln();
 
         // Belegdatum (links) + Kundennummer (rechts)
@@ -259,7 +261,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         foreach($conditions AS $condition) {
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencyName.' ('.utf8_encode($this->currencySymbol).')', $condition)), 0, 'L');
+            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencySymbol, $condition)), 0, 'L');
             $this->pdf->Ln();
         }
     }
@@ -273,7 +275,6 @@ class InvoiceCreatePdfService
         $x = $this->pdf->GetX();
         $y = $this->pdf->GetY();
 
-        $footerColumn1 = null;
         if($this->receiver->getSpecialFooterColumn1())
             $footerColumn1 = $this->receiver->getSpecialFooterColumn1();
         elseif($this->lang == 'DE')
@@ -288,7 +289,6 @@ class InvoiceCreatePdfService
         $x = $this->pdf->GetX();
         $y = $this->pdf->GetY();
 
-        $footerColumn2 = null;
         if($this->receiver->getSpecialFooterColumn2())
             $footerColumn2 = $this->receiver->getSpecialFooterColumn2();
         elseif($this->lang == 'DE')
@@ -300,7 +300,6 @@ class InvoiceCreatePdfService
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
 
-        $footerColumn3 = null;
         if($this->receiver->getSpecialFooterColumn3())
             $footerColumn3 = $this->receiver->getSpecialFooterColumn3();
         elseif($this->lang == 'DE')
