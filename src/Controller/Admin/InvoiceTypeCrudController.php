@@ -27,9 +27,25 @@ class InvoiceTypeCrudController extends AbstractCrudController
         return [
             IdField::new('id')
                 ->hideOnForm(),
-            TextField::new('type', 'Type')
+
+            TextField::new('type', 'Type (DE)')
                 ->setColumns(2),
-            TextField::new('name')
+            TextField::new('name', 'Name (DE)')
+                ->setColumns(10),
+
+            TextField::new('typeEn', 'Type (EN)')
+                ->setColumns(2),
+            TextField::new('nameEn', 'Name (EN)')
+                ->setColumns(10),
+
+            TextField::new('typeFr', 'Type (FR)')
+                ->setColumns(2),
+            TextField::new('nameFr', 'Name (FR)')
+                ->setColumns(10),
+
+            TextField::new('typeIt', 'Type (IT)')
+                ->setColumns(2),
+            TextField::new('nameIt', 'Name (IT)')
                 ->setColumns(10),
         ];
     }
