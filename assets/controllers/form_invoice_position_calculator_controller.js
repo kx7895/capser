@@ -35,9 +35,10 @@ export default class extends Controller {
     // Funktion zum Setzen des Netto-Betrags
     setAmountNet(value) {
         const amountNetHolder = document.querySelector('.amountNetHolder');
-        amountNetHolder.innerHTML = ''; // clear
+        amountNetHolder.innerHTML = '';
         const amountNetDiv = document.createElement('div');
-        amountNetDiv.innerText = this.round(value, 2).replace('.', ',');
+        const roundedValue = this.round(value, 2);
+        amountNetDiv.innerText = Number(roundedValue).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         amountNetHolder.append(amountNetDiv);
     }
 
@@ -48,7 +49,7 @@ export default class extends Controller {
         const amountTaxHolder = document.querySelector('.amountTaxHolder');
         amountTaxHolder.innerHTML = ''; // clear
         const amountTaxDiv = document.createElement('div');
-        amountTaxDiv.innerText = amountTaxRounded.replace('.', ',');
+        amountTaxDiv.innerText = Number(amountTaxRounded).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         amountTaxHolder.append(amountTaxDiv);
         return amountTaxRounded;
     }
@@ -58,9 +59,9 @@ export default class extends Controller {
         let amountGross = parseFloat(value) + parseFloat(amountTax);
         let amountGrossRounded = this.round(amountGross, 2);
         const amountGrossHolder = document.querySelector('.amountGrossHolder');
-        amountGrossHolder.innerHTML = ''; // clear
+        amountGrossHolder.innerHTML = '';
         const amountGrossDiv = document.createElement('div');
-        amountGrossDiv.innerText = amountGrossRounded.replace('.', ',');
+        amountGrossDiv.innerText = Number(amountGrossRounded).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         amountGrossHolder.append(amountGrossDiv);
     }
 
