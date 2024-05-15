@@ -14,6 +14,8 @@ class InvoiceCreatePdfService
 
     private string $lang;
     private string $currencySymbol;
+    private string $invoiceTypeType = 'RE';
+    private string $invoiceTypeName = 'Rechnung';
     private Customer $receiver;
     private Principal $principal;
     private Invoice $invoice;
@@ -30,7 +32,16 @@ class InvoiceCreatePdfService
         $this->principal = $invoice->getPrincipal();
         $this->receiver = $invoice->getCustomer();
         $this->lang = (($this->invoice->getLanguage()->getAlpha2() == 'DE' || $this->invoice->getLanguage()->getAlpha2() == 'CH') ? 'DE' : 'EN');
+
         $this->currencySymbol = $invoice->getCurrency()->getAlpha3();
+
+        $methodName = 'getName'.ucfirst(strtolower($this->lang));
+        if($methodName == 'getNameDe' || $methodName == 'getNameCh')
+            $methodName = 'getName';
+        $this->invoiceTypeName = $invoice->getInvoiceType()->$methodName();
+
+        $methodType = str_replace('Name', 'Type', $methodName);
+        $this->invoiceTypeType = $invoice->getInvoiceType()->$methodType();
 
         $this->pdf = new Fpdf('P', 'mm', 'A4');
         $this->pdf->SetMargins(17, 5);
@@ -117,11 +128,7 @@ class InvoiceCreatePdfService
 
         // Überschrift
         $this->pdf->SetFont('Arial', 'B', 11);
-        $method = 'getName'.ucfirst(strtolower($this->lang));
-        if($method == 'getNameDe' || $method == 'getNameCh')
-            $method = 'getName';
-        $invoiceType = ($this->invoice->getInvoiceType()->$method() ? $this->invoice->getInvoiceType()->$method() : $this->invoice->getInvoiceType()->getName());
-        $this->pdf->Cell($cell1+$cell2, 5, $invoiceType);
+        $this->pdf->Cell($cell1+$cell2, 5, $this->invoiceTypeName);
         $this->pdf->Ln();
 
         // Belegdatum (links) + Kundennummer (rechts)
@@ -139,7 +146,7 @@ class InvoiceCreatePdfService
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell1, $height, ($this->lang == 'DE' ? 'Belegnummer' : 'Document Number').':');
         $this->pdf->SetFont('Arial', '', 9);
-        $this->pdf->Cell($cell2, $height, $this->invoice->getInvoiceType()->getType().' '.($this->invoice->getNumber() == 99999999 ? ($this->lang == 'DE' ? 'ENTWURF' : 'DRAFT') : $this->invoice->getNumber()));
+        $this->pdf->Cell($cell2, $height, $this->invoiceTypeType.' '.($this->invoice->getNumber() == 99999999 ? ($this->lang == 'DE' ? 'ENTWURF' : 'DRAFT') : $this->invoice->getNumber()));
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell3, $height, ($this->lang == 'DE' ? 'Ihre Kostenstelle' : 'Your Cost Center').':');
         $this->pdf->SetFont('Arial', '', 9);

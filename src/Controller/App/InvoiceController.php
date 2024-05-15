@@ -547,7 +547,6 @@ class InvoiceController extends AbstractController
                 $invoice->setCurrency($this->currencyRepository->findOneBy(['alpha3' => 'EUR'])); // TODO: Abhängig vom Kunden, nicht Standard
                 $invoice->setVatType('RC'); // TODO: Abhängig vom Kunden, nicht Standard
                 $invoice->setVatRate(0); // TODO: Abhängig vom Kunden, nicht Standard
-                $invoice->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type' => 'IN']));
                 return $invoice;
             }
 
