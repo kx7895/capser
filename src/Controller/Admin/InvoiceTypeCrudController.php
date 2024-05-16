@@ -39,14 +39,18 @@ class InvoiceTypeCrudController extends AbstractCrudController
                 ->setColumns(10),
 
             TextField::new('typeFr', 'Type (FR)')
-                ->setColumns(2),
+                ->setColumns(2)
+                ->hideOnIndex(),
             TextField::new('nameFr', 'Name (FR)')
-                ->setColumns(10),
+                ->setColumns(10)
+                ->hideOnIndex(),
 
             TextField::new('typeIt', 'Type (IT)')
-                ->setColumns(2),
+                ->setColumns(2)
+                ->hideOnIndex(),
             TextField::new('nameIt', 'Name (IT)')
-                ->setColumns(10),
+                ->setColumns(10)
+                ->hideOnIndex(),
         ];
     }
 }

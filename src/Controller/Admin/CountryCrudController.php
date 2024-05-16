@@ -27,14 +27,23 @@ class CountryCrudController extends AbstractCrudController
         return [
             IdField::new('id')
                 ->hideOnForm(),
-            TextField::new('name')
-                ->setColumns(12),
-            TextField::new('state_name', 'Staatenname')
-                ->setColumns(12),
             TextField::new('alpha2', 'ISO 3166-2 Letter')
-                ->setColumns(6),
+                ->setColumns(3),
             TextField::new('alpha3', 'ISO 3166-3 Letter')
+                ->setColumns(3),
+            TextField::new('state_name', 'Staatenname (DE)')
+                ->setColumns(6)
+                ->hideOnIndex(),
+            TextField::new('name', 'Name (DE)')
                 ->setColumns(6),
+            TextField::new('nameEn', 'Name (EN)')
+                ->setColumns(6),
+            TextField::new('nameFr', 'Name (FR)')
+                ->setColumns(6)
+                ->hideOnIndex(),
+            TextField::new('nameIt', 'Name (IT)')
+                ->setColumns(6)
+                ->hideOnIndex(),
         ];
     }
 }

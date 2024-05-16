@@ -136,7 +136,7 @@
                                 <div class="col-1 px-1 d-flex align-items-center">Menge</div>
                                 <div class="col-2 px-1 d-flex align-items-center">Einheit</div>
                                 <div class="col-1 px-1">Preis<br>[{{ invoice.currency.alpha3 }}]</div>
-                                <div class="col-1 px-1">Gesamt<br>[{{ invoice.currency.alpha3 }}]</div>
+                                <div class="col-1 px-1">Summe<br>[{{ invoice.currency.alpha3 }}]</div>
                                 <div class="col-1 px-1 d-flex align-items-center justify-content-end" style="margin-top:-5px;">
                                     <button type="button"
                                             class="btn btn-primary btn-sm"
@@ -187,7 +187,7 @@
                                 <p>{{ taxSentence }}</p>
                             {% endif %}
                             <p>
-                                {{ paymentSentence|replace({'_CURRENCY_': invoice.currency.name ~ ' (' ~ invoice.currency.alpha3 ~ ')' }) }}
+                                {{ paymentSentence|replace({'_CURRENCY_': invoice.currency.name}) }}
                             </p>
                             {{ form_widget(form.outroText) }}
                         </div>

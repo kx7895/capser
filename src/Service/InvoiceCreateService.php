@@ -83,14 +83,13 @@ class InvoiceCreateService
     public function getPaymentSentence(Invoice $invoice): string
     {
         $lang = $invoice->getLanguage()->getAlpha2();
-        $type = $invoice->getInvoiceType()->getType();
 
-        if(in_array($type, ['CR', 'RV', 'GU', 'ST', 'RK'])) {
+        if(!$invoice->isInvoice()) {
             return (($lang == 'DE' || $lang == 'CH') ? 'Die Verrechnung dieser Gutschrift erfolgt mit der nächstmöglichen Rechnung.' : 'We settle this amount against your next invoice.');
         } elseif($invoice->getDate() == $invoice->getDue()) {
             return (($lang == 'DE' || $lang == 'CH') ? 'Der Gesamtbetrag ist sofort zur Zahlung fällig. Bitte überweisen Sie den Gesamtbetrag in _CURRENCY_ auf das unten angegebene Konto.' : 'The total amount is due for immediate payment. Please transfer the total amount in _CURRENCY_ to the account indicated below.');
         } else {
-            return (($lang == 'DE' || $lang == 'CH') ? 'Bitte überweisen Sie den Gesamtbetrag bis zum '.$invoice->getDue()->format('d.m.Y').' in _CURRENCY_ auf das unten angegebene Konto.' : 'The total amount is due for payment until '.$invoice->getDue()->format('d.m.Y').'. Please transfer the total amount in _CURRENCY_ to the account indicated below.');
+            return (($lang == 'DE' || $lang == 'CH') ? 'Bitte überweisen Sie den Gesamtbetrag bis zum '.$invoice->getDue()->format('d.m.Y').' in _CURRENCY_ auf das unten angegebene Konto.' : 'The total amount is due for payment until '.$invoice->getDue()->format('Y-m-d').'. Please transfer the total amount in _CURRENCY_ to the account indicated below.');
         }
     }
 

@@ -13,6 +13,7 @@ class InvoiceCreatePdfService
     private Fpdf $pdf;
 
     private string $lang;
+    private string $dateFormat = 'd.m.Y';
     private string $currencySymbol;
     private string $invoiceTypeType = 'RE';
     private string $invoiceTypeName = 'Rechnung';
@@ -22,8 +23,8 @@ class InvoiceCreatePdfService
 
     private int $positionsCounter = 0;
 
-    private const WIDTHS = [95, 20, 23, 20, 20];
-    private const TABLEHEADS_DE = ['Beschreibung', 'Menge', 'Einheit', 'Preis [_CURRENCY_]', 'Gesamt [_CURRENCY_]'];
+    private const WIDTHS = [95, 16, 23, 22, 22];
+    private const TABLEHEADS_DE = ['Beschreibung', 'Menge', 'Einheit', 'Preis [_CURRENCY_]', 'Summe [_CURRENCY_]'];
     private const TABLEHEADS_EN = ['Position', 'Quantity', 'Unit', 'Price [_CURRENCY_]', 'Total [_CURRENCY_]'];
 
     public function __construct(Invoice $invoice)
@@ -33,15 +34,22 @@ class InvoiceCreatePdfService
         $this->receiver = $invoice->getCustomer();
         $this->lang = (($this->invoice->getLanguage()->getAlpha2() == 'DE' || $this->invoice->getLanguage()->getAlpha2() == 'CH') ? 'DE' : 'EN');
 
+        if($this->lang == 'DE')
+            $this->dateFormat = 'd.m.Y';
+        else
+            $this->dateFormat = 'Y-m-d';
+        
         $this->currencySymbol = $invoice->getCurrency()->getAlpha3();
 
         $methodName = 'getName'.ucfirst(strtolower($this->lang));
         if($methodName == 'getNameDe' || $methodName == 'getNameCh')
             $methodName = 'getName';
-        $this->invoiceTypeName = $invoice->getInvoiceType()->$methodName();
+        if($invoice->getInvoiceType()->$methodName())
+            $this->invoiceTypeName = $invoice->getInvoiceType()->$methodName();
 
         $methodType = str_replace('Name', 'Type', $methodName);
-        $this->invoiceTypeType = $invoice->getInvoiceType()->$methodType();
+        if($invoice->getInvoiceType()->$methodType())
+            $this->invoiceTypeType = $invoice->getInvoiceType()->$methodType();
 
         $this->pdf = new Fpdf('P', 'mm', 'A4');
         $this->pdf->SetMargins(17, 5);
@@ -83,8 +91,15 @@ class InvoiceCreatePdfService
             $principalAddress[] = $this->principal->getAddressLine3();
         if($this->principal->getAddressLine4())
             $principalAddress[] = $this->principal->getAddressLine4();
-        if($this->principal->getAddressLineCountry())
-            $principalAddress[] = $this->principal->getAddressLineCountry()->getName();
+        if($this->principal->getAddressLineCountry()) {
+            $methodName = 'getName'.ucfirst(strtolower($this->lang));
+            if($methodName == 'getNameDe' || $methodName == 'getNameCh')
+                $methodName = 'getName';
+            if($this->principal->getAddressLineCountry()->$methodName())
+                $principalAddress[] = $this->principal->getAddressLineCountry()->$methodName();
+            else
+                $principalAddress[] = $this->principal->getAddressLineCountry()->getName();
+        }
         $principalAddressString = implode(' | ', $principalAddress);
         
         $this->pdf->SetFont('Arial', '', 7);
@@ -100,8 +115,15 @@ class InvoiceCreatePdfService
             $receiverAddress[] = $this->receiver->getAddressLine3();
         if($this->receiver->getAddressLine4())
             $receiverAddress[] = $this->receiver->getAddressLine4();
-        if($this->receiver->getAddressLineCountry())
-            $receiverAddress[] = $this->receiver->getAddressLineCountry()->getName();
+        if($this->receiver->getAddressLineCountry()) {
+            $methodName = 'getName'.ucfirst(strtolower($this->lang));
+            if($methodName == 'getNameDe' || $methodName == 'getNameCh')
+                $methodName = 'getName';
+            if($this->principal->getAddressLineCountry()->$methodName())
+                $receiverAddress[] = $this->receiver->getAddressLineCountry()->$methodName();
+            else
+                $receiverAddress[] = $this->receiver->getAddressLineCountry()->getName();
+        }
         $receiverAddressString = implode('
 ', $receiverAddress);
 
@@ -135,7 +157,7 @@ class InvoiceCreatePdfService
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell1, $height, ($this->lang == 'DE' ? 'Belegdatum' : 'Document Date').':');
         $this->pdf->SetFont('Arial', '', 9);
-        $this->pdf->Cell($cell2, $height, $this->invoice->getDate()->format('d.m.Y'));
+        $this->pdf->Cell($cell2, $height, $this->invoice->getDate()->format($this->dateFormat));
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell3, $height, ($this->lang == 'DE' ? 'Ihre Kundennummer' : 'Your Customer Id').':');
         $this->pdf->SetFont('Arial', '', 9);
@@ -157,7 +179,7 @@ class InvoiceCreatePdfService
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell1, $height, ($this->lang == 'DE' ? 'Leistungszeitraum' : 'Period of Performance').':');
         $this->pdf->SetFont('Arial', '', 9);
-        $this->pdf->Cell($cell2, $height, $this->invoice->getPeriodFrom()->format('d.m.Y').' - '.$this->invoice->getPeriodTo()->format('d.m.Y'));
+        $this->pdf->Cell($cell2, $height, $this->invoice->getPeriodFrom()->format($this->dateFormat).' - '.$this->invoice->getPeriodTo()->format($this->dateFormat));
         $this->pdf->SetFont('Arial', 'B', 9);
         $this->pdf->Cell($cell3, $height, ($this->lang == 'DE' ? 'Ihre Referenz' : 'Your Reference').':');
         $this->pdf->SetFont('Arial', '', 9);

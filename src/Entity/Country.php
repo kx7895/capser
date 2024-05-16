@@ -16,6 +16,15 @@ class Country
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nameEn = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nameFr = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nameIt = null;
+
     #[ORM\Column(length: 255)]
     private ?string $stateName = null;
 
@@ -41,6 +50,42 @@ class Country
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getNameEn(): ?string
+    {
+        return $this->nameEn;
+    }
+
+    public function setNameEn(?string $nameEn): static
+    {
+        $this->nameEn = $nameEn;
+
+        return $this;
+    }
+
+    public function getNameFr(): ?string
+    {
+        return $this->nameFr;
+    }
+
+    public function setNameFr(?string $nameFr): static
+    {
+        $this->nameFr = $nameFr;
+
+        return $this;
+    }
+
+    public function getNameIt(): ?string
+    {
+        return $this->nameIt;
+    }
+
+    public function setNameIt(?string $nameIt): static
+    {
+        $this->nameIt = $nameIt;
 
         return $this;
     }
