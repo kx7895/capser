@@ -283,7 +283,7 @@ Yours sincerely,
         foreach($invoice->getInvoiceAttachments() AS $invoiceAttachment) {
             $email->addPart(new DataPart(new File($this->buildFullPathToFile($invoiceAttachment->getStorageFilename())), $invoiceAttachment->getNiceFilename()));
         }
-
+dd($email);
         try {
             $this->mailer->send($email);
             $this->sendLog($invoice, $email);
