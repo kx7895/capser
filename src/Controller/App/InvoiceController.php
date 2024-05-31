@@ -4,6 +4,7 @@ namespace App\Controller\App;
 
 use App\Entity\Invoice;
 use App\Entity\InvoiceAttachment;
+use App\Entity\InvoicePayment;
 use App\Entity\InvoicePosition;
 use App\Entity\User;
 use App\Form\InvoiceAttachmentFormType;
@@ -317,17 +318,26 @@ class InvoiceController extends AbstractController
         if(!$this->isAllowedForInvoice($user, $invoice, 'show'))
             return $this->redirectToRoute('app_invoice_index');
 
-        $paymentForm = null;
-        if($invoice->getPaymentStatus() != 'paid') {
-            // Build Form
-            $paymentForm = $this->createForm(InvoicePaymentFormType::class, $invoice, [
+        $paymentForm = $invoicePayment = null;
+        if(!$invoice->isPaid()) {
+            $invoicePayment = new InvoicePayment();
+            $invoicePayment->setInvoice($invoice);
+
+            $paymentForm = $this->createForm(InvoicePaymentFormType::class, $invoicePayment, [
                 'action' => $this->generateUrl('app_invoice_show', ['id' => $invoice->getId()]),
             ]);
 
             // Set Default
-            $paymentForm->get('paymentDate')->setData(new DateTime());
-            $paymentForm->get('paymentAmount')->setData($invoice->getAmountGross());
-            $paymentForm->get('paymentCurrency')->setData($invoice->getCurrency());
+            $paymentForm->get('date')->setData(new DateTime());
+            if(!$invoice->getInvoicePayments()->isEmpty()) {
+                $reduce = 0;
+                foreach($invoice->getInvoicePayments() as $existingInvoicePayment)
+                    $reduce += $existingInvoicePayment->getAmount();
+                $paymentForm->get('amount')->setData($invoice->getAmountGross()-$reduce);
+            } else {
+                $paymentForm->get('amount')->setData($invoice->getAmountGross());
+            }
+            $paymentForm->get('currency')->setData($invoice->getCurrency());
         }
 
         $newInvoiceAttachment = new InvoiceAttachment();
@@ -336,14 +346,22 @@ class InvoiceController extends AbstractController
             'action' => $this->generateUrl('app_invoice_show', ['id' => $invoice->getId()]),
         ]);
 
-        if($paymentForm) {
+        if($paymentForm && $invoicePayment) {
             $paymentForm->handleRequest($request);
             if($paymentForm->isSubmitted() && $paymentForm->isValid()) {
-                if($invoice->getPaymentDate()) {
-                    $invoice->setPaymentIsPaid(true);
-                    $invoice->setPaymentMarkedAt(new DateTimeImmutable());
-                    $invoice->setPaymentMarkedBy($this->getUser());
+                $invoicePayment->setCreatedAt(new DateTimeImmutable());
+                $invoicePayment->setCreatedBy($user);
+
+                if($invoicePayment->getCurrency() === $invoice->getCurrency()) {
+                    $sum = $invoicePayment->getAmount();
+                    foreach($invoice->getInvoicePayments() as $existingInvoicePayment)
+                        $sum += $existingInvoicePayment->getAmount();
+                    if($sum == $invoice->getAmountGross()) {
+                        $invoice->setPaid(true);
+                    }
                 }
+
+                $invoice->addInvoicePayment($invoicePayment);
 
                 $this->entityManager->persist($invoice);
                 $this->entityManager->flush();
@@ -434,22 +452,40 @@ class InvoiceController extends AbstractController
         return $this->invoiceActionHelper($invoice, 'cancel');
     }
 
+    #[Route('/{id}/paid', name: 'paid', methods: ['GET'])]
+    public function paidInvoice(Invoice $invoice): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'paidInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
+
+        return $this->invoiceActionHelper($invoice, 'paid');
+    }
+
     private function invoiceActionHelper(Invoice $invoice, string $action): RedirectResponse
     {
         $success = $successMessage = $failMessage = null;
 
         if($action == 'mail') {
             $success = $this->invoiceCreateService->sendToCustomer($invoice);
-            $successMessage = 'Der Beleg wurde erfolgreich wurde erfolgreich per E-Mail verschickt.';
+            $successMessage = 'Der Beleg wurde erfolgreich per E-Mail verschickt.';
             $failMessage = 'Der Beleg konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.';
         } elseif($action == 'remind') {
             $success = $this->invoiceCreateService->sendToCustomer($invoice, true);
-            $successMessage = 'Die Zahlungserinnerung wurde erfolgreich wurde erfolgreich per E-Mail verschickt.';
+            $successMessage = 'Die Zahlungserinnerung wurde erfolgreich per E-Mail verschickt.';
             $failMessage = 'Die Zahlungserinnerung konnte nicht per E-Mail verschickt werden, es ist ein Fehler aufgetreten.';
         } elseif($action == 'cancel') {
             $success = $this->invoiceCreateService->cancel($invoice);
             $successMessage = 'Die Rechnung wurde erfolgreich storniert.';
             $failMessage = 'Die Rechnung konnte nicht storniert werden, es ist ein Fehler aufgetreten.';
+        } elseif($action == 'paid') {
+            $invoice->setPaid(true);
+            $this->entityManager->persist($invoice);
+            $this->entityManager->flush();
+            $success = true;
+            $successMessage = 'Die Rechnung wurde als bezahlt markiert.';
         }
 
         if($success && $successMessage)

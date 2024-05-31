@@ -4,7 +4,7 @@ namespace App\Form;
 
 use App\Entity\AccountingPlanLedger;
 use App\Entity\Currency;
-use App\Entity\Invoice;
+use App\Entity\InvoicePayment;
 use App\Form\Field\CustomDateType;
 use App\Repository\AccountingPlanLedgerRepository;
 use App\Repository\CurrencyRepository;
@@ -20,11 +20,11 @@ class InvoicePaymentFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('paymentDate', CustomDateType::class, [
+            ->add('date', CustomDateType::class, [
                 'label' => 'Zahlungseingang <span class="text-danger">*</span>',
                 'required' => true,
             ])
-            ->add('paymentAmount', NumberType::class, [
+            ->add('amount', NumberType::class, [
                 'scale' => 2,
                 'label' => 'Bezahlter Betrag <span class="text-danger">*</span>',
                 'label_html' => true,
@@ -33,7 +33,7 @@ class InvoicePaymentFormType extends AbstractType
                 ],
                 'required' => true,
             ])
-            ->add('paymentCurrency', EntityType::class, [
+            ->add('currency', EntityType::class, [
                 'row_attr' => [
                     'class' => 'form-floating',
                 ],
@@ -57,7 +57,7 @@ class InvoicePaymentFormType extends AbstractType
                 'required' => true,
             ])
             /* TODO: Nur eigene Konten und nur vom tatsächlich aktivierten Kontenplan */
-            ->add('paymentAccountingPlanLedger', EntityType::class, [
+            ->add('accountingPlanLedger', EntityType::class, [
                 'row_attr' => [
                     'class' => 'form-floating',
                 ],
@@ -92,7 +92,7 @@ class InvoicePaymentFormType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Invoice::class,
+            'data_class' => InvoicePayment::class,
         ]);
     }
 }

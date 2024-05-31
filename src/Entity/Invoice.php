@@ -34,17 +34,20 @@ class Invoice
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToMany(targetEntity: InvoiceAttachment::class, mappedBy: 'invoice', cascade: ["persist", "remove"], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'invoice', targetEntity: InvoiceAttachment::class, cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $invoiceAttachments;
 
-    #[ORM\OneToMany(targetEntity: InvoicePosition::class, mappedBy: 'invoice', cascade: ["persist", "remove"], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'invoice', targetEntity: InvoicePosition::class, cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $invoicePositions;
 
-    #[ORM\OneToMany(targetEntity: InvoiceMailing::class, mappedBy: 'invoice', cascade: ["persist", "remove"], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'invoice', targetEntity: InvoiceMailing::class, cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $invoiceMailings;
 
-    #[ORM\OneToMany(targetEntity: InvoiceNote::class, mappedBy: 'invoice', cascade: ["persist", "remove"], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'invoice', targetEntity: InvoiceNote::class, cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $invoiceNotes;
+
+    #[ORM\OneToMany(mappedBy: 'invoice', targetEntity: InvoicePayment::class, cascade: ["persist", "remove"], orphanRemoval: true)]
+    private Collection $invoicePayments;
 
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'invoices')]
     private Collection $tags;
@@ -152,25 +155,7 @@ class Invoice
     private ?string $hPrincipalShortName = null;
 
     #[ORM\Column(nullable: true)]
-    private ?bool $paymentIsPaid = null;
-
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?DateTimeInterface $paymentDate = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?float $paymentAmount = null;
-
-    #[ORM\ManyToOne]
-    private ?Currency $paymentCurrency = null;
-
-    #[ORM\ManyToOne]
-    private ?AccountingPlanLedger $paymentAccountingPlanLedger = null;
-
-    #[ORM\ManyToOne]
-    private ?User $paymentMarkedBy = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?DateTimeImmutable $paymentMarkedAt = null;
+    private ?bool $paid = null;
 
     public function __construct()
     {
@@ -178,6 +163,7 @@ class Invoice
         $this->invoicePositions = new ArrayCollection();
         $this->invoiceMailings = new ArrayCollection();
         $this->invoiceNotes = new ArrayCollection();
+        $this->invoicePayments = new ArrayCollection();
         $this->tags = new ArrayCollection();
     }
 
@@ -300,6 +286,36 @@ class Invoice
             // set the owning side to null (unless already changed)
             if ($invoiceNote->getInvoice() === $this) {
                 $invoiceNote->setInvoice(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, InvoicePayment>
+     */
+    public function getInvoicePayments(): Collection
+    {
+        return $this->invoicePayments;
+    }
+
+    public function addInvoicePayment(InvoicePayment $invoicePayment): static
+    {
+        if (!$this->invoicePayments->contains($invoicePayment)) {
+            $this->invoicePayments->add($invoicePayment);
+            $invoicePayment->setInvoice($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInvoicePayment(InvoicePayment $invoicePayment): static
+    {
+        if ($this->invoicePayments->removeElement($invoicePayment)) {
+            // set the owning side to null (unless already changed)
+            if ($invoicePayment->getInvoice() === $this) {
+                $invoicePayment->setInvoice(null);
             }
         }
 
@@ -758,86 +774,19 @@ class Invoice
         return $this;
     }
 
-    public function isPaymentIsPaid(): ?bool
+    public function isInvoice(): bool
     {
-        return $this->paymentIsPaid;
+        return in_array($this->getInvoiceType()->getType(), ['IN', 'RE', 'RG']);
     }
 
-    public function setPaymentIsPaid(?bool $paymentIsPaid): static
+    public function isPaid(): ?bool
     {
-        $this->paymentIsPaid = $paymentIsPaid;
-
-        return $this;
+        return $this->paid;
     }
 
-    public function getPaymentDate(): ?DateTimeInterface
+    public function setPaid(?bool $paid): static
     {
-        return $this->paymentDate;
-    }
-
-    public function setPaymentDate(?DateTimeInterface $paymentDate): static
-    {
-        $this->paymentDate = $paymentDate;
-
-        return $this;
-    }
-
-    public function getPaymentAmount(): ?float
-    {
-        return $this->paymentAmount;
-    }
-
-    public function setPaymentAmount(?float $paymentAmount): static
-    {
-        $this->paymentAmount = $paymentAmount;
-
-        return $this;
-    }
-
-    public function getPaymentCurrency(): ?Currency
-    {
-        return $this->paymentCurrency;
-    }
-
-    public function setPaymentCurrency(?Currency $paymentCurrency): static
-    {
-        $this->paymentCurrency = $paymentCurrency;
-
-        return $this;
-    }
-
-    public function getPaymentAccountingPlanLedger(): ?AccountingPlanLedger
-    {
-        return $this->paymentAccountingPlanLedger;
-    }
-
-    public function setPaymentAccountingPlanLedger(?AccountingPlanLedger $paymentAccountingPlanLedger): static
-    {
-        $this->paymentAccountingPlanLedger = $paymentAccountingPlanLedger;
-
-        return $this;
-    }
-
-    public function getPaymentMarkedBy(): ?User
-    {
-        return $this->paymentMarkedBy;
-    }
-
-    public function setPaymentMarkedBy(?User $paymentMarkedBy): static
-    {
-        $this->paymentMarkedBy = $paymentMarkedBy;
-
-        return $this;
-    }
-
-    public function getPaymentMarkedAt(): ?DateTimeImmutable
-    {
-        return $this->paymentMarkedAt;
-    }
-
-    public function setPaymentMarkedAt(?DateTimeImmutable $paymentMarkedAt): static
-    {
-        $this->paymentMarkedAt = $paymentMarkedAt;
+        $this->paid = $paid;
 
         return $this;
     }
@@ -845,26 +794,50 @@ class Invoice
     public function getPaymentLabel(): string
     {
         if($this->getPaymentStatus() == 'paid')
-            return '<span class="badge text-bg-success">Bezahlt</span>';
+            return '<span class="badge text-bg-success-soft">Bezahlt</span>';
+        elseif($this->getPaymentStatus() == 'partly')
+            return '<span class="badge text-bg-warning-soft">Teilw. bezahlt</span>';
         elseif($this->getPaymentStatus() == 'overdue')
-            return '<span class="badge text-bg-danger">Überfällig</span>';
+            return '<span class="badge text-bg-danger-soft">Überfällig</span>';
         else
             return '<span class="badge text-bg-light">Offen</span>';
     }
 
     public function getPaymentStatus(): string
     {
-        if($this->isPaymentIsPaid())
+        if($this->isPaid())
             return 'paid';
+        elseif(!$this->getInvoicePayments()->isEmpty())
+            return 'partly';
         elseif($this->getDue()->format('Ymd') < (new DateTime())->format('Ymd'))
             return 'overdue';
         else
             return 'due';
     }
 
-    public function isInvoice(): bool
+    public function getAmountDue(): float
     {
-        return in_array($this->getInvoiceType()->getType(), ['IN', 'RE', 'RG']);
+        if($this->isPaid()) {
+            return 0;
+        } elseif(!$this->getInvoicePayments()->isEmpty()) {
+            if($this->isInvoice()) {
+                $reduce = 0;
+                foreach($this->getInvoicePayments() as $invoicePayment) {
+                    if($invoicePayment->getCurrency() === $this->getCurrency())
+                        $reduce += $invoicePayment->getAmount();
+                }
+                return ($this->getAmountGross())-$reduce;
+            } else {
+                $add = 0;
+                foreach($this->getInvoicePayments() as $invoicePayment) {
+                    if($invoicePayment->getCurrency() === $this->getCurrency())
+                        $add += $invoicePayment->getAmount();
+                }
+                return ($this->getAmountGross())+$add;
+            }
+        } else {
+            return $this->getAmountGross();
+        }
     }
 
     public function __toString(): string

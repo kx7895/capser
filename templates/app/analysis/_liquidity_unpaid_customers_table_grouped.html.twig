@@ -3,16 +3,15 @@
         <div class="div-table">
             <div class="row div-table-head">
                 <div class="col-1 collapse-arrow-col"></div>
-                <div class="col-7">Kunde</div>
-                <div class="col-2 text-end">Betrag (netto)</div>
-                <div class="col-2 text-end">Betrag (brutto)</div>
+                <div class="col-9">Kunde</div>
+                <div class="col-2 text-end">Offener Betrag</div>
             </div>
             {% for row in rows %}
                 <div class="row fw-bold div-table-body collapsed" data-bs-toggle="collapse" data-bs-target=".row{{ loop.index }}">
                     <div class="col-1 text-end collapse-arrow-col">
                         <div class="collapse-arrow"><i class="fas fa-angle-down"></i></div>
                     </div>
-                    <div class="col-7">
+                    <div class="col-9">
                         {{ row.customer.name }}
                         {% if row.customer.shortName %}
                             | <span class="text-mute fw-normal">{{ row.customer.shortName }}</span>
@@ -21,16 +20,9 @@
                     </div>
                     <div class="col-2 text-end">
                         {% if row.currency.alpha3 == 'CHF' %}
-                            CHF {{ row.sumAmountNet|number_format(2, '.', ',') }}
+                            CHF {{ row.sumAmountDue|number_format(2, '.', ',') }}
                         {% else %}
-                            {{ row.sumAmountNet|number_format(2, ',', '.') }} {{ row.currency.alpha3 }}
-                        {% endif %}
-                    </div>
-                    <div class="col-2 text-end">
-                        {% if row.currency.alpha3 == 'CHF' %}
-                            CHF {{ row.sumAmountGross|number_format(2, '.', ',') }}
-                        {% else %}
-                            {{ row.sumAmountGross|number_format(2, ',', '.') }} {{ row.currency.alpha3 }}
+                            {{ row.sumAmountDue|number_format(2, ',', '.') }} {{ row.currency.alpha3 }}
                         {% endif %}
                     </div>
                 </div>
@@ -38,20 +30,24 @@
                     <div class="col-12 p-0">
                         <div class="row mx-0 small div-table-head text-body">
                             <div class="col-1 collapse-arrow-col"></div>
-                            <div class="col-2">Beleg</div>
-                            <div class="col-2">Datum</div>
+                            <div class="col-3">Beleg</div>
+                            <div class="col-3">Datum</div>
                             <div class="col-3">Fälligkeit</div>
-                            <div class="col-2 text-end">Betrag (netto)</div>
-                            <div class="col-2 text-end">Betrag (brutto)</div>
+                            <div class="col-2 text-end">Offener Betrag</div>
                         </div>
                         {% for invoice in row.invoices %}
                             <div class="row {% if not loop.last %}border-bottom border-light{% endif %} mx-0 small">
                                 <div class="col-1 collapse-arrow-col border-0">
                                 </div>
-                                <div class="col-2">
-                                    {{ invoice.invoiceType.type }} {{invoice.number }}
+                                <div class="col-3">
+                                    <a href="{{ path('app_invoice_show', { 'id': invoice.id }) }}" target="_blank">
+                                        {{ invoice.invoiceType.type }} {{invoice.number }}
+                                    </a>
+                                    <a href="/{{ invoice.storageFilename }}" target="_blank">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
                                 </div>
-                                <div class="col-2">
+                                <div class="col-3">
                                     {{ invoice.date|date('d.m.Y') }}
                                 </div>
                                 <div class="col-3">
@@ -59,16 +55,9 @@
                                 </div>
                                 <div class="col-2 text-end">
                                     {% if invoice.currency.alpha3 == 'CHF' %}
-                                        CHF {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountNet|number_format(2, '.', ',') }}
+                                        CHF {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountDue|number_format(2, '.', ',') }}
                                     {% else %}
-                                        {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountNet|number_format(2, ',', '.') }} {{ invoice.currency.alpha3 }}
-                                    {% endif %}
-                                </div>
-                                <div class="col-2 text-end">
-                                    {% if invoice.currency.alpha3 == 'CHF' %}
-                                        CHF {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountGross|number_format(2, '.', ',') }}
-                                    {% else %}
-                                        {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountGross|number_format(2, ',', '.') }} {{ invoice.currency.alpha3 }}
+                                        {% if invoice.isInvoice == false %}-{% endif %}{{ invoice.amountDue|number_format(2, ',', '.') }} {{ invoice.currency.alpha3 }}
                                     {% endif %}
                                 </div>
                             </div>

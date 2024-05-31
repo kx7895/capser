@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Customer;
 use App\Entity\Invoice;
 use App\Entity\InvoiceMailing;
 use App\Entity\InvoiceMailingRecipient;
@@ -116,18 +115,6 @@ class InvoiceCreateService
                 return self::TAXTYPE_NOT_EN;
         }
 
-        return null;
-    }
-
-    /**
-     * Abhängig von dem Rechnungsempfänger ($customer) - insbesondere gibt es einzelne spezifische Rechnungsempfänger mit besonderen Bedingungen sowie ihrer UID folgend - und dem Steuersatz ($taxRate), gibt diese Funktion die anwendbare Steuerart ($taxType) zurück.
-     *
-     * @param Customer $customer
-     * @param float $taxRate
-     * @return string|null
-     */
-    public function getVatType(Customer $customer, float $taxRate): ?string
-    {
         return null;
     }
 
@@ -370,6 +357,7 @@ Yours sincerely,
         $credit->setCurrency($invoice->getCurrency());
         $credit->setAccountingPlanLedger($invoice->getAccountingPlanLedger());
         $credit->setTermOfPayment($invoice->getTermOfPayment());
+        $credit->setPaid(true);
         $this->entityManager->persist($credit);
 
         $creditPosition = new InvoicePosition();
@@ -379,6 +367,7 @@ Yours sincerely,
         $credit->addInvoicePosition($creditPosition);
 
         $invoice->setCancelled(true);
+        $invoice->setPaid(true);
         $this->entityManager->persist($invoice);
 
         // PDF CREATION

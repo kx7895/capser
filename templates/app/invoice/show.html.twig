@@ -125,7 +125,7 @@
                                     border: none;
                                 }
                             </style>
-                            <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;"></iframe>
+                            <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;" class="d-none d-xxl-block mb-3"></iframe>
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6">Beleg</legend>
                                 <div class="row d-flex">
@@ -262,47 +262,65 @@
                         <div class="card-header">Bezahlung</div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-lg-6">
+                                <div class="col-lg-5">
                                     {{ _self.listElement('Status', invoice.paymentLabel) }}
                                     {{ _self.listElement('Fälligkeit', invoice.due|date('d.m.Y')) }}
-                                    {{ _self.listElement('Bedingung', invoice.termOfPayment.name ~ ' (' ~ invoice.termOfPayment.dueDays ~ ' Tage)') }}
+                                    {{ _self.listElement('Bedingung', invoice.termOfPayment.name ~ '<br>' ~ invoice.termOfPayment.dueDays ~ ' Tage') }}
                                 </div>
-                                <div class="col-lg-6">
-                                    {% if invoice.paymentStatus == 'paid' %}
-                                        <fieldset class="border border-1 border-light mb-4 p-3">
-                                            <legend class="h6">Zahlungsdetails</legend>
-                                            {{ _self.listElement('Datum', invoice.paymentDate|date('d.m.Y')) }}
-                                            {{ _self.listElement('Währung', invoice.paymentCurrency.alpha3) }}
-                                            {{ _self.listElement('Betrag', invoice.paymentAmount|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
-                                            {{ _self.listElement('Konto', invoice.paymentAccountingPlanLedger.name) }}
-                                            {{ _self.listElement('Erfassung', invoice.paymentMarkedAt|date('d.m.Y, H:i') ~ ' (' ~ invoice.paymentMarkedBy.userIdentifier ~ ')') }}
-                                        </fieldset>
-                                    {% else %}
-                                        <fieldset class="border border-1 border-light mb-4 p-3">
-                                            <legend class="h6">Zahlung erfassen</legend>
-                                            {% if paymentForm %}
-                                                {{ form_start(paymentForm) }}
-                                                <div class="mb-2">
-                                                    {{ form_row(paymentForm.paymentDate) }}
-                                                </div>
-                                                <div class="mb-2">
-                                                    {{ form_row(paymentForm.paymentAmount) }}
-                                                </div>
-                                                <div class="mb-2">
-                                                    {{ form_row(paymentForm.paymentCurrency) }}
-                                                </div>
-                                                <div class="mb-2">
-                                                    {{ form_row(paymentForm.paymentAccountingPlanLedger) }}
-                                                </div>
-                                                <div class="d-flex justify-content-center">
-                                                    {{ form_widget(paymentForm.submit) }}
-                                                </div>
-                                                {{ form_widget(paymentForm) }}
+                                <div class="col-lg-7">
+                                    {% if paymentForm %}
+                                    <fieldset class="border border-1 border-light mb-4 p-3">
+                                        <legend class="h6 section collapsed" data-bs-toggle="collapse" data-bs-target="#paymentForm">
+                                            <span class="clickable">Zahlung erfassen</span>
+                                            <i class="collapse-arrow clickable fas fa-angle-down"></i>
+                                        </legend>
+                                        <div class="collapse" id="paymentForm">
+                                            {{ form_start(paymentForm) }}
+                                            <div class="mb-2">
+                                                {{ form_row(paymentForm.date) }}
+                                            </div>
+                                            <div class="mb-2">
+                                                {{ form_row(paymentForm.amount) }}
+                                            </div>
+                                            <div class="mb-2">
+                                                {{ form_row(paymentForm.currency) }}
+                                            </div>
+                                            <div class="mb-2">
+                                                {{ form_row(paymentForm.accountingPlanLedger) }}
+                                            </div>
+                                            <div class="d-flex justify-content-center">
+                                                {{ form_widget(paymentForm.submit) }}
+                                            </div>
+                                            {{ form_widget(paymentForm) }}
 
-                                                {{ form_end(paymentForm) }}
-                                            {% endif %}
-                                        </fieldset>
+                                            {{ form_end(paymentForm) }}
+                                        </div>
+                                    </fieldset>
                                     {% endif %}
+
+                                    <fieldset class="border border-1 border-light mb-4 p-3">
+                                        <legend class="h6">Erfasste Zahlungen</legend>
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Datum</th>
+                                                    <th scope="col">Betrag</th>
+                                                    <th scope="col">Währung</th>
+                                                    <th scope="col">Konto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for invoicePayment in invoice.invoicePayments %}
+                                                <tr>
+                                                    <td>{{ invoicePayment.date|date('d.m.Y') }}</td>
+                                                    <td>{{ invoicePayment.amount|number_format(2, format_params.decimal_point, format_params.thousands_sep) }}</td>
+                                                    <td>{{ invoicePayment.currency.alpha3 }}</td>
+                                                    <td>{{ invoicePayment.accountingPlanLedger.name }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </fieldset>
                                 </div>
                             </div>
                         </div>
@@ -400,30 +418,40 @@
                                 </a>
                             </li>
                             {% if draft != true %}
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
-                                        <i class="fa-regular fa-envelope icon-column"></i> Beleg per E-Mail versenden
+                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id }) }}" onclick="return confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                        <i class="fa-regular fa-envelope icon-column"></i> Beleg versenden
                                     </a>
                                 </li>
                                 {% if invoice.sent %}
                                     <li>
-                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
-                                            <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung per E-Mail versenden
+                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id }) }}" onclick="return confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                            <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung versenden
                                         </a>
                                     </li>
                                 {% endif %}
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id }) }}">
                                         <i class="fa-regular fa-copy icon-column"></i> Kopieren
                                     </a>
                                 </li>
                             {% endif %}
+                            {% if invoice.paid == false %}
                             <li>
-                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
-                                    <i class="fa-regular fa-xmark icon-column"></i> Stornieren
+                                <a class="dropdown-item" href="{{ path('app_invoice_paid', { id: invoice.id }) }}" onclick="return confirm('Soll dieser Belag als vollständig bezahlt markiert werden?')">
+                                    <i class="fa-solid fa-money-bill-1-wave icon-column"></i> Vollständig bezahlt
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id }) }}" onclick="return confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
+                                    <i class="fa-solid fa-xmark icon-column"></i> Stornieren
                                 </a>
                             </li>
                             {% if is_granted('ROLE_SUPERADMIN') %}
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}" onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
                                         <i class="fas fa-trash-alt icon-column"></i> Löschen
@@ -451,50 +479,6 @@
                     <a class="btn btn-outline-primary" href="{{ path('app_invoice_index') }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
-                    <div class="btn-group dropup" role="group">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Aktionen
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment">
-                                    <i class="fa-solid fa-paperclip icon-column"></i> Anhang hinzufügen
-                                </a>
-                            </li>
-                            {% if draft != true %}
-                                <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
-                                        <i class="fa-regular fa-envelope icon-column"></i> Beleg per E-Mail versenden
-                                    </a>
-                                </li>
-                                {% if invoice.sent %}
-                                    <li>
-                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
-                                            <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung per E-Mail versenden
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id }) }}">
-                                        <i class="fa-regular fa-copy icon-column"></i> Kopieren
-                                    </a>
-                                </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
-                                    <i class="fa-regular fa-xmark icon-column"></i> Stornieren
-                                </a>
-                            </li>
-                            {% if is_granted('ROLE_SUPERADMIN') %}
-                                <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}" onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
-                                        <i class="fas fa-trash-alt icon-column"></i> Löschen
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </div>
-
                 </div>
             </div>
         </div>

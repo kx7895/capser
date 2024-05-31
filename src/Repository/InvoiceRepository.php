@@ -65,8 +65,8 @@ class InvoiceRepository extends ServiceEntityRepository
                 if($value === false) {
                     $qb->andWhere(
                         $qb->expr()->orX(
-                            $qb->expr()->isNull('i.paymentIsPaid'),
-                            $qb->expr()->eq('i.paymentIsPaid', '0')
+                            $qb->expr()->isNull('i.paid'),
+                            $qb->expr()->eq('i.paid', '0')
                         )
                     );
                 }
@@ -88,20 +88,17 @@ class InvoiceRepository extends ServiceEntityRepository
         foreach($qb->getQuery()->getResult() as $invoice) {
             $unique = 'CUSTOMER'.$invoice->getCustomer()->getId().'#'.'CURRENCY'.$invoice->getCurrency()->getId();
 
-            $amountNet = ($invoice->isInvoice() ? $invoice->getAmountNet() : $invoice->getAmountNet()*-1);
-            $amountGross = ($invoice->isInvoice() ? $invoice->getAmountGross() : $invoice->getAmountGross()*-1);
+            $amountDue = ($invoice->isInvoice() ? $invoice->getAmountDue() : $invoice->getAmountDue()*-1);
 
             if(isset($customers[$unique])) {
-                $customers[$unique]['sumAmountNet'] += $amountNet;
-                $customers[$unique]['sumAmountGross'] += $amountGross;
+                $customers[$unique]['sumAmountDue'] += $amountDue;
                 $customers[$unique]['invoices'][] = $invoice;
 
             } else {
                 $customers[$unique] = [
                     'customer' => $invoice->getCustomer(),
                     'currency' => $invoice->getCurrency(),
-                    'sumAmountNet' => $amountNet,
-                    'sumAmountGross' => $amountGross,
+                    'sumAmountDue' => $amountDue,
                     'invoices' => [$invoice],
                 ];
             }

@@ -43,7 +43,11 @@
                 {% for invoice in rows %}
                     <tr>
                         <td>{{ invoice.date|date('d.m.Y') }}</td>
-                        <td>{{ invoice.invoiceType.type }} {{ invoice.number }}</td>
+                        <td>
+                            <a href="{{ path('app_invoice_show', { 'id': invoice.id }) }}" target="_blank">
+                                {{ invoice.invoiceType.type }} {{ invoice.number }}
+                            </a>
+                        </td>
                         <td>
                             {{ invoice.customerName }}
                             {% if invoice.customerShortName %}
@@ -64,15 +68,12 @@
                                 <br> &dash; {{ invoice.periodTo|date('d.m.Y') }}
                             {% endif %}
                         </td>
-                        <td>{{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}</td>
+                        <td>{{ invoice.currency.alpha3 }} {{ invoice.amountDue|number_format(2, ',', '.') }}</td>
                         <td>{{ invoice.due|date('d.m.Y') }}</td>
                         <td>{{ invoice.paymentLabel|raw }}</td>
                         <td class="action-column">
                             <a href="/{{ invoice.storageFilename }}" target="_blank">
                                 <i class="fa-regular fa-eye"></i>
-                            </a>
-                            <a href="{{ path('app_invoice_show', { 'id': invoice.id }) }}" target="_blank">
-                                <i class="fa-solid fa-square-arrow-up-right"></i>
                             </a>
                         </td>
                     </tr>
