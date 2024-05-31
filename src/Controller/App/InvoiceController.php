@@ -54,6 +54,7 @@ class InvoiceController extends AbstractController
 
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(
+        Request $request,
         #[MapQueryParameter] int $page = 1,
         #[MapQueryParameter] string $sort = 'date',
         #[MapQueryParameter] string $sortDirection = 'DESC',
@@ -70,10 +71,17 @@ class InvoiceController extends AbstractController
         $allowedCustomers = $this->customerRepository->findAllowed($allowedPrincipals);
 
         // FILTER
+        if($request->query->has('clear') && $request->query->get('clear')) {
+            $this->userPreferenceService->set($user, 'InvoiceController_index_queryPrincipalId', null);
+            $this->userPreferenceService->set($user, 'InvoiceController_index_queryCustomerId', null);
+        }
         $queryPrincipalId = $this->prefs->handle($user, 'InvoiceController_index_queryPrincipalId', $queryPrincipalId);
         $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
         $queryCustomerId = $this->prefs->handle($user, 'InvoiceController_index_queryCustomerId', $queryCustomerId);
         $queryCustomer = $this->dataTableService->processCustomerSelect($queryCustomerId, $allowedPrincipals);
+        $activeFilters = 0;
+        if($queryPrincipal) $activeFilters++;
+        if($queryCustomer) $activeFilters++;
 
         // SEARCH
         $query = $this->prefs->handle($user, 'InvoiceController_index_query', $query);
@@ -103,6 +111,7 @@ class InvoiceController extends AbstractController
             'query' => $query,
             'sort' => $sort,
             'sortDirection' => $sortDirection,
+            'activeFilters' => $activeFilters,
 
             'invoices' => $invoices,
         ]);
@@ -595,7 +604,6 @@ class InvoiceController extends AbstractController
                 $invoice->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type' => 'RE']));
                 $invoice->setIntroText($this->userPreferenceService->get($user, 'invoiceDefaultIntroText'));
                 $invoice->setOutroText($this->userPreferenceService->get($user, 'invoiceDefaultOutroText'));
-                // TODO: Beleggrunddaten abhängig vom Kunden, nicht vom Benutzer
                 $invoice->setLanguage($this->languageRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultLanguage')));
                 $invoice->setCurrency($this->currencyRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultCurrency')));
                 $invoice->setVatType($this->userPreferenceService->get($user, 'invoiceDefaultVatType'));

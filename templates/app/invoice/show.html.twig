@@ -118,14 +118,14 @@
                     <div class="card mb-4" id="sectionDokumente">
                         <div class="card-header">Dokumente</div>
                         <div class="card-body">
-{#                            <style>#}
-{#                                iframe {#}
-{#                                    width: 100%;#}
-{#                                    height: 500px;#}
-{#                                    border: none;#}
-{#                                }#}
-{#                            </style>#}
-{#                            <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;"></iframe>#}
+                            <style>
+                                iframe {
+                                    width: 100%;
+                                    height: 500px;
+                                    border: none;
+                                }
+                            </style>
+                            <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;"></iframe>
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6">Beleg</legend>
                                 <div class="row d-flex">
@@ -148,10 +148,10 @@
                             <fieldset class="border border-1 border-light mb-4 p-3">
                                 <legend class="h6 d-flex justify-content-between align-items-center">
                                     Anhänge
-                                    <buttn data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment"
+                                    <button data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment"
                                            class="btn btn-primary btn-xs">
                                         Neuer Anhang
-                                    </buttn>
+                                    </button>
                                 </legend>
                                 {% for invoiceAttachment in invoice.invoiceAttachments %}
                                 <div class="row d-flex">

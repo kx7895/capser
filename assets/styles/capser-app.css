@@ -154,3 +154,7 @@
         border-bottom-width: 1px;
     }
 }
+
+tr.clickable {
+    cursor: pointer;
+}
