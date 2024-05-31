@@ -72,7 +72,7 @@
                                             Referenz:
                                         </div>
                                         <div class="col-8">
-                                            <a href="{{ path('app_invoice_show', { id: invoice.invoiceReference.id, ...app.request.query.all()  }) }}">{{ invoice.invoiceReference.invoiceType.type }} {{ invoice.invoiceReference.number }}</a>
+                                            <a href="{{ path('app_invoice_show', { id: invoice.invoiceReference.id }) }}">{{ invoice.invoiceReference.invoiceType.type }} {{ invoice.invoiceReference.number }}</a>
                                         </div>
                                     </div>
                                 {% endif %}
@@ -162,8 +162,7 @@
                                         <a href="{{ path('app_invoice_attachment_delete', {
                                             'id': invoice.id,
                                             'idInvoiceAttachment': invoiceAttachment.id,
-                                            '_token': csrf_token('delete' ~ invoice.id),
-                                            ...app.request.query.all()
+                                            '_token': csrf_token('delete' ~ invoice.id)
                                         }) }}"
                                            onclick="return confirm('Soll dieser Anhang wirklich unwiderruflich entfernt werden?');"
                                             role="button" class="btn btn-outline-danger btn-xs me-1">
@@ -386,7 +385,7 @@
             <!-- Large Screens -->
             <div class="nav-sticky d-none d-xxl-block">
                 <div class="btn-group d-flex" role="group">
-                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index') }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
                     <!-- ACTIONS -->
@@ -402,31 +401,31 @@
                             </li>
                             {% if draft != true %}
                                 <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
                                         <i class="fa-regular fa-envelope icon-column"></i> Beleg per E-Mail versenden
                                     </a>
                                 </li>
                                 {% if invoice.sent %}
                                     <li>
-                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
                                             <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung per E-Mail versenden
                                         </a>
                                     </li>
                                 {% endif %}
                                 <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id, ...app.request.query.all() }) }}">
+                                    <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id }) }}">
                                         <i class="fa-regular fa-copy icon-column"></i> Kopieren
                                     </a>
                                 </li>
                             {% endif %}
                             <li>
-                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id, ...app.request.query.all() }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
+                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
                                     <i class="fa-regular fa-xmark icon-column"></i> Stornieren
                                 </a>
                             </li>
                             {% if is_granted('ROLE_SUPERADMIN') %}
                                 <li>
-                                    <a class="dropdown-item" href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id), ...app.request.query.all() }) }}" onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
+                                    <a class="dropdown-item" href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}" onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
                                         <i class="fas fa-trash-alt icon-column"></i> Löschen
                                     </a>
                                 </li>
@@ -449,10 +448,52 @@
             <!-- Other Screens -->
             <div class="d-xxl-none">
                 <div class="text-center mt-5">
-                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index') }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
-
+                    <div class="btn-group dropup" role="group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Aktionen
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment">
+                                    <i class="fa-solid fa-paperclip icon-column"></i> Anhang hinzufügen
+                                </a>
+                            </li>
+                            {% if draft != true %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ path('app_invoice_mail', { id: invoice.id }) }}" onclick="confirm('Sollen dieser Beleg und etwaige Anhänge an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                        <i class="fa-regular fa-envelope icon-column"></i> Beleg per E-Mail versenden
+                                    </a>
+                                </li>
+                                {% if invoice.sent %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('app_invoice_remind', { id: invoice.id }) }}" onclick="confirm('Soll eine Zahlungserinnerung mit diesem Beleg und etwaigen Anhängen an die im Kundendatensatz hinterlegten E-Mail-Empfänger verschickt werden?')">
+                                            <i class="fa-regular fa-envelope icon-column"></i> Zahlungserinnerung per E-Mail versenden
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ path('app_invoice_copy', { id: invoice.id }) }}">
+                                        <i class="fa-regular fa-copy icon-column"></i> Kopieren
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_invoice_cancel', { id: invoice.id }) }}" onclick="confirm('Soll für diesen Beleg eine Rechnungskorrektur (vollständige Erstattung) erstellt werden?')">
+                                    <i class="fa-regular fa-xmark icon-column"></i> Stornieren
+                                </a>
+                            </li>
+                            {% if is_granted('ROLE_SUPERADMIN') %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}" onclick="return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
+                                        <i class="fas fa-trash-alt icon-column"></i> Löschen
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
 
                 </div>
             </div>

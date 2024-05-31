@@ -54,7 +54,8 @@ class InvoicePositionType extends AbstractType
                 'label' => 'Einheit',
                 'attr' => [
                     'class' => 'h-100',
-                ]
+                ],
+                'required' => false,
             ])
             ->add('price', MoneyType::class, [
                 'currency' => false,

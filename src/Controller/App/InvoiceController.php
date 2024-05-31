@@ -15,9 +15,11 @@ use App\Repository\CustomerRepository;
 use App\Repository\InvoiceAttachmentRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\InvoiceTypeRepository;
+use App\Repository\LanguageRepository;
 use App\Service\DataTableService;
 use App\Service\InvoiceCreatePdfService;
 use App\Service\InvoiceCreateService;
+use App\Service\UserPreferenceService;
 use DateTime;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -44,15 +46,15 @@ class InvoiceController extends AbstractController
         private readonly InvoiceAttachmentRepository $invoiceAttachmentRepository,
         private readonly DataTableService            $dataTableService,
         private readonly InvoiceCreateService        $invoiceCreateService,
+        private readonly UserPreferenceService       $prefs,
         private readonly EntityManagerInterface      $entityManager,
         private readonly LoggerInterface             $logger,
-        private readonly SluggerInterface            $slugger,
+        private readonly SluggerInterface            $slugger, private readonly UserPreferenceService $userPreferenceService, private readonly LanguageRepository $languageRepository,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(
         #[MapQueryParameter] int $page = 1,
-        #[MapQueryParameter] int $itemsPerPage = 20, // TODO: Vielleicht in Benutzer-Einstellungen setzen lassen.
         #[MapQueryParameter] string $sort = 'date',
         #[MapQueryParameter] string $sortDirection = 'DESC',
         #[MapQueryParameter] string $query = null,
@@ -60,61 +62,68 @@ class InvoiceController extends AbstractController
         #[MapQueryParameter] string $queryCustomerId = null,
     ): Response
     {
+        // USER
         /** @var User $user */
         $user = $this->getUser();
+        $this->logger->debug('InvoiceController->index(): {user}', ['user' => $user->getUserIdentifier()]);
         $allowedPrincipals = $user->getPrincipals();
         $allowedCustomers = $this->customerRepository->findAllowed($allowedPrincipals);
 
+        // FILTER
+        $queryPrincipalId = $this->prefs->handle($user, 'InvoiceController_index_queryPrincipalId', $queryPrincipalId);
         $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
+        $queryCustomerId = $this->prefs->handle($user, 'InvoiceController_index_queryCustomerId', $queryCustomerId);
         $queryCustomer = $this->dataTableService->processCustomerSelect($queryCustomerId, $allowedPrincipals);
 
+        // SEARCH
+        $query = $this->prefs->handle($user, 'InvoiceController_index_query', $query);
+
+        // PAGINATION
+        $itemsPerPage = $this->prefs->get($user, 'itemsPerPage');
+        $sort = $this->prefs->handle($user, 'InvoiceController_index_sort', $sort);
         $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountNet', 'createdAt']);
+        $sortDirection = $this->prefs->handle($user, 'InvoiceController_index_sortDirection', $sortDirection);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
 
+        // TABLE
         $queryParameters = [];
         if($queryPrincipal)
             $queryParameters['principal'] = $queryPrincipal;
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
-
-        $urlQueryParts = [
-            'queryPrincipalId' => $queryPrincipalId,
-            'queryCustomerId' => $queryCustomerId,
-            'query' => $query,
-            'sort' => $sort,
-            'sortDirection' => $sortDirection,
-        ];
-
         $invoices = $this->dataTableService->buildDataTable($this->invoiceRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
+        if(count($invoices) > 0)
+            $this->logger->debug('InvoiceController->index(): Bis zu {count} Zeilen angezeigt', ['user' => $user->getUserIdentifier(), 'count' => count($invoices)]);
 
         return $this->render('app/invoice/index.html.twig', [
-            'invoices' => $invoices,
-
             'allowedPrincipals' => $allowedPrincipals,
             'queryPrincipal' => $queryPrincipal,
             'allowedCustomers' => $allowedCustomers,
             'queryCustomer' => $queryCustomer,
             'query' => $query,
-            'page' => $page,
-            'itemsPerPage' => $itemsPerPage,
             'sort' => $sort,
             'sortDirection' => $sortDirection,
 
-            'urlQueryParts' => $urlQueryParts,
+            'invoices' => $invoices,
         ]);
     }
 
-    #[Route('/new/basics', name: 'new_basics', methods: ['GET', 'POST'])]
+    #[Route('/new', name: 'new_basics', methods: ['GET', 'POST'])]
     public function newBasics(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        /** @var Invoice $invoice */
         $invoice = $this->findOrCreateInvoice($request, true);
         if(!$invoice)
-            return $this->redirectToRoute('app_invoice_index');
+            return $this->invoiceLogErrorAndRedirectToIndex('newBasics', 'ICnB1');
 
-        $form = $this->createInvoiceForm($request, $invoice, 1);
+        $form = $this->createInvoiceForm($invoice, 1);
         $form->handleRequest($request);
-
         if($form->isSubmitted() && $form->isValid()) {
+            $this->logger->debug('InvoiceController->newBasics(): {user} - Form submitted', ['user' => $user->getUserIdentifier()]);
+
             // define due date
             $due = clone $invoice->getDate();
             if($invoice->getTermOfPayment() && $invoice->getTermOfPayment()->getDueDays() > 0)
@@ -143,7 +152,9 @@ class InvoiceController extends AbstractController
             $this->entityManager->persist($invoice);
             $this->entityManager->flush();
 
-            return $this->redirectToRoute('app_invoice_new_positions', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+            return $this->redirectToRoute('app_invoice_new_positions', ['id' => $invoice->getId()]);
+        } else {
+            $this->logger->debug('InvoiceController->newBasics(): {user}', ['user' => $user->getUserIdentifier()]);
         }
 
         return $this->render('app/invoice/new_basics.html.twig', [
@@ -155,29 +166,36 @@ class InvoiceController extends AbstractController
     #[Route('/new/positions', name: 'new_positions', methods: ['GET', 'POST'])]
     public function newPositions(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         /** @var Invoice $invoice */
-        $invoice = $this->findOrCreateInvoice($request, false);
+        $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
-            return $this->redirectToRoute('app_invoice_index');
+            return $this->invoiceLogErrorAndRedirectToIndex('newPositions', 'ICnP1');
 
-        $form = $this->createInvoiceForm($request, $invoice, 2);
+        $form = $this->createInvoiceForm($invoice, 2);
         $form->handleRequest($request);
-
         if($form->isSubmitted() && $form->isValid()) {
+            $this->logger->info('InvoiceController->newPositions(): {user} - Form submitted', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
+
             $this->entityManager->persist($invoice);
             $this->entityManager->flush();
 
             $redirectTarget = 'new_positions';
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if($form->get('finalize')->isClicked() || $form->get('finalizeXXL')->isClicked())
                 $redirectTarget = 'new_final';
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             elseif($form->get('return')->isClicked() || $form->get('returnXXL')->isClicked())
                 $redirectTarget = 'new_basics';
 
-            if($redirectTarget == 'new_positions') {
+            if($redirectTarget == 'new_positions')
                 $this->addFlash('success', ['Entwurf', 'Der aktuelle Entwurf des Beleges wurde erfolgreich gespeichert.']);
-            }
 
-            return $this->redirectToRoute('app_invoice_'.$redirectTarget, ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+            return $this->redirectToRoute('app_invoice_'.$redirectTarget, ['id' => $invoice->getId()]);
+        } else {
+            $this->logger->info('InvoiceController->newPositions(): {user}', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
         }
 
         return $this->render('app/invoice/new_positions.html.twig', [
@@ -191,23 +209,30 @@ class InvoiceController extends AbstractController
     #[Route('/new/preview', name: 'new_preview')]
     public function newPreview(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         /** @var Invoice $invoice */
-        $invoice = $this->findOrCreateInvoice($request, false);
+        $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
-            return $this->redirectToRoute('app_invoice_index');
+            return $this->invoiceLogErrorAndRedirectToIndex('newPreview', 'ICnPr1');
 
         [, $pdf] = $this->buildInvoice($invoice);
 
+        $this->logger->info('InvoiceController->newPreview(): Durch Benutzer {user} wurde für Beleg #{id} eine PDF-Vorschau erstellt', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
         return new Response($pdf->Output('I', $invoice->getNiceFilename()), 200, array('Content-Type' => 'application/pdf'));
     }
 
     #[Route('/new/final', name: 'new_final')]
     public function newFinal(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         /** @var Invoice $invoice */
-        $invoice = $this->findOrCreateInvoice($request, false);
+        $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
-            return $this->redirectToRoute('app_invoice_index');
+            return $this->invoiceLogErrorAndRedirectToIndex('newFinal', 'ICnF1');
 
         [$invoice, $pdf] = $this->buildInvoice($invoice, true);
 
@@ -219,6 +244,7 @@ class InvoiceController extends AbstractController
         $this->entityManager->persist($invoice);
         $this->entityManager->flush();
 
+        $this->logger->info('InvoiceController->newFinal(): Durch Benutzer {user} wurde der Beleg #{id} ({invoiceType} {invoiceNumber} final erstellt', ['user' => $user->getUserIdentifier(), 'invoiceType' => $invoice->getInvoiceType()->getType(), 'invoiceNumber' => $invoice->getNumber(), 'id' => $invoice->getId()]);
         $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Beleg wurde erfolgreich erstellt und kann nun per E-Mail verschickt werden.']);
         return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
     }
@@ -275,19 +301,18 @@ class InvoiceController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET', 'POST'])]
     public function show(Invoice $invoice, Request $request): Response
     {
-        // TODO: Security - nur Invoices für eigene Principals! Voters!
+        /** @var User $user */
+        $user = $this->getUser();
+        $this->logger->info('InvoiceController->show(): {user}', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'show'))
+            return $this->redirectToRoute('app_invoice_index');
 
         $paymentForm = null;
-//        $uploadAttachmentForm = null;
-
-        $parameters = $this->dataTableService->parametersFromQueryToArray($request);
-        if($invoice->getId())
-            $parameters['id'] = $invoice->getId();
-
         if($invoice->getPaymentStatus() != 'paid') {
             // Build Form
             $paymentForm = $this->createForm(InvoicePaymentFormType::class, $invoice, [
-                'action' => $this->generateUrl('app_invoice_show', $parameters),
+                'action' => $this->generateUrl('app_invoice_show', ['id' => $invoice->getId()]),
             ]);
 
             // Set Default
@@ -299,7 +324,7 @@ class InvoiceController extends AbstractController
         $newInvoiceAttachment = new InvoiceAttachment();
         $newInvoiceAttachment->setInvoice($invoice);
         $uploadAttachmentForm = $this->createForm(InvoiceAttachmentFormType::class, $newInvoiceAttachment, [
-            'action' => $this->generateUrl('app_invoice_show', $parameters),
+            'action' => $this->generateUrl('app_invoice_show', ['id' => $invoice->getId()]),
         ]);
 
         if($paymentForm) {
@@ -307,15 +332,15 @@ class InvoiceController extends AbstractController
             if($paymentForm->isSubmitted() && $paymentForm->isValid()) {
                 if($invoice->getPaymentDate()) {
                     $invoice->setPaymentIsPaid(true);
-                    $invoice->setPaymentMarkedAt(new DateTimeImmutable()); // TODO: Mit Doctrine Extensions Timestampable arbeiten
-                    $invoice->setPaymentMarkedBy($this->getUser()); // TODO: Mit Doctrine Extensions Blamable arbeiten
+                    $invoice->setPaymentMarkedAt(new DateTimeImmutable());
+                    $invoice->setPaymentMarkedBy($this->getUser());
                 }
 
                 $this->entityManager->persist($invoice);
                 $this->entityManager->flush();
 
                 $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Zahlungseingang wurde erfolgreich gespeichert.']);
-                return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+                return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
             }
         }
 
@@ -338,23 +363,23 @@ class InvoiceController extends AbstractController
                     $this->logger->warning('Dateiupload (Rechnungsanhang) fehlgeschlagen: '.$e->getMessage().' ('.$e->getCode().')');
 
                     $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der neue Anhang konnte nicht hinzugefügt werden, es ist ein Fehler aufgetreten.']);
-                    return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+                    return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
                 }
 
                 $newInvoiceAttachment->setStorageFilename('files/invoices/'.$newStorageFilename);
                 $newInvoiceAttachment->setNiceFilename($newFilename);
-                $newInvoiceAttachment->setCreatedAt(new DateTimeImmutable()); // TODO: Mit Doctrine Extensions Timestampable arbeiten
-                $newInvoiceAttachment->setCreatedBy($this->getUser()); // TODO: Mit Doctrine Extensions Blamable arbeiten
+                $newInvoiceAttachment->setCreatedAt(new DateTimeImmutable());
+                $newInvoiceAttachment->setCreatedBy($this->getUser());
 
                 $this->entityManager->persist($newInvoiceAttachment);
                 $this->entityManager->flush();
             }
 
             $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der neue Anhang '.$newInvoiceAttachment->getNiceFilename().' wurde erfolgreich hinzugefügt.']);
-            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
         } elseif($uploadAttachmentForm->isSubmitted() && !$uploadAttachmentForm->isValid()) {
             $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Anhang konnte nicht hinzugefügt werden, bitte versuchen Sie es erneut oder verwenden Sie ein anderes Dateiformat.']);
-            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
         }
 
         return $this->render('app/invoice/show.html.twig', [
@@ -365,27 +390,42 @@ class InvoiceController extends AbstractController
     }
 
     #[Route('/{id}/mail', name: 'mail', methods: ['GET'])]
-    public function mailInvoice(Invoice $invoice, Request $request): Response
+    public function mailInvoice(Invoice $invoice): Response
     {
-        // TODO: Security - nur Invoices für eigene Principals! Voters!
-        return $this->invoiceActionHelper($invoice, $request, 'mail');
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'mailInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
+
+        return $this->invoiceActionHelper($invoice, 'mail');
     }
 
     #[Route('/{id}/remind', name: 'remind', methods: ['GET'])]
-    public function remindInvoice(Invoice $invoice, Request $request): Response
+    public function remindInvoice(Invoice $invoice): Response
     {
-        // TODO: Security - nur Invoices für eigene Principals! Voters!
-        return $this->invoiceActionHelper($invoice, $request, 'remind');
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'remindInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
+
+        return $this->invoiceActionHelper($invoice, 'remind');
     }
 
     #[Route('/{id}/cancel', name: 'cancel', methods: ['GET'])]
-    public function cancelInvoice(Invoice $invoice, Request $request): Response
+    public function cancelInvoice(Invoice $invoice): Response
     {
-        // TODO: Security - nur Invoices für eigene Principals! Voters!
-        return $this->invoiceActionHelper($invoice, $request, 'cancel');
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'cancelInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
+
+        return $this->invoiceActionHelper($invoice, 'cancel');
     }
 
-    private function invoiceActionHelper(Invoice $invoice, Request $request, string $action): RedirectResponse
+    private function invoiceActionHelper(Invoice $invoice, string $action): RedirectResponse
     {
         $success = $successMessage = $failMessage = null;
 
@@ -408,13 +448,17 @@ class InvoiceController extends AbstractController
         elseif($failMessage)
             $this->addFlash('danger', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), $failMessage]);
 
-        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
     }
 
     #[Route('/{id}/attachment/delete', name: 'attachment_delete', methods: ['GET'])]
     public function deleteAttachmentInvoice(Invoice $invoice, Request $request): Response
     {
-        // TODO: Security - nur Customers für eigene Principals! Voters!
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'deleteAttachmentInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
 
         if($this->isCsrfTokenValid('delete'.$invoice->getId(), $request->get('_token'))) {
             $idInvoiceAttachment = $request->query->get('idInvoiceAttachment');
@@ -427,13 +471,17 @@ class InvoiceController extends AbstractController
             $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Anhang '.$niceFilename.' wurde erfolgreich entfernt.']);
         }
 
-        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['GET'])]
     public function delete(Invoice $invoice, Request $request): Response
     {
-        // TODO: Security - nur Customers für eigene Principals! Voters!
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'delete'))
+            return $this->redirectToRoute('app_invoice_index');
 
         if($this->isCsrfTokenValid('delete'.$invoice->getId(), $request->get('_token'))) {
             if($invoice->getNumber()) {
@@ -462,14 +510,14 @@ class InvoiceController extends AbstractController
     }
 
     #[Route('/{id}/copy', name: 'copy', methods: ['GET'])]
-    public function copy(Invoice $invoice, Request $request): Response
+    public function copy(Invoice $invoice): Response
     {
-        return $this->redirectToRoute('app_invoice_new_basics', ['invoiceReference' => $invoice->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+        return $this->redirectToRoute('app_invoice_new_basics', ['invoiceReference' => $invoice->getId()]);
     }
 
-    private function createInvoiceForm(Request $request, Invoice $invoice, int $step = null): FormInterface
+    private function createInvoiceForm(Invoice $invoice, int $step = null): FormInterface
     {
-        $parameters = $this->dataTableService->parametersFromQueryToArray($request);
+        $parameters = [];
         if($invoice->getId())
             $parameters['id'] = $invoice->getId();
 
@@ -498,14 +546,16 @@ class InvoiceController extends AbstractController
 
         $invoice = null;
         if($request->query->has('id')) {
-            // TODO: Security - Nur wenn für Rechnung berechtigt.
             $invoice = $this->invoiceRepository->find($request->query->get('id'));
+            if(!$this->isAllowedForInvoice($user, $invoice, 'findOrCreateInvoice'))
+                return null;
         }
 
         $invoiceReference = null;
         if($request->query->has('invoiceReference')) {
-            // TODO: Security - Nur wenn für Rechnung berechtigt.
             $invoiceReference = $this->invoiceRepository->find($request->query->get('invoiceReference'));
+            if(!$this->isAllowedForInvoice($user, $invoiceReference, 'findOrCreateInvoice[invoiceReference]'))
+                return null;
         }
 
         if($invoiceReference && $invoice == null && $createWhenMissing) {
@@ -543,23 +593,56 @@ class InvoiceController extends AbstractController
                 $invoice->setPeriodFrom((new DateTimeImmutable())->modify('first day of this month'));
                 $invoice->setPeriodTo((new DateTimeImmutable())->modify('last day of this month'));
                 $invoice->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type' => 'RE']));
-                $invoice->setLanguage($user->getLanguage()); // TODO: Abhängig vom Kunden, nicht vom Benutzer
-                $invoice->setCurrency($this->currencyRepository->findOneBy(['alpha3' => 'EUR'])); // TODO: Abhängig vom Kunden, nicht Standard
-                $invoice->setVatType('RC'); // TODO: Abhängig vom Kunden, nicht Standard
-                $invoice->setVatRate(0); // TODO: Abhängig vom Kunden, nicht Standard
+                $invoice->setIntroText($this->userPreferenceService->get($user, 'invoiceDefaultIntroText'));
+                $invoice->setOutroText($this->userPreferenceService->get($user, 'invoiceDefaultOutroText'));
+                // TODO: Beleggrunddaten abhängig vom Kunden, nicht vom Benutzer
+                $invoice->setLanguage($this->languageRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultLanguage')));
+                $invoice->setCurrency($this->currencyRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultCurrency')));
+                $invoice->setVatType($this->userPreferenceService->get($user, 'invoiceDefaultVatType'));
+                $invoice->setVatRate($this->userPreferenceService->get($user, 'invoiceDefaultVatRate'));
                 return $invoice;
             }
 
-            $this->addFlash('warning', ['Fehler', 'Der angeforderte Beleg kann nicht aufgerufen werden [IC:IAP1].']);
+            $this->logger->warning('InvoiceController->findOrCreateInvoice(): Invoice ist null, darf aber auch nicht neu generiert werden.', ['user' => $user->getUserIdentifier()]);
             return null;
         }
 
         if($invoice->getNumber() != null) {
-            $this->addFlash('warning', ['Fehler', 'Bereits finalisierte Belege können nicht bearbeitet werden [ICC:IAP2]']);
+            $errorCode = time().'-ICfOCI1';
+            $this->logger->info('InvoiceController->findOrCreateInvoice(): Bereits finalisierter Beleg #{id} zur Bearbeitung aufgerufen, Error-Code: {eC}', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId(), 'eC' => $errorCode]);
+            $this->addFlash('warning', ['Hinweis', 'Bereits finalisierte Belege können nicht bearbeitet werden, Fehler-Code: '.$errorCode]);
+
             return null;
         }
 
         return $invoice;
+    }
+
+    private function isAllowedForInvoice(User $user, ?Invoice $invoice, string $action): bool
+    {
+        if(!$invoice) {
+            $this->logger->warning('InvoiceController->'.$action.'(): Aufgerufener Beleg zu übergebener ID wurde nicht gefunden, ID unbekannt', ['user' => $user->getUserIdentifier()]);
+            return false;
+        } elseif(!$invoice->getPrincipal()) {
+            $this->logger->warning('InvoiceController->'.$action.'(): Aufgerufener Beleg zu übergebener ID #{id} hat keinen gültigen, validierbaren Principal', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
+            return false;
+        } elseif(!$user->getPrincipals()->contains($invoice->getPrincipal())) {
+            $this->logger->warning('InvoiceController->'.$action.'(): Aufgerufener Beleg #{id} entspricht keinem berechtigten Mandanten, Beleg wird nicht angezeigt', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId(), 'principal' => $invoice->getPrincipal()->getId()]);
+            return false;
+        }
+
+        return true;
+    }
+
+    private function invoiceLogErrorAndRedirectToIndex(string $action, string $errorCode): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $errorCode = time().'-'.$errorCode;
+        $this->logger->warning('InvoiceController->'.$action.'(): Zugriffs- oder Berechtigungsfehler, Abbruch des Aufrufs, Error-Code: {eC}', ['user' => $user->getUserIdentifier(), 'eC' => $errorCode]);
+        $this->addFlash('danger', ['Fehler', 'Die Aktion konnte nicht durchgeführt werden, Fehler-Code: '.$errorCode]);
+        return $this->redirectToRoute('app_invoice_index');
     }
 
 }

@@ -70,9 +70,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Principal::class, inversedBy: 'users')]
     private Collection $principals;
 
+    /**
+     * @var Collection<int, UserPreference>
+     */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserPreference::class, orphanRemoval: true)]
+    private Collection $userPreferences;
+
     public function __construct()
     {
         $this->principals = new ArrayCollection();
+        $this->userPreferences = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -303,6 +310,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return null;
+    }
+
+    /**
+     * @return Collection<int, UserPreference>
+     */
+    public function getUserPreferences(): Collection
+    {
+        return $this->userPreferences;
+    }
+
+    public function addUserPreference(UserPreference $userPreference): static
+    {
+        if (!$this->userPreferences->contains($userPreference)) {
+            $this->userPreferences->add($userPreference);
+            $userPreference->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserPreference(UserPreference $userPreference): static
+    {
+        if ($this->userPreferences->removeElement($userPreference)) {
+            // set the owning side to null (unless already changed)
+            if ($userPreference->getUser() === $this) {
+                $userPreference->setUser(null);
+            }
+        }
+
+        return $this;
     }
 
     public function __toString(): string

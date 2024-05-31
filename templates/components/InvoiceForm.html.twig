@@ -160,7 +160,7 @@
             <!-- Large Screens -->
             <div class="nav-sticky d-none d-xxl-block">
                 <div class="btn-group d-flex" role="group">
-                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index') }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Abbrechen
                     </a>
                     <button class="btn btn-primary w-100">
@@ -171,7 +171,7 @@
             <!-- Other Screens -->
             <div class="d-xxl-none">
                 <div class="text-center mt-5">
-                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index', { ...app.request.query.all() }) }}">
+                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index') }}">
                         <i class="fa-solid fa-chevron-left me-1"></i> Abbrechen
                     </a>
                     <button class="btn btn-primary">
