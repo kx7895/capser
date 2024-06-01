@@ -6,7 +6,10 @@ use App\Entity\User;
 use App\Repository\CustomerRepository;
 use App\Repository\InvoiceRepository;
 use App\Service\DataTableService;
+use App\Service\UserPreferenceService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -18,29 +21,48 @@ class AnalysisController extends AbstractController
         private readonly CustomerRepository          $customerRepository,
         private readonly InvoiceRepository           $invoiceRepository,
         private readonly DataTableService            $dataTableService,
+        private readonly UserPreferenceService       $prefs,
+        private readonly LoggerInterface             $logger,
     ) {}
 
     #[Route('/liquidity/unpaid/customers', name: 'liquidity_unpaid_customers', methods: ['GET'])]
     public function liquidityUnpaidCustomers(
-        #[MapQueryParameter] bool $groupedByCustomers = false,
+        Request $request,
+        #[MapQueryParameter] bool $groupedByCustomers = null,
+        #[MapQueryParameter] string $sort = null,
+        #[MapQueryParameter] string $sortDirection = null,
+        #[MapQueryParameter] string $query = null,
         #[MapQueryParameter] string $queryPrincipalId = null,
         #[MapQueryParameter] string $queryCustomerId = null,
-        #[MapQueryParameter] string $query = null,
-        #[MapQueryParameter] string $sort = 'due',
-        #[MapQueryParameter] string $sortDirection = 'ASC',
     ): Response
     {
+        // USER
         /** @var User $user */
         $user = $this->getUser();
+        $this->logger->debug('AnalysisController->index(): {user}', ['user' => $user->getUserIdentifier()]);
         $allowedPrincipals = $user->getPrincipals();
         $allowedCustomers = $this->customerRepository->findAllowed($allowedPrincipals);
 
+        // FILTER
+        if($request->query->has('clear') && $request->query->get('clear')) {
+            $this->prefs->set($user, 'AnalysisController_index_queryPrincipalId', null);
+            $this->prefs->set($user, 'AnalysisController_index_queryCustomerId', null);
+            $this->prefs->set($user, 'AnalysisController_index_groupedByCustomers', null);
+        }
+        $queryPrincipalId = $this->prefs->handle($user, 'AnalysisController_index_queryPrincipalId', $queryPrincipalId);
         $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
+        $queryCustomerId = $this->prefs->handle($user, 'AnalysisController_index_queryCustomerId', $queryCustomerId);
         $queryCustomer = $this->dataTableService->processCustomerSelect($queryCustomerId, $allowedPrincipals);
+        $groupedByCustomers = $this->prefs->handle($user, 'AnalysisController_index_groupedByCustomers', $groupedByCustomers);
+        $activeFilters = 0;
+        if($queryPrincipal) $activeFilters++;
+        if($queryCustomer) $activeFilters++;
+        if($groupedByCustomers) $activeFilters++;
 
-        if($queryPrincipal === false || $queryCustomer === false)
-            return throw $this->createNotFoundException();
+        // SEARCH
+        $query = $this->prefs->handle($user, 'AnalysisController_index_query', $query);
 
+        // TABLE
         $queryParameters = [
             'draft' => false,
             'paid' => false
@@ -50,32 +72,22 @@ class AnalysisController extends AbstractController
         if($queryCustomer)
             $queryParameters['customer'] = $queryCustomer;
 
-        $urlQueryParts = [
-            'groupedByCustomers' => $groupedByCustomers,
-            'queryPrincipalId' => $queryPrincipalId,
-            'queryCustomerId' => $queryCustomerId,
-            'query' => $query,
-        ];
-
         if($groupedByCustomers) {
             $rows = $this->invoiceRepository->findUnpaidGroupedByCustomers($query, $allowedPrincipals, $queryParameters);
             usort($rows, function($a, $b) {
                 return strcmp($a['customer']->getName(), $b['customer']->getName());
             });
-
         } else {
-            $sort = $this->dataTableService->validateSort($sort, ['date', 'number', 'hCustomerName', 'hPrincipalShortName', 'periodFrom', 'amountGross', 'due']);
+            // PAGINATION (here: only SORTING)
+            $sort = $this->prefs->handle($user, 'AnalysisController_index_sort', $sort);
+            $sort = $this->dataTableService->validateSort($sort, ['date', 'number', 'hCustomerName', 'hPrincipalShortName', 'periodFrom', 'amountGross', 'due'], 'due');
+            $sortDirection = $this->prefs->handle($user, 'AnalysisController_index_sortDirection', $sortDirection);
             $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
-            $urlQueryParts['sort'] = $sort;
-            $urlQueryParts['sortDirection'] = $sortDirection;
-
-            $rows = $this->dataTableService->buildDataTable($this->invoiceRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, 1, 50000);
-
+            $rows = $this->dataTableService->buildDataTable($this->invoiceRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, 1, 100000);
         }
 
         return $this->render('app/analysis/liquidity_unpaid_customers.html.twig', [
-            'rows' => $rows,
-
+            'groupedByCustomers' => $groupedByCustomers,
             'allowedPrincipals' => $allowedPrincipals,
             'queryPrincipal' => $queryPrincipal,
             'allowedCustomers' => $allowedCustomers,
@@ -83,9 +95,9 @@ class AnalysisController extends AbstractController
             'query' => $query,
             'sort' => $sort,
             'sortDirection' => $sortDirection,
-            'groupedByCustomers' => $groupedByCustomers,
+            'activeFilters' => $activeFilters,
 
-            'urlQueryParts' => $urlQueryParts,
+            'rows' => $rows,
         ]);
 
     }

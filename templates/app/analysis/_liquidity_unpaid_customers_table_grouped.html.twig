@@ -13,9 +13,6 @@
                     </div>
                     <div class="col-9">
                         {{ row.customer.name }}
-                        {% if row.customer.shortName %}
-                            | <span class="text-mute fw-normal">{{ row.customer.shortName }}</span>
-                        {% endif %}
                         | <span class="text-muted fw-normal">#{{ row.customer.ledgerAccountNumber }}</span>
                     </div>
                     <div class="col-2 text-end">

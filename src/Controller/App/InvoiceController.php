@@ -47,20 +47,21 @@ class InvoiceController extends AbstractController
         private readonly InvoiceTypeRepository       $invoiceTypeRepository,
         private readonly InvoiceAttachmentRepository $invoiceAttachmentRepository,
         private readonly InvoicePaymentRepository    $invoicePaymentRepository,
+        private readonly LanguageRepository          $languageRepository,
         private readonly DataTableService            $dataTableService,
         private readonly InvoiceCreateService        $invoiceCreateService,
         private readonly UserPreferenceService       $prefs,
         private readonly EntityManagerInterface      $entityManager,
         private readonly LoggerInterface             $logger,
-        private readonly SluggerInterface            $slugger, private readonly UserPreferenceService $userPreferenceService, private readonly LanguageRepository $languageRepository,
+        private readonly SluggerInterface            $slugger,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(
         Request $request,
         #[MapQueryParameter] int $page = 1,
-        #[MapQueryParameter] string $sort = 'date',
-        #[MapQueryParameter] string $sortDirection = 'DESC',
+        #[MapQueryParameter] string $sort = null,
+        #[MapQueryParameter] string $sortDirection = null,
         #[MapQueryParameter] string $query = null,
         #[MapQueryParameter] string $queryPrincipalId = null,
         #[MapQueryParameter] string $queryCustomerId = null,
@@ -75,8 +76,8 @@ class InvoiceController extends AbstractController
 
         // FILTER
         if($request->query->has('clear') && $request->query->get('clear')) {
-            $this->userPreferenceService->set($user, 'InvoiceController_index_queryPrincipalId', null);
-            $this->userPreferenceService->set($user, 'InvoiceController_index_queryCustomerId', null);
+            $this->prefs->set($user, 'InvoiceController_index_queryPrincipalId', null);
+            $this->prefs->set($user, 'InvoiceController_index_queryCustomerId', null);
         }
         $queryPrincipalId = $this->prefs->handle($user, 'InvoiceController_index_queryPrincipalId', $queryPrincipalId);
         $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
@@ -92,9 +93,9 @@ class InvoiceController extends AbstractController
         // PAGINATION
         $itemsPerPage = $this->prefs->get($user, 'itemsPerPage');
         $sort = $this->prefs->handle($user, 'InvoiceController_index_sort', $sort);
-        $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountNet', 'createdAt']);
+        $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountGross', 'createdAt'], 'date');
         $sortDirection = $this->prefs->handle($user, 'InvoiceController_index_sortDirection', $sortDirection);
-        $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
+        $sortDirection = $this->dataTableService->validateSortDirection($sortDirection, 'DESC');
 
         // TABLE
         $queryParameters = [];
@@ -665,12 +666,12 @@ class InvoiceController extends AbstractController
                 $invoice->setPeriodFrom((new DateTimeImmutable())->modify('first day of this month'));
                 $invoice->setPeriodTo((new DateTimeImmutable())->modify('last day of this month'));
                 $invoice->setInvoiceType($this->invoiceTypeRepository->findOneBy(['type' => 'RE']));
-                $invoice->setIntroText($this->userPreferenceService->get($user, 'invoiceDefaultIntroText'));
-                $invoice->setOutroText($this->userPreferenceService->get($user, 'invoiceDefaultOutroText'));
-                $invoice->setLanguage($this->languageRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultLanguage')));
-                $invoice->setCurrency($this->currencyRepository->find($this->userPreferenceService->get($user, 'invoiceDefaultCurrency')));
-                $invoice->setVatType($this->userPreferenceService->get($user, 'invoiceDefaultVatType'));
-                $invoice->setVatRate($this->userPreferenceService->get($user, 'invoiceDefaultVatRate'));
+                $invoice->setIntroText($this->prefs->get($user, 'invoiceDefaultIntroText'));
+                $invoice->setOutroText($this->prefs->get($user, 'invoiceDefaultOutroText'));
+                $invoice->setLanguage($this->languageRepository->find($this->prefs->get($user, 'invoiceDefaultLanguage')));
+                $invoice->setCurrency($this->currencyRepository->find($this->prefs->get($user, 'invoiceDefaultCurrency')));
+                $invoice->setVatType($this->prefs->get($user, 'invoiceDefaultVatType'));
+                $invoice->setVatRate($this->prefs->get($user, 'invoiceDefaultVatRate'));
                 return $invoice;
             }
 

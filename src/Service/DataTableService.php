@@ -19,8 +19,11 @@ class DataTableService {
         private readonly LoggerInterface     $logger,
     ) {}
 
-    public function validateSort(string $selectedSort, array $availableSorts, string $defaultSort = null)
+    public function validateSort(?string $selectedSort, array $availableSorts, string $defaultSort = null)
     {
+        if(!$selectedSort)
+            return $defaultSort;
+
         return in_array($selectedSort, $availableSorts) ? $selectedSort : ($defaultSort ?: $availableSorts[0]);
     }
 
@@ -66,8 +69,11 @@ class DataTableService {
         }
     }
 
-    public function validateSortDirection(string $selectedSortDirection, string $defaultSortDirection = 'ASC'): string
+    public function validateSortDirection(?string $selectedSortDirection, string $defaultSortDirection = 'ASC'): string
     {
+        if(!$selectedSortDirection)
+            return $defaultSortDirection;
+
         $availableSortOrders = ['ASC', 'DESC'];
         return in_array($selectedSortDirection, $availableSortOrders) ? $selectedSortDirection : $defaultSortDirection;
     }

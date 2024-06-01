@@ -52,7 +52,7 @@ class UserPreferenceService {
         return $value;
     }
 
-    public function handle(User $user, string $setting, ?string $value): ?string {
+    public function handle(User $user, string $setting, $value): ?string {
         if($value === '')
             // Wenn der Parameter explizit leer ist = in URL oder Form wurde explizit leer durch den Benutzer übergeben, speichere NULL und gib dies zurück
             return $this->set($user, $setting, null);
@@ -62,6 +62,8 @@ class UserPreferenceService {
         elseif(is_numeric($value) && $value > 0)
             return $this->set($user, $setting, $value);
         elseif(is_string($value) && $value <> '')
+            return $this->set($user, $setting, $value);
+        elseif(is_bool($value))
             return $this->set($user, $setting, $value);
 
         return null;

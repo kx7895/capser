@@ -37,9 +37,7 @@
                 <form method="GET" action="{{ path('app_invoice_index') }}"
                       class="mb-0 d-flex"
                       data-controller="autosubmit"
-                      data-turbo-frame="invoice-index"
-                >
-
+                      data-turbo-frame="invoice-index">
                     <div class="btn-group me-2">
                         <button class="btn {% if activeFilters > 0 %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm" data-bs-toggle="modal" data-bs-target="#searchModal">
                             Filter{% if activeFilters > 0 %} ({{ activeFilters }}){% endif %}
@@ -107,7 +105,7 @@
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('invoiceType', 'Typ', sort, sortDirection) }}</th>
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('number', 'Nummer', sort, sortDirection) }}</th>
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection) }}</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('amountNet', 'Betrag', sort, sortDirection) }}</th>
+                                <th class="text-nowrap">{{ _self.sortColumnHeader('amountGross', 'Betrag', sort, sortDirection) }}</th>
                                 <th>Zahlung</th>
                                 <th class="text-nowrap d-none d-xxl-table-cell">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection) }}</th>
                                 <th class="action-column"></th>

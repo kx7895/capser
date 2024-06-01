@@ -869,6 +869,11 @@ class Invoice
         }
     }
 
+    public function getAmountDueNice($includeCurrencyAlpha3 = false): ?string
+    {
+        return $this->getAmountNice($this->getAmountDue(), $includeCurrencyAlpha3);
+    }
+
     public function __toString(): string
     {
         return $this->getInvoiceType()->getType().' '.($this->getNumber() <> '' ? $this->getNumber() : 'PREVIEW');

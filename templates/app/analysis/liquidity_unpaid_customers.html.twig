@@ -10,25 +10,32 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="d-none d-lg-block">Unbezahlte Rechnungen und Korrekturbelege</span>
             <div class="d-flex">
-                {% if groupedByCustomers %}
-                    <a class="btn btn-primary btn-sm me-2"
-                       href="{{ path('app_analysis_liquidity_unpaid_customers', {...urlQueryParts, groupedByCustomers: false} ) }}">
-                        Gruppieren nach Kunde
-                    </a>
-                {% else %}
-                    <a class="btn btn-outline-primary btn-sm me-2"
-                       href="{{ path('app_analysis_liquidity_unpaid_customers', {...urlQueryParts, groupedByCustomers: true} ) }}">
-                        Gruppieren nach Kunde
-                    </a>
-                {% endif%}
+
                 <form method="GET" action="{{ path('app_analysis_liquidity_unpaid_customers') }}"
                       class="mb-0 d-flex"
                       data-controller="autosubmit"
-                      data-turbo-frame="invoice-unpaid"
-                >
-                    <button type="button" class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#searchModal">
-                        Filter
-                    </button>
+                      data-turbo-frame="invoice-unpaid">
+                    <div class="btn-group me-2">
+                        {% if groupedByCustomers %}
+                            <a class="btn btn-primary btn-sm"
+                               href="{{ path('app_analysis_liquidity_unpaid_customers', { groupedByCustomers: false} ) }}">
+                                Gruppiere je Kunde
+                            </a>
+                        {% else %}
+                            <a class="btn btn-outline-primary btn-sm"
+                               href="{{ path('app_analysis_liquidity_unpaid_customers', { groupedByCustomers: true} ) }}">
+                                Gruppiere je Kunde
+                            </a>
+                        {% endif%}
+                        <button class="btn {% if activeFilters > 0 %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm" data-bs-toggle="modal" data-bs-target="#searchModal">
+                            Filter{% if activeFilters > 0 %} ({{ activeFilters }}){% endif %}
+                        </button>
+                        {% if activeFilters > 0 %}
+                            <a href="{{ path('app_analysis_liquidity_unpaid_customers', { clear: true }) }}" class="btn btn-outline-dark btn-sm">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        {% endif %}
+                    </div>
                     <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
