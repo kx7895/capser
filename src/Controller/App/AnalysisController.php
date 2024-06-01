@@ -57,7 +57,6 @@ class AnalysisController extends AbstractController
         $activeFilters = 0;
         if($queryPrincipal) $activeFilters++;
         if($queryCustomer) $activeFilters++;
-        if($groupedByCustomers) $activeFilters++;
 
         // SEARCH
         $query = $this->prefs->handle($user, 'AnalysisController_index_query', $query);
