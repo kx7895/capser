@@ -14,6 +14,7 @@ use App\Form\InvoicePositionsFormType;
 use App\Repository\CurrencyRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\InvoiceAttachmentRepository;
+use App\Repository\InvoicePaymentRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\InvoiceTypeRepository;
 use App\Repository\LanguageRepository;
@@ -45,6 +46,7 @@ class InvoiceController extends AbstractController
         private readonly InvoiceRepository           $invoiceRepository,
         private readonly InvoiceTypeRepository       $invoiceTypeRepository,
         private readonly InvoiceAttachmentRepository $invoiceAttachmentRepository,
+        private readonly InvoicePaymentRepository    $invoicePaymentRepository,
         private readonly DataTableService            $dataTableService,
         private readonly InvoiceCreateService        $invoiceCreateService,
         private readonly UserPreferenceService       $prefs,
@@ -514,6 +516,31 @@ class InvoiceController extends AbstractController
             $this->entityManager->flush();
 
             $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Anhang '.$niceFilename.' wurde erfolgreich entfernt.']);
+        }
+
+        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
+    }
+
+    #[Route('/{id}/payment/delete', name: 'payment_delete', methods: ['GET'])]
+    public function deletePaymentInvoice(Invoice $invoice, Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForInvoice($user, $invoice, 'deletePaymentInvoice'))
+            return $this->redirectToRoute('app_invoice_index');
+
+        if($this->isCsrfTokenValid('delete'.$invoice->getId(), $request->get('_token'))) {
+            $idInvoicePayment = $request->query->get('idInvoicePayment');
+            $invoicePayment = $this->invoicePaymentRepository->find($idInvoicePayment);
+            $this->entityManager->remove($invoicePayment);
+
+            $invoice->setPaid(false);
+            $this->entityManager->persist($invoice);
+
+            $this->entityManager->flush();
+
+            $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Die erfasste Zahlung wurde erfolgreich entfernt.']);
         }
 
         return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);

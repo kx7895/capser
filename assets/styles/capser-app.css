@@ -73,6 +73,10 @@
     color: var(--cp-color-primary) !important;
 }
 
+.table tbody tr:last-child, .table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
 /*--------------------------------------------------------------
 # CHANGED UX AUTOCOMPLETE (Tom-Select)
 --------------------------------------------------------------*/

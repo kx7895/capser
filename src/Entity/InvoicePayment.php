@@ -1,8 +1,10 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace App\Entity;
 
 use App\Repository\InvoicePaymentRepository;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -19,7 +21,7 @@ class InvoicePayment
     private ?Invoice $invoice = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    private ?DateTimeInterface $date = null;
 
     #[ORM\Column]
     private ?float $amount = null;
@@ -32,7 +34,7 @@ class InvoicePayment
     private ?AccountingPlanLedger $accountingPlanLedger = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -55,12 +57,12 @@ class InvoicePayment
         return $this;
     }
 
-    public function getDate(): ?\DateTimeInterface
+    public function getDate(): ?DateTimeInterface
     {
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    public function setDate(DateTimeInterface $date): static
     {
         $this->date = $date;
 
@@ -77,6 +79,25 @@ class InvoicePayment
         $this->amount = $amount;
 
         return $this;
+    }
+
+    public function getAmountNice(bool $includeCurrencyAlpha3 = false): ?string
+    {
+        if(!$this->getAmount())
+            return null;
+
+        $preCurrency = '';
+        $postCurrency = '';
+
+        $decimalPoint = ($this->getCurrency()->getAlpha3() == 'CHF' ? '.' : ',');
+        $thousandsSeparator = ($this->getCurrency()->getAlpha3() == 'CHF' ? ',' : '.');
+
+        if($this->getCurrency()->getAlpha3() == 'CHF' && $includeCurrencyAlpha3)
+                $preCurrency = $this->getCurrency()->getAlpha3().' ';
+        elseif($includeCurrencyAlpha3)
+                $postCurrency = ' '.$this->getCurrency()->getAlpha3();
+
+        return $preCurrency.number_format($this->getAmount(), 2, $decimalPoint, $thousandsSeparator).$postCurrency;
     }
 
     public function getCurrency(): ?Currency
@@ -103,12 +124,12 @@ class InvoicePayment
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 

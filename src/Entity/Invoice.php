@@ -594,6 +594,35 @@ class Invoice
         return $this;
     }
 
+    private function getAmountNice(?float $amount, bool $includeCurrencyAlpha3): ?string
+    {
+        if(!$amount)
+            return null;
+
+        $preCurrency = '';
+        $postCurrency = '';
+
+        $decimalPoint = ($this->getCurrency()->getAlpha3() == 'CHF' ? '.' : ',');
+        $thousandsSeparator = ($this->getCurrency()->getAlpha3() == 'CHF' ? ',' : '.');
+
+        if($this->getCurrency()->getAlpha3() == 'CHF' && $includeCurrencyAlpha3)
+            $preCurrency = $this->getCurrency()->getAlpha3().' ';
+        elseif($includeCurrencyAlpha3)
+            $postCurrency = ' '.$this->getCurrency()->getAlpha3();
+
+        return $preCurrency.number_format($amount, 2, $decimalPoint, $thousandsSeparator).$postCurrency;
+    }
+
+    public function getAmountNetNice($includeCurrencyAlpha3 = false): ?string
+    {
+        return $this->getAmountNice($this->getAmountNet(), $includeCurrencyAlpha3);
+    }
+
+    public function getAmountGrossNice($includeCurrencyAlpha3 = false): ?string
+    {
+        return $this->getAmountNice($this->getAmountGross(), $includeCurrencyAlpha3);
+    }
+
     public function getCostcenterExternal(): ?string
     {
         return $this->costcenterExternal;

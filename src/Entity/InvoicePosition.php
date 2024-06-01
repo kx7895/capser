@@ -97,6 +97,45 @@ class InvoicePosition
         return $this;
     }
 
+    public function getPriceNice(bool $includeCurrencyAlpha3 = false): ?string
+    {
+        if(!$this->getPrice())
+            return null;
+
+        $preCurrency = '';
+        $postCurrency = '';
+
+        $decimalPoint = ($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' ? '.' : ',');
+        $thousandsSeparator = ($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' ? ',' : '.');
+
+        if($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' && $includeCurrencyAlpha3)
+            $preCurrency = $this->getInvoice()->getCurrency()->getAlpha3().' ';
+        elseif($includeCurrencyAlpha3)
+            $postCurrency = ' '.$this->getInvoice()->getCurrency()->getAlpha3();
+
+        return $preCurrency.number_format($this->getPrice(), 2, $decimalPoint, $thousandsSeparator).$postCurrency;
+    }
+
+    public function getSumNice(bool $includeCurrencyAlpha3 = false): ?string
+    {
+        if(!$this->getPrice() || !$this->getAmount())
+            return null;
+
+        $preCurrency = '';
+        $postCurrency = '';
+
+        $decimalPoint = ($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' ? '.' : ',');
+        $thousandsSeparator = ($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' ? ',' : '.');
+
+        if($this->getInvoice()->getCurrency()->getAlpha3() == 'CHF' && $includeCurrencyAlpha3)
+            $preCurrency = $this->getInvoice()->getCurrency()->getAlpha3().' ';
+        elseif($includeCurrencyAlpha3)
+            $postCurrency = ' '.$this->getInvoice()->getCurrency()->getAlpha3();
+
+        return $preCurrency.number_format(($this->getPrice()*$this->getAmount()), 2, $decimalPoint, $thousandsSeparator).$postCurrency;
+    }
+
+
     public function getDiscount(): ?float
     {
         return $this->discount;

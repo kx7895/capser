@@ -43,7 +43,7 @@
                     <div class="card mb-4" id="sectionBeleginformationen">
                         <div class="card-header">Beleginformationen</div>
                         <div class="card-body">
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Basis</legend>
                                 {% if invoice.cancelled %}
                                     <div class="mb-2">
@@ -77,30 +77,38 @@
                                     </div>
                                 {% endif %}
                             </fieldset>
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Rechnungssteller</legend>
                                 {{ _self.listElement('Mandant', invoice.hPrincipalName) }}
-                                {{ _self.listElement('Buchungskonto', invoice.accountingPlanLedger) }}
+                                {% if invoice.accountingPlanLedger %}
+                                    {{ _self.listElement('Buchungskonto', invoice.accountingPlanLedger) }}
+                                {% endif %}
                             </fieldset>
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Rechnungsempfänger</legend>
                                 {{ _self.listElement('Kunde', invoice.hCustomerName) }}
-                                {{ _self.listElement('Belegsprache', invoice.language.alpha3) }}
-                                {{ _self.listElement('E-Mail-Zustellung', invoice.sentLabel) }}
-                                {{ _self.listElement('Zahlungserinnerung', invoice.remindedLabel) }}
-                                {{ _self.listElement('Kostenstelle', invoice.costcenterExternal) }}
-                                {{ _self.listElement('Referenz', invoice.referenceExternal) }}
+                                {{ _self.listElement('Belegsprache', invoice.language.name) }}
+                                {{ _self.listElement('E-Mail-Versand', invoice.sentLabel) }}
+                                {% if invoice.sent %}
+                                    {{ _self.listElement('E-Mail-Erinnerung', invoice.remindedLabel) }}
+                                {% endif %}
+                                {% if invoice.costcenterExternal %}
+                                    {{ _self.listElement('Kostenstelle', invoice.costcenterExternal) }}
+                                {% endif %}
+                                {% if invoice.referenceExternal %}
+                                    {{ _self.listElement('Referenz', invoice.referenceExternal) }}
+                                {% endif %}
                             </fieldset>
-                            <fieldset class="border border-1 border-light mb-4 p-3">
-                                <legend class="h6">Belegsummen {{ invoice.paymentLabel|raw }}</legend>
+                            <fieldset class="border border-1 border-light p-3">
+                                <legend class="h6">Belegsummen</legend>
                                 {{ _self.listElement('Währung', invoice.currency.alpha3) }}
                                 {% if invoice.currency.alpha3 == 'CHF' %}
                                     {% set format_params = {'decimal_point': '.', 'thousands_sep': ','} %}
                                 {% else %}
                                     {% set format_params = {'decimal_point': ',', 'thousands_sep': '.'} %}
                                 {% endif %}
-                                {{ _self.listElement('Betrag', invoice.amountNet|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
-                                {{ _self.listElement('Brutto-Betrag', invoice.amountGross|number_format(2, format_params.decimal_point, format_params.thousands_sep)) }}
+                                {{ _self.listElement('Betrag', invoice.amountNetNice) }}
+                                {{ _self.listElement('Brutto-Betrag', invoice.amountGrossNice) }}
                                 {{ _self.listElement('Steuersatz', invoice.vatRate|number_format(2, ',', '.') ~ ' %') }}
                                 {% if invoice.vatType == 'REG' %}
                                     {{ _self.listElement('Steuerart', 'Regulär') }}
@@ -121,12 +129,12 @@
                             <style>
                                 iframe {
                                     width: 100%;
-                                    height: 500px;
+                                    height: 450px;
                                     border: none;
                                 }
                             </style>
                             <iframe src="/{{ invoice.storageFilename }}#toolbar=0" allow="fullscreen;" class="d-none d-xxl-block mb-3"></iframe>
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light {% if invoice.invoiceAttachments|length > 0 %}mb-3{% endif%} p-3">
                                 <legend class="h6">Beleg</legend>
                                 <div class="row d-flex">
                                     <div class="col-9 align-middle">
@@ -145,7 +153,7 @@
                                 </div>
                             </fieldset>
                             {% if invoice.invoiceAttachments|length > 0 %}
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light p-3">
                                 <legend class="h6 d-flex justify-content-between align-items-center">
                                     Anhänge
                                     <button data-bs-toggle="modal" data-bs-target="#newInvoiceAttachment"
@@ -216,25 +224,26 @@
                         <div class="card-header">Leistungsdaten</div>
                         <div class="card-body">
                             {% if invoice.introText %}
-                            <fieldset class="border border-1 border-light mb-4 p-3">
+                            <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Einleitungstext</legend>
-                                <p>{{ invoice.introText }}</p>
+                                <p class="mb-0">{{ invoice.introText }}</p>
                             </fieldset>
                             {% endif %}
                             {% if invoice.outroText %}
-                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                <fieldset class="border border-1 border-light mb-3 p-3">
                                     <legend class="h6">Nachbemerkung</legend>
-                                    <p>{{ invoice.outroText }}</p>
+                                    <p class="mb-0">{{ invoice.outroText }}</p>
                                 </fieldset>
                             {% endif %}
                             {% if invoice.invoicePositions|length > 0 %}
-                                <fieldset class="border border-1 border-light mb-4 p-3">
+                                <fieldset class="border border-1 border-light p-3">
                                     <legend class="h6">Positionen</legend>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm table-hover mb-0">
                                         <thead>
                                             <tr>
                                                 <th scope="col">Beschreibung</th>
                                                 <th scope="col">Menge</th>
+                                                <th scope="col">Einheit</th>
                                                 <th scope="col">Preis</th>
                                                 <th scope="col">Gesamt</th>
                                             </tr>
@@ -244,8 +253,9 @@
                                                 <tr>
                                                     <td>{{ invoicePosition.text|nl2br }}</td>
                                                     <td>{{ invoicePosition.amount|number_format(2, ',', '.') }}</td>
-                                                    <td>{{ invoicePosition.price|number_format(2, format_params.decimal_point, format_params.thousands_sep) }}</td>
-                                                    <td>{{ (invoicePosition.amount*invoicePosition.price)|number_format(2,  format_params.decimal_point, format_params.thousands_sep) }}</td>
+                                                    <td>{{ invoicePosition.unit }}</td>
+                                                    <td>{{ invoicePosition.priceNice }}</td>
+                                                    <td>{{ invoicePosition.sumNice }}</td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -263,14 +273,18 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-5">
-                                    {{ _self.listElement('Status', invoice.paymentLabel) }}
-                                    {{ _self.listElement('Fälligkeit', invoice.due|date('d.m.Y')) }}
-                                    {{ _self.listElement('Bedingung', invoice.termOfPayment.name ~ '<br>' ~ invoice.termOfPayment.dueDays ~ ' Tage') }}
+                                    <fieldset class="border border-1 border-light p-3">
+                                        <legend class="h6">Überblick</legend>
+                                        {{ _self.listElement('Status', invoice.paymentLabel) }}
+                                        {{ _self.listElement('Fälligkeit', invoice.due|date('d.m.Y')) }}
+                                        {{ _self.listElement('Zahlungsziel', invoice.termOfPayment.dueDays ~ ' Tage') }}
+                                        {{ _self.listElement('Bedingung', invoice.termOfPayment.name) }}
+                                    </fieldset>
                                 </div>
                                 <div class="col-lg-7">
                                     {% if paymentForm %}
-                                    <fieldset class="border border-1 border-light mb-4 p-3">
-                                        <legend class="h6 section collapsed" data-bs-toggle="collapse" data-bs-target="#paymentForm">
+                                    <fieldset class="border border-1 border-light mb-3 p-3">
+                                        <legend class="h6 mb-3 section collapsed" data-bs-toggle="collapse" data-bs-target="#paymentForm">
                                             <span class="clickable">Zahlung erfassen</span>
                                             <i class="collapse-arrow clickable fas fa-angle-down"></i>
                                         </legend>
@@ -298,24 +312,36 @@
                                     </fieldset>
                                     {% endif %}
 
-                                    <fieldset class="border border-1 border-light mb-4 p-3">
+                                    <fieldset class="border border-1 border-light mb-3 p-3">
                                         <legend class="h6">Erfasste Zahlungen</legend>
-                                        <table class="table table-sm">
+                                        <table class="table table-sm mb-0">
                                             <thead>
                                                 <tr>
                                                     <th scope="col">Datum</th>
                                                     <th scope="col">Betrag</th>
                                                     <th scope="col">Währung</th>
                                                     <th scope="col">Konto</th>
+                                                    <th scope="col">&nbsp;</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                             {% for invoicePayment in invoice.invoicePayments %}
                                                 <tr>
                                                     <td>{{ invoicePayment.date|date('d.m.Y') }}</td>
-                                                    <td>{{ invoicePayment.amount|number_format(2, format_params.decimal_point, format_params.thousands_sep) }}</td>
+                                                    <td>{{ invoicePayment.amountNice }}</td>
                                                     <td>{{ invoicePayment.currency.alpha3 }}</td>
                                                     <td>{{ invoicePayment.accountingPlanLedger.name }}</td>
+                                                    <td class="text-end">
+                                                        <a href="{{ path('app_invoice_payment_delete', {
+                                                            'id': invoice.id,
+                                                            'idInvoicePayment': invoicePayment.id,
+                                                            '_token': csrf_token('delete' ~ invoice.id)
+                                                        }) }}"
+                                                           onclick="return confirm('Soll die erfasste Zahlung wirklich unwiderruflich entfernt werden?');"
+                                                           role="button" class="btn btn-outline-danger btn-xs me-1">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </a>
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                             </tbody>
@@ -346,7 +372,7 @@
                             {% if invoice.invoiceMailings|length > 0 %}
                                 <fieldset class="border border-1 border-light mb-4 p-3">
                                     <legend class="h6">E-Mail-Berichte</legend>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm mb-0">
                                         <thead>
                                         <tr>
                                             <th scope="col">Betreff</th>
@@ -367,7 +393,7 @@
                                                 </td>
                                                 <td>
                                                     <a data-bs-toggle="modal" data-bs-target="#message{{ invoiceMailing.id }}" href="">
-                                                        Anzeigen
+                                                        <i class="fa-regular fa-eye"></i>
                                                     </a>
                                                     <div class="modal fade" id="message{{ invoiceMailing.id }}" tabindex="-1">
                                                         <div class="modal-dialog modal-dialog-scrollable modal-lg">
