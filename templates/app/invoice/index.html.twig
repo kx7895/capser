@@ -144,7 +144,7 @@
                                 </td>
                                 <td>
                                     {% if draft == false %}
-                                        {{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}
+                                        {{ invoice.amountGrossNice(true) }}
                                     {% endif %}
                                 </td>
                                 <td>
