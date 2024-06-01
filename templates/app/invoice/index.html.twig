@@ -109,7 +109,7 @@
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection) }}</th>
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('amountNet', 'Betrag', sort, sortDirection) }}</th>
                                 <th>Zahlung</th>
-                                <th class="text-nowrap">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection) }}</th>
+                                <th class="text-nowrap d-none d-xxl-table-cell">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection) }}</th>
                                 <th class="action-column"></th>
                             </tr>
                         </thead>
@@ -128,20 +128,23 @@
                                     {% if draft %}
                                         <span class="badge text-bg-light">Entwurf</span>
                                     {% else %}
-                                        {{ invoice.number }}
+                                        {% if invoice.cancelled %}
+                                            <del>{{ invoice.number }}</del>
+                                            <span class="badge text-bg-info-soft">Storno</span>
+                                        {% else %}
+                                            {{ invoice.number }}
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {{ invoice.customerName }}
+                                    <span class="{% if invoice.customerShortName %}d-none d-xxl-inline{% endif %}">{{ invoice.customerName }}</span>
                                     {% if invoice.customerShortName %}
-                                        <br>
-                                        <span class="text-muted">{{ invoice.customerShortName }}</span>
+                                        <span class="d-inline d-xxl-none">{{ invoice.customerShortName }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if draft == false %}
-                                        {{ invoice.currency.alpha3 }} {{ invoice.amountNet|number_format(2, ',', '.') }}
-                                        <br><span class="text-muted">{{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}</span>
+                                        {{ invoice.currency.alpha3 }} {{ invoice.amountGross|number_format(2, ',', '.') }}
                                     {% endif %}
                                 </td>
                                 <td>
@@ -149,17 +152,18 @@
                                         {{ invoice.paymentLabel|raw }}
                                     {% endif %}
                                 </td>
-                                <td>{{ invoice.createdAt|ago }}</td>
+                                <td class="d-none d-xxl-table-cell">{{ invoice.createdAt|ago }}</td>
                                 <td class="action-column">
                                     {% if draft %}
-                                        <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}"
-                                           target="_top"
-                                           onclick="event.stopPropagation();return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');">
+                                        <a href="{{ path('app_invoice_delete', { 'id': invoice.id, '_token': csrf_token('delete' ~ invoice.id) }) }}" target="_top"
+                                           onclick="event.stopPropagation();return confirm('Soll dieser Beleg wirklich unwiderruflich gelöscht werden?');"
+                                           class="text-primary">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
 
                                         <a href="{{ path('app_invoice_new_basics', { 'id': invoice.id }) }}" target="_top"
-                                           onclick="event.stopPropagation();">
+                                           onclick="event.stopPropagation();"
+                                           class="text-primary ms-1">
                                             <i class="fa-regular fa-square-caret-right"></i>
                                         </a>
                                     {% else %}
@@ -188,7 +192,6 @@
                                             <i class="fa-solid fa-circle-info"></i>
                                         </a>
                                     {% endif %}
-
                                 </td>
                             </tr>
                         {% else %}
