@@ -3,10 +3,14 @@
 namespace App\Repository;
 
 use App\Entity\Customer;
+use App\Entity\Principal;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 
 /**
  * @extends ServiceEntityRepository<Customer>
@@ -18,9 +22,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CustomerRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private LoggerInterface $logger;
+
+    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
     {
         parent::__construct($registry, Customer::class);
+        $this->logger = $logger;
     }
 
     public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
@@ -77,5 +84,34 @@ class CustomerRepository extends ServiceEntityRepository
             ->getQuery();
 
         return $qb->getResult();
+    }
+
+    public function getNextAvailableCustomerNumber(Principal $principal): ?int
+    {
+        $customerNumberRange = $principal->getCustomerNumberRange();
+
+        if(!$customerNumberRange) {
+            $this->logger->warning('CustomerRepository->getNextAvailableCustomerNumber: Kein $customerNumberRange für Mandant #{id} definiert (NULL)', ['id' => $principal->getId()]);
+            return null;
+        }
+
+        $qb = $this->createQueryBuilder('customer');
+        $qb->select('MAX(customer.ledgerAccountNumber) AS max')
+            ->join('customer.principal', 'principal')
+            ->where($qb->expr()->eq('principal.id', ':principal'))
+            ->andWhere($qb->expr()->like('customer.ledgerAccountNumber', ':customerNumberRange'))
+            ->setParameter('principal', $principal)
+            ->setParameter('customerNumberRange', $customerNumberRange.'%');
+        try {
+            $result = $qb->getQuery()->getSingleResult();
+            $this->logger->debug('CustomerRepository->getNextAvailableCustomerNumber: Relevanter Eintrag zu {customerNumberRange} für Mandant #{id} gefunden, MAX: {max}', ['customerNumberRange' => $customerNumberRange, 'id' => $principal->getId(), 'max' => $result['max']] );
+        } catch (NoResultException|NonUniqueResultException) {
+            $this->logger->info('CustomerRepository->getNextAvailableCustomerNumber: Kein relevanter Eintrag zu {customerNumberRange} für Mandant #{id} gefunden', ['customerNumberRange' => $customerNumberRange, 'id' => $principal->getId()] );
+            return null;
+        }
+        if($result['max'] == null)
+            return $customerNumberRange.'001';
+        else
+            return $result['max']+1;
     }
 }

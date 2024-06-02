@@ -15,6 +15,7 @@ use App\Form\Field\PrincipalFieldType;
 use App\Form\Field\TermOfPaymentFieldType;
 use App\Repository\CountryRepository;
 use App\Repository\CurrencyRepository;
+use App\Repository\CustomerRepository;
 use App\Repository\CustomerTypeRepository;
 use App\Repository\LanguageRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -33,26 +34,51 @@ use Symfonycasts\DynamicForms\DynamicFormBuilder;
 
 class CustomerFormType extends AbstractType
 {
+    public function __construct(
+        private readonly CustomerRepository $customerRepository,
+    ) {}
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder = new DynamicFormBuilder($builder);
 
         $builder
             ->add('principal', PrincipalFieldType::class)
+            ->addDependent('ledgerAccountNumber', 'principal', function(DependentField $field, ?Principal $principal) use ($builder, $options) {
+                if($principal === null)
+                    $field->add(IntegerType::class, [
+                        'label' => 'Kundenummer',
+                        'row_attr' => ['class' => 'form-floating'],
+                        'disabled' => true,
+                    ]);
+                else {
+                    if(!$builder->getData()->getLedgerAccountNumber())
+                        $nextAvailableCustomerNumber = $this->customerRepository->getNextAvailableCustomerNumber($principal);
+                    else
+                        $nextAvailableCustomerNumber = null;
+                    $field
+                        ->add(IntegerType::class, [
+                            'label' => 'Kundenummer <span class="text-danger">*</span>',
+                            'label_html' => true,
+                            'row_attr' => ['class' => 'form-floating'],
+                            'help' => ($nextAvailableCustomerNumber ? 'Nächste freie Kundennummer: <b>'.$nextAvailableCustomerNumber.'</b>' : null),
+                            'help_html' => true,
+                            'required' => true
+                        ]);
+                }
+            })
             ->addDependent('termOfPaymentDefault', 'principal', function(DependentField $field, ?Principal $principal) {
                 if($principal === null)
                     $field->add(TextType::class, [
                         'label' => 'Zahlungsbedingung',
-                        'label_html' => true,
-                        'row_attr' => [
-                            'class' => 'form-floating',
-                        ],
+                        'row_attr' => ['class' => 'form-floating'],
                         'disabled' => true,
                     ]);
                 else
                     $field
                         ->add(TermOfPaymentFieldType::class, [
                             'label' => 'Zahlungsbedingung',
+                            'label_html' => false,
                             'selectedPrincipal' => $principal,
                             'choice_label' =>  function (TermOfPayment $entity) {
                                 return $entity->getName().' ('.$entity->getDueDays().' Tage)';
@@ -64,15 +90,13 @@ class CustomerFormType extends AbstractType
                 if($principal === null)
                     $field->add(TextType::class, [
                         'label' => 'Buchungskonto',
-                        'label_html' => true,
-                        'row_attr' => [
-                            'class' => 'form-floating',
-                        ],
+                        'row_attr' => ['class' => 'form-floating'],
                         'disabled' => true,
                     ]);
                 else
                     $field->add(AccountingPlanLedgerFieldType::class, [
                         'label' => 'Buchungskonto',
+                        'label_html' => false,
                         'selectedPrincipal' => $principal,
                         'choice_label' =>  function (AccountingPlanLedger $entity) {
                             return $entity->getName().' ('.$entity->getNumber().')';
@@ -110,14 +134,6 @@ class CustomerFormType extends AbstractType
                 ],
                 'label' => 'Kurzbezeichnung',
                 'required' => false
-            ])
-            ->add('ledgerAccountNumber', IntegerType::class, [
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'label' => 'Kundenummer laut Kontenplan <span class="text-danger">*</span>',
-                'label_html' => true,
-                'required' => true
             ])
 //            ->add('logoPath') // TODO: Upload-Field für Logo integrieren
 
@@ -358,7 +374,7 @@ class CustomerFormType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Customer::class,
+            'data_class' => Customer::class
         ]);
     }
 }
