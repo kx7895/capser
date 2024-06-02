@@ -46,7 +46,7 @@
                             <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Basis</legend>
                                 {% if invoice.cancelled %}
-                                    <div class="mb-2">
+                                    <div class="mb-2 text-center">
                                         {{ invoice.cancelledLabel|raw }}
                                     </div>
                                 {% endif %}
@@ -56,7 +56,12 @@
                                 {% if draft %}
                                     <span class="badge badge-primary">Entwurf</span>
                                 {% else %}
-                                    {{ _self.listElement('Nummer', invoice.number) }}
+                                    {% if invoice.cancelled %}
+                                        {% set value = '<del>' ~ invoice.number ~ '</del>' %}
+                                    {% else %}
+                                        {% set value = invoice.number %}
+                                    {% endif %}
+                                    {{ _self.listElement('Nummer', value) }}
                                 {% endif %}
 
                                 {{ _self.listElement('Datum', invoice.date|date('d.m.Y')) }}
@@ -86,7 +91,7 @@
                             </fieldset>
                             <fieldset class="border border-1 border-light mb-3 p-3">
                                 <legend class="h6">Rechnungsempfänger</legend>
-                                {{ _self.listElement('Kunde', invoice.hCustomerName) }}
+                                {{ _self.listElement('Kunde', '<a href="' ~ path('app_customer_edit', { id: invoice.customer.id }) ~ '">' ~ invoice.hCustomerName ~ '<i class="fa-solid fa-arrow-up-right-from-square small ms-1 d-none d-xxl-inline"></i></a>') }}
                                 {{ _self.listElement('Belegsprache', invoice.language.name) }}
                                 {{ _self.listElement('E-Mail-Versand', invoice.sentLabel) }}
                                 {% if invoice.sent %}
@@ -173,7 +178,7 @@
                                             '_token': csrf_token('delete' ~ invoice.id)
                                         }) }}"
                                            onclick="return confirm('Soll dieser Anhang wirklich unwiderruflich entfernt werden?');"
-                                            role="button" class="btn btn-outline-danger btn-xs me-1">
+                                            role="button" class="btn btn-outline-danger-soft text-gray-600 btn-xs me-1">
                                             <i class="fa-solid fa-trash"></i>
                                         </a>
                                         <a href="/{{ invoiceAttachment.storageFilename }}" target="_blank" role="button"
@@ -338,7 +343,7 @@
                                                             '_token': csrf_token('delete' ~ invoice.id)
                                                         }) }}"
                                                            onclick="return confirm('Soll die erfasste Zahlung wirklich unwiderruflich entfernt werden?');"
-                                                           role="button" class="btn btn-outline-danger btn-xs me-1">
+                                                           role="button" class="btn btn-outline-danger-soft text-gray-600 btn-xs me-1">
                                                             <i class="fa-solid fa-trash"></i>
                                                         </a>
                                                     </td>
@@ -429,7 +434,7 @@
             <!-- Large Screens -->
             <div class="nav-sticky d-none d-xxl-block">
                 <div class="btn-group d-flex" role="group">
-                    <a class="btn btn-outline-primary w-100" href="{{ path('app_invoice_index') }}">
+                    <a class="btn btn-outline-primary w-100" href="javascript:history.back();">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
                     <!-- ACTIONS -->
@@ -502,7 +507,7 @@
             <!-- Other Screens -->
             <div class="d-xxl-none">
                 <div class="text-center mt-5">
-                    <a class="btn btn-outline-primary" href="{{ path('app_invoice_index') }}">
+                    <a class="btn btn-outline-primary" href="javascript:history.back()">
                         <i class="fa-solid fa-chevron-left me-1"></i> Zurück
                     </a>
                 </div>

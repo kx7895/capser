@@ -85,7 +85,7 @@
                                 <dl class="col-7 mb-0">{{ invoice.invoiceType.type }} <mark>ENTWURF</mark></dl>
                                 <dt class="col-5 mb-0">Leistungszeitraum:</dt>
                                 <dl class="col-7 mb-0">
-                                    {{ invoice.periodFrom|date('d.m.Y') }}{% if invoice.periodFrom != invoice.periodTo %} bis {{ invoice.periodTo|date('d.m.Y') }}{% endif %}
+                                    {{ invoice.periodFrom|date('d.m.Y') }}{% if invoice.periodFrom != invoice.periodTo %} - {{ invoice.periodTo|date('d.m.Y') }}{% endif %}
                                 </dl>
                                 <dt class="col-5 mb-0">Seite:</dt>
                                 <dl class="col-7 mb-0">1 von 1</dl>

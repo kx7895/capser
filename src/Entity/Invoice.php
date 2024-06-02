@@ -662,7 +662,7 @@ class Invoice
     public function getSentLabel(): string
     {
         if($this->isSent())
-            return '<span class="badge text-bg-success">Verschickt</span>';
+            return '<span class="badge text-bg-success-soft">Verschickt</span>';
         else
             return '<span class="badge text-bg-light">Offen</span>';
     }
@@ -682,7 +682,7 @@ class Invoice
     public function getRemindedLabel(): string
     {
         if($this->isReminded())
-            return '<span class="badge text-bg-success">Verschickt</span>';
+            return '<span class="badge text-bg-success-soft">Verschickt</span>';
         else
             return '-';
     }
@@ -702,7 +702,7 @@ class Invoice
     public function getCancelledLabel(): string
     {
         if($this->isCancelled())
-            return '<span class="badge text-bg-warning">Storniert</span>';
+            return '<span class="badge text-bg-info-soft">Storniert</span>';
         else
             return '';
     }

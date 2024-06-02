@@ -135,10 +135,13 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <span class="{% if invoice.customerShortName %}d-none d-xxl-inline{% endif %}">{{ invoice.customerName }}</span>
-                                    {% if invoice.customerShortName %}
-                                        <span class="d-inline d-xxl-none">{{ invoice.customerShortName }}</span>
-                                    {% endif %}
+                                    <a href="{{ path('app_customer_edit', { id: invoice.customer.id }) }}" target="_top">
+                                        <span class="{% if invoice.customerShortName %}d-none d-xxl-inline{% endif %}">{{ invoice.customerName }}</span>
+                                        {% if invoice.customerShortName %}
+                                            <span class="d-inline d-xxl-none">{{ invoice.customerShortName }}</span>
+                                        {% endif %}
+                                        <i class="fa-solid fa-arrow-up-right-from-square small ms-1 d-none d-xxl-inline"></i>
+                                    </a>
                                 </td>
                                 <td>
                                     {% if draft == false %}

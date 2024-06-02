@@ -7,7 +7,7 @@
                 <div class="col-2 text-end">Offener Betrag</div>
             </div>
             {% for row in rows %}
-                <div class="row fw-bold div-table-body collapsed" data-bs-toggle="collapse" data-bs-target=".row{{ loop.index }}">
+                <div class="row fw-bold div-table-body" data-bs-toggle="collapse" data-bs-target=".row{{ loop.index }}">
                     <div class="col-1 text-end collapse-arrow-col">
                         <div class="collapse-arrow"><i class="fas fa-angle-down"></i></div>
                     </div>
@@ -23,7 +23,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="row border-bottom border-light collapse row{{ loop.index }}">
+                <div class="row border-bottom border-light show row{{ loop.index }}">
                     <div class="col-12 p-0">
                         <div class="row mx-0 small div-table-head text-body">
                             <div class="col-1 collapse-arrow-col"></div>
