@@ -15,7 +15,6 @@ use App\Form\Field\CustomerFieldType;
 use App\Form\Field\LanguageFieldType;
 use App\Form\Field\PrincipalFieldType;
 use App\Form\Field\TermOfPaymentFieldType;
-use App\Repository\AccountingPlanLedgerRepository;
 use App\Repository\CurrencyRepository;
 use App\Repository\InvoiceTypeRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -44,7 +43,6 @@ class InvoiceFormType extends AbstractType
                 if($principal === null)
                     $field->add(TextType::class, [
                         'label' => 'Buchungskonto',
-                        'label_html' => true,
                         'row_attr' => [
                             'class' => 'form-floating',
                         ],
@@ -52,6 +50,8 @@ class InvoiceFormType extends AbstractType
                     ]);
                 else
                     $field->add(AccountingPlanLedgerFieldType::class, [
+                        'label' => 'Buchungskonto',
+                        'label_html' => false,
                         'selectedPrincipal' => $principal,
                         'choice_label' =>  function (AccountingPlanLedger $entity) {
                             return $entity->getName().' ('.$entity->getNumber().')';

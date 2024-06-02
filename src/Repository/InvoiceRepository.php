@@ -3,13 +3,14 @@
 namespace App\Repository;
 
 use App\Entity\Invoice;
+use App\Entity\Principal;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Exception;
+use Psr\Log\LoggerInterface;
 
 /**
  * @extends ServiceEntityRepository<Invoice>
@@ -21,9 +22,12 @@ use Exception;
  */
 class InvoiceRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private LoggerInterface $logger;
+
+    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
     {
         parent::__construct($registry, Invoice::class);
+        $this->logger = $logger;
     }
 
     public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $sortDirection = 'ASC'): QueryBuilder
@@ -107,19 +111,27 @@ class InvoiceRepository extends ServiceEntityRepository
         return $customers;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function getNextAvailableDocumentNumber(int $fibuDocumentNumberRange): int
+    public function getNextAvailableDocumentNumber(Principal $principal): ?int
     {
+        $fibuDocumentNumberRange = $principal->getFibuDocumentNumberRange();
+
+        if(!$fibuDocumentNumberRange) {
+            $this->logger->warning('InvoiceRepository->getNextAvailableDocumentNumber: Kein $fibuDocumentNumberRange für Mandant #{id} definiert (NULL)', ['id' => $principal->getId()]);
+            return null;
+        }
+
         $qb = $this->createQueryBuilder('invoice');
         $qb->select('MAX(invoice.number) AS max')
-            ->where($qb->expr()->like('invoice.number', ':fibuDocumentNumberRange'))
+            ->join('invoice.principal', 'principal')
+            ->where($qb->expr()->eq('principal.id', ':principal'))
+            ->andWhere($qb->expr()->like('invoice.number', ':fibuDocumentNumberRange'))
             ->setParameter('fibuDocumentNumberRange', $fibuDocumentNumberRange.'%');
         try {
             $result = $qb->getQuery()->getSingleResult();
+            $this->logger->debug('InvoiceRepository->getNextAvailableDocumentNumber: Relevanter Eintrag zu {fibuDocumentNumberRange} für Mandant #{id} gefunden, MAX: {max}', ['fibuDocumentNumberRange' => $fibuDocumentNumberRange, 'id' => $principal->getId(), 'max' => $result['max']] );
         } catch (NoResultException|NonUniqueResultException) {
-            throw new Exception('Nächste Number zur InvoiceNumberRange '.$fibuDocumentNumberRange.' konnte nicht bestimmt werden. [InvoiceRepository:GN1]', 500);
+            $this->logger->info('InvoiceRepository->getNextAvailableDocumentNumber: Kein relevanter Eintrag zu {fibuDocumentNumberRange} für Mandant #{id} gefunden', ['fibuDocumentNumberRange' => $fibuDocumentNumberRange, 'id' => $principal->getId()] );
+            return null;
         }
         if($result['max'] == null)
             return $fibuDocumentNumberRange.'0001';

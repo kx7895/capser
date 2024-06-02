@@ -6,11 +6,11 @@ use App\Entity\Invoice;
 use App\Entity\InvoiceMailing;
 use App\Entity\InvoiceMailingRecipient;
 use App\Entity\InvoicePosition;
+use App\Entity\Principal;
 use App\Repository\InvoiceRepository;
 use App\Repository\InvoiceTypeRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -118,13 +118,9 @@ class InvoiceCreateService
         return null;
     }
 
-    public function buildInvoiceNumber(int $fibuDocumentNumberRange): ?int
+    public function buildInvoiceNumber(Principal $principal): ?int
     {
-        try {
-            return $this->invoiceRepository->getNextAvailableDocumentNumber($fibuDocumentNumberRange);
-        } catch(Exception) {
-            return null;
-        }
+        return $this->invoiceRepository->getNextAvailableDocumentNumber($principal);
     }
 
     public function sendToFibu(Invoice $invoice): bool
@@ -335,7 +331,7 @@ Yours sincerely,
         $credit->setPrincipal($invoice->getPrincipal());
         $credit->setCustomer($invoice->getCustomer());
         $credit->setDate(new DateTimeImmutable());
-        $credit->setNumber($this->buildInvoiceNumber((int)$credit->getPrincipal()->getFibuDocumentNumberRange()));
+        $credit->setNumber($this->buildInvoiceNumber($credit->getPrincipal()));
         $credit->setPeriodFrom($invoice->getPeriodFrom());
         $credit->setPeriodTo($invoice->getPeriodTo());
         $credit->setDue(new DateTimeImmutable());

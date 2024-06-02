@@ -30,6 +30,7 @@ class CustomerRepository extends ServiceEntityRepository
         $this->logger = $logger;
     }
 
+    /** @noinspection PhpUnused */
     public function findBySearch(?string $query, Collection $allowedPrincipals, array $queryParameters, ?string $sort = null, ?string $direction = 'ASC'): QueryBuilder
     {
         $qb = $this->createQueryBuilder('c');
