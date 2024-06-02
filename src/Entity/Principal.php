@@ -104,6 +104,12 @@ class Principal
     #[ORM\Column(length: 25, nullable: true)]
     private ?string $fibuDocumentNumberRange = null;
 
+    #[ORM\Column(length: 25, nullable: true)]
+    private ?string $customerNumberRange = null;
+
+    #[ORM\Column(length: 25, nullable: true)]
+    private ?string $supplierNumberRange = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $capserInvoiceAddress = null;
 
@@ -491,6 +497,30 @@ class Principal
     public function setFibuDocumentNumberRange(?string $fibuDocumentNumberRange): static
     {
         $this->fibuDocumentNumberRange = $fibuDocumentNumberRange;
+
+        return $this;
+    }
+
+    public function getCustomerNumberRange(): ?string
+    {
+        return $this->customerNumberRange;
+    }
+
+    public function setCustomerNumberRange(?string $customerNumberRange): static
+    {
+        $this->customerNumberRange = $customerNumberRange;
+
+        return $this;
+    }
+
+    public function getSupplierNumberRange(): ?string
+    {
+        return $this->supplierNumberRange;
+    }
+
+    public function setSupplierNumberRange(?string $supplierNumberRange): static
+    {
+        $this->supplierNumberRange = $supplierNumberRange;
 
         return $this;
     }

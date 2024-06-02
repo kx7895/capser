@@ -129,7 +129,6 @@ class PrincipalCrudController extends AbstractCrudController
                 ->setColumns(6)
                 ->hideOnIndex(),
 
-
             FormField::addFieldset('Rechnungsangaben (deutsch)'),
 
             TextareaField::new('footerColumn1', 'Fusszeile 1')
@@ -152,6 +151,16 @@ class PrincipalCrudController extends AbstractCrudController
                 ->hideOnIndex(),
             TextareaField::new('footerColumn3En', 'Fusszeile 3')
                 ->setColumns(4)
+                ->hideOnIndex(),
+
+            FormField::addFieldset('Weitere Nummernkreise'),
+            IntegerField::new('customerNumberRange', 'Kundennummern')
+                ->setHelp('Beispiel: <i>15</i> für <i>15001</i>')
+                ->setColumns(6)
+                ->hideOnIndex(),
+            IntegerField::new('supplierNumberRange', 'Lieferantennummern')
+                ->setHelp('Beispiel: <i>70</i> für <i>70001</i>')
+                ->setColumns(6)
                 ->hideOnIndex(),
 
             FormField::addTab('Steuerangaben'),
