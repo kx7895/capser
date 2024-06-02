@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use App\Entity\Customer;
@@ -9,14 +10,14 @@ use Doctrine\Common\Collections\Collection;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
-class DataTableService {
+readonly class DataTableService
+{
 
     public function __construct(
-        private readonly CustomerRepository  $customerRepository,
-        private readonly PrincipalRepository $principalRepository,
-        private readonly LoggerInterface     $logger,
+        private CustomerRepository  $customerRepository,
+        private PrincipalRepository $principalRepository,
+        private LoggerInterface     $logger,
     ) {}
 
     public function validateSort(?string $selectedSort, array $availableSorts, string $defaultSort = null)
@@ -85,16 +86,6 @@ class DataTableService {
             $page,
             $itemsPerPage
         );
-    }
-
-    public function parametersFromQueryToArray(Request $request): array
-    {
-        $parameters = [];
-        foreach($request->query as $key => $value) {
-            if(in_array($key, ['page', 'itemsPerPage', 'sort', 'sortDirection', 'query', 'queryPrincipalId', 'queryCustomerId']) && $value <> '')
-                $parameters[$key] = $value;
-        }
-        return $parameters;
     }
 
 }

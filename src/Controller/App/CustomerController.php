@@ -6,11 +6,11 @@ use App\Entity\Customer;
 use App\Entity\User;
 use App\Form\CustomerFormType;
 use App\Repository\CustomerRepository;
-use App\Repository\PrincipalRepository;
 use App\Service\DataTableService;
+use App\Service\UserPreferenceService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -21,66 +21,79 @@ class CustomerController extends AbstractController
 {
     public function __construct(
         private readonly CustomerRepository     $customerRepository,
-        private readonly PrincipalRepository    $principalRepository,
         private readonly DataTableService       $dataTableService,
+        private readonly UserPreferenceService  $prefs,
         private readonly EntityManagerInterface $entityManager,
+        private readonly LoggerInterface        $logger,
     ) {}
 
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(
+        Request $request,
         #[MapQueryParameter] int $page = 1,
-        #[MapQueryParameter] int $itemsPerPage = 20, // TODO: Vielleicht in Benutzer-Einstellungen setzen lassen.
-        #[MapQueryParameter] string $sort = 'name',
-        #[MapQueryParameter] string $sortDirection = 'ASC',
+        #[MapQueryParameter] string $sort = null,
+        #[MapQueryParameter] string $sortDirection = null,
         #[MapQueryParameter] string $query = null,
         #[MapQueryParameter] string $queryPrincipalId = null,
     ): Response
     {
         /** @var User $user */
         $user = $this->getUser();
+        $this->logger->debug('CustomerController->index(): {user}', ['user' => $user->getUserIdentifier()]);
         $allowedPrincipals = $user->getPrincipals();
 
+        // FILTER
+        if($request->query->has('clear') && $request->query->get('clear')) {
+            $this->prefs->set($user, 'CustomerController_index_queryPrincipalId', null);
+        }
+        $queryPrincipalId = $this->prefs->handle($user, 'CustomerController_index_queryPrincipalId', $queryPrincipalId);
         $queryPrincipal = $this->dataTableService->processPrincipalSelect($queryPrincipalId, $allowedPrincipals);
+        $activeFilters = 0;
+        if($queryPrincipal) $activeFilters++;
 
-        $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'hPrincipalName', 'createdAt', 'vatId']);
+        // SEARCH
+        $query = $this->prefs->handle($user, 'CustomerController_index_query', $query);
+
+        // PAGINATION
+        $itemsPerPage = $this->prefs->get($user, 'itemsPerPage');
+        $sort = $this->prefs->handle($user, 'CustomerController_index_sort', $sort);
+        $sort = $this->dataTableService->validateSort($sort, ['name', 'ledgerAccountNumber', 'hPrincipalName', 'createdAt', 'vatId'], 'name');
+        $sortDirection = $this->prefs->handle($user, 'CustomerController_index_sortDirection', $sortDirection);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection);
 
+        // TABLE
         $queryParameters = [];
         if($queryPrincipal)
             $queryParameters['principal'] = $queryPrincipal;
-
         $customers = $this->dataTableService->buildDataTable($this->customerRepository, $allowedPrincipals, $query, $queryParameters, $sort, $sortDirection, $page, $itemsPerPage);
-
-        $urlQueryParts = [
-            'queryPrincipalId' => $queryPrincipalId,
-            'query' => $query,
-            'sort' => $sort,
-            'sortDirection' => $sortDirection,
-        ];
+        if(count($customers) > 0)
+            $this->logger->debug('CustomerController->index(): Bis zu {count} Zeilen angezeigt', ['user' => $user->getUserIdentifier(), 'count' => count($customers)]);
 
         return $this->render('app/customer/index.html.twig', [
-            'customers' => $customers,
-
             'allowedPrincipals' => $allowedPrincipals,
             'queryPrincipal' => $queryPrincipal,
-            'page' => $page,
-            'itemsPerPage' => $itemsPerPage,
+            'query' => $query,
             'sort' => $sort,
             'sortDirection' => $sortDirection,
-            'query' => $query,
+            'activeFilters' => $activeFilters,
 
-            'urlQueryParts' => $urlQueryParts,
+            'customers' => $customers,
         ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
-        $customer = new Customer();
-        $form = $this->createCustomerForm($request, $customer);
-        $form->handleRequest($request);
+        /** @var User $user */
+        $user = $this->getUser();
 
+        $customer = new Customer();
+
+        $form = $this->createForm(CustomerFormType::class, $customer);
+        $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
+            $this->logger->debug('CustomerController->new(): {user} - Form submitted', ['user' => $user->getUserIdentifier()]);
+
             if($customer->getPrincipal()) {
                 $customer->setHPrincipalName($customer->getPrincipal()->getName());
                 $customer->setHPrincipalShortName($customer->getPrincipal()->getShortName());
@@ -91,7 +104,9 @@ class CustomerController extends AbstractController
 
             $this->addFlash('success', [$customer->getName(), 'Der Kunde wurde erfolgreich angelegt.']);
 
-            return $this->redirectToRoute('app_customer_index', $this->dataTableService->parametersFromQueryToArray($request));
+            return $this->redirectToRoute('app_customer_index');
+        } else {
+            $this->logger->debug('CustomerController->new(): {user}', ['user' => $user->getUserIdentifier()]);
         }
 
         return $this->render('app/customer/new.html.twig', [
@@ -101,14 +116,20 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Customer $customer): Response
+    public function edit(Customer $customer, Request $request): Response
     {
-        // TODO: Security - nur Customers für eigene Principals! Voters!
+        /** @var User $user */
+        $user = $this->getUser();
+        $this->logger->info('CustomerController->edit(): {user}', ['user' => $user->getUserIdentifier(), 'id' => $customer->getId()]);
 
-        $form = $this->createCustomerForm($request, $customer);
+        if(!$this->isAllowedForCustomer($user, $customer, 'edit'))
+            return $this->redirectToRoute('app_customer_index');
+
+        $form = $this->createForm(CustomerFormType::class, $customer);
         $form->handleRequest($request);
-
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->logger->debug('CustomerController->edit(): {user} - Form submitted', ['user' => $user->getUserIdentifier(), 'id' => $customer->getId()]);
+
             if($customer->getPrincipal()) {
                 $customer->setHPrincipalName($customer->getPrincipal()->getName());
                 $customer->setHPrincipalShortName($customer->getPrincipal()->getShortName());
@@ -119,7 +140,7 @@ class CustomerController extends AbstractController
 
             $this->addFlash('success', [$customer->getName(), 'Der Kunde wurde erfolgreich aktualisiert.']);
 
-            return $this->redirectToRoute('app_customer_edit',  ['id' => $customer->getId(), ...$this->dataTableService->parametersFromQueryToArray($request)]);
+            return $this->redirectToRoute('app_customer_edit',  ['id' => $customer->getId()]);
         }
 
         return $this->render('app/customer/edit.html.twig', [
@@ -129,9 +150,13 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['GET'])]
-    public function delete(Request $request, Customer $customer): Response
+    public function delete(Customer $customer, Request $request): Response
     {
-        // TODO: Security - nur Customers für eigene Principals! Voters!
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if(!$this->isAllowedForCustomer($user, $customer, 'edit'))
+            return $this->redirectToRoute('app_customer_index');
 
         if($this->isCsrfTokenValid('delete'.$customer->getId(), $request->get('_token'))) {
             $name = $customer->getName();
@@ -141,20 +166,23 @@ class CustomerController extends AbstractController
             $this->addFlash('success', [$name, 'Der Kunde wurde erfolgreich gelöscht.']);
         }
 
-        return $this->redirectToRoute('app_customer_index', $this->dataTableService->parametersFromQueryToArray($request));
+        return $this->redirectToRoute('app_customer_index');
     }
 
-    private function createCustomerForm(Request $request, Customer $customer = null): FormInterface
+    private function isAllowedForCustomer(User $user, ?Customer $customer, string $action): bool
     {
-        $customer = $customer ?? new Customer();
+        if(!$customer) {
+            $this->logger->warning('CustomerController->'.$action.'(): Aufgerufener Kunde zu übergebener ID wurde nicht gefunden, ID unbekannt', ['user' => $user->getUserIdentifier()]);
+            return false;
+        } elseif(!$customer->getPrincipal()) {
+            $this->logger->warning('CustomerController->'.$action.'(): Aufgerufener Kunde zu übergebener ID #{id} hat keinen gültigen, validierbaren Principal', ['user' => $user->getUserIdentifier(), 'id' => $customer->getId()]);
+            return false;
+        } elseif(!$user->getPrincipals()->contains($customer->getPrincipal())) {
+            $this->logger->warning('CustomerController->'.$action.'(): Aufgerufener Kunde #{id} entspricht keinem berechtigten Mandanten, Kunde wird nicht angezeigt', ['user' => $user->getUserIdentifier(), 'id' => $customer->getId(), 'principal' => $customer->getPrincipal()->getId()]);
+            return false;
+        }
 
-        $parameters = $this->dataTableService->parametersFromQueryToArray($request);
-        if($customer->getId())
-            $parameters['id'] = $customer->getId();
-
-        return $this->createForm(CustomerFormType::class, $customer, [
-            'action' => $customer->getId() ? $this->generateUrl('app_customer_edit', $parameters) : $this->generateUrl('app_customer_new', $parameters),
-        ]);
+        return true;
     }
 
 }

@@ -259,7 +259,7 @@ class InvoiceController extends AbstractController
 
         $this->logger->info('InvoiceController->newFinal(): Durch Benutzer {user} wurde der Beleg #{id} ({invoiceType} {invoiceNumber} final erstellt', ['user' => $user->getUserIdentifier(), 'invoiceType' => $invoice->getInvoiceType()->getType(), 'invoiceNumber' => $invoice->getNumber(), 'id' => $invoice->getId()]);
         $this->addFlash('success', [$invoice->getInvoiceType()->getType().' '.$invoice->getNumber(), 'Der Beleg wurde erfolgreich erstellt und kann nun per E-Mail verschickt werden.']);
-        return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
+        return $this->redirectToRoute('app_invoice_index');
     }
 
     private function buildInvoice(Invoice $invoice, $isFinal = false): array
@@ -561,7 +561,7 @@ class InvoiceController extends AbstractController
                 $name = $invoice->getInvoiceType()->getType().' '.$invoice->getNumber();
                 if(!$this->isGranted('ROLE_SUPERADMIN')) {
                     $this->addFlash('danger', [$name, 'Finalisierte Belege können nicht storniert werden.']);
-                    return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
+                    return $this->redirectToRoute('app_invoice_index');
                 }
             } else {
                 $name = $invoice->getInvoiceType()->getName().' für '.$invoice->getCustomerName().', Entwurf';
@@ -579,7 +579,7 @@ class InvoiceController extends AbstractController
             $this->addFlash('success', [$name, 'Der Beleg wurde erfolgreich gelöscht.']);
         }
 
-        return $this->redirectToRoute('app_invoice_index', $this->dataTableService->parametersFromQueryToArray($request));
+        return $this->redirectToRoute('app_invoice_index');
     }
 
     #[Route('/{id}/copy', name: 'copy', methods: ['GET'])]
@@ -590,22 +590,15 @@ class InvoiceController extends AbstractController
 
     private function createInvoiceForm(Invoice $invoice, int $step = null): FormInterface
     {
-        $parameters = [];
-        if($invoice->getId())
-            $parameters['id'] = $invoice->getId();
-
         if($step == 1)
-            return $this->createForm(InvoiceFormType::class, $invoice, [
-                'action' => $this->generateUrl('app_invoice_new_basics', $parameters),
-            ]);
-        elseif($step == 2)
+            return $this->createForm(InvoiceFormType::class, $invoice);
+        elseif($step == 2 && $invoice->getId())
             return $this->createForm(InvoicePositionsFormType::class, $invoice, [
-                'action' => $this->generateUrl('app_invoice_new_positions', $parameters),
+                'action' => $this->generateUrl('app_invoice_new_positions', ['id' => $invoice->getId()]),
                 'principal' => $invoice->getPrincipal(),
             ]);
         else
-            throw new LogicException('Invalid Form Step for InvoiceForm.');
-
+            throw new LogicException('Invalid Form Step for createInvoiceForm.');
     }
 
     /**

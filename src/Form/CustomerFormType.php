@@ -10,17 +10,14 @@ use App\Entity\CustomerType;
 use App\Entity\Language;
 use App\Entity\Principal;
 use App\Entity\TermOfPayment;
-use App\Entity\User;
-use App\Repository\AccountingPlanLedgerRepository;
+use App\Form\Field\AccountingPlanLedgerFieldType;
+use App\Form\Field\PrincipalFieldType;
+use App\Form\Field\TermOfPaymentFieldType;
 use App\Repository\CountryRepository;
 use App\Repository\CurrencyRepository;
 use App\Repository\CustomerTypeRepository;
 use App\Repository\LanguageRepository;
-use App\Repository\PrincipalRepository;
-use App\Repository\TermOfPaymentRepository;
-use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
@@ -31,23 +28,58 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfonycasts\DynamicForms\DependentField;
+use Symfonycasts\DynamicForms\DynamicFormBuilder;
 
 class CustomerFormType extends AbstractType
 {
-    public function __construct(
-        private readonly Security $security,
-    ) {}
-
-    private function getAllowedPrincipals(): Collection
-    {
-        /** @var User $user */
-        $user = $this->security->getUser();
-        return $user->getPrincipals();
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $allowedPrincipals = $this->getAllowedPrincipals();
+        $builder = new DynamicFormBuilder($builder);
+
+        $builder
+            ->add('principal', PrincipalFieldType::class)
+            ->addDependent('termOfPaymentDefault', 'principal', function(DependentField $field, ?Principal $principal) {
+                if($principal === null)
+                    $field->add(TextType::class, [
+                        'label' => 'Zahlungsbedingung',
+                        'label_html' => true,
+                        'row_attr' => [
+                            'class' => 'form-floating',
+                        ],
+                        'disabled' => true,
+                    ]);
+                else
+                    $field
+                        ->add(TermOfPaymentFieldType::class, [
+                            'label' => 'Zahlungsbedingung',
+                            'selectedPrincipal' => $principal,
+                            'choice_label' =>  function (TermOfPayment $entity) {
+                                return $entity->getName().' ('.$entity->getDueDays().' Tage)';
+                            },
+                            'required' => false,
+                        ]);
+            })
+            ->addDependent('accountingPlanLedgerDefault', 'principal', function(DependentField $field, ?Principal $principal) {
+                if($principal === null)
+                    $field->add(TextType::class, [
+                        'label' => 'Buchungskonto',
+                        'label_html' => true,
+                        'row_attr' => [
+                            'class' => 'form-floating',
+                        ],
+                        'disabled' => true,
+                    ]);
+                else
+                    $field->add(AccountingPlanLedgerFieldType::class, [
+                        'label' => 'Buchungskonto',
+                        'selectedPrincipal' => $principal,
+                        'choice_label' =>  function (AccountingPlanLedger $entity) {
+                            return $entity->getName().' ('.$entity->getNumber().')';
+                        },
+                        'required' => false,
+                    ]);
+            });
 
         $builder
             /* BASISANGABEN */
@@ -86,30 +118,6 @@ class CustomerFormType extends AbstractType
                 'label' => 'Kundenummer laut Kontenplan <span class="text-danger">*</span>',
                 'label_html' => true,
                 'required' => true
-            ])
-            // TODO: Nur zeigen, wenn man überhaupt mehr als 1 Principal zugewiesen hat
-            ->add('principal', EntityType::class, [
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'class' => Principal::class,
-                'query_builder' => function (PrincipalRepository $repository) use ($allowedPrincipals) {
-                    return $repository->createQueryBuilder('principal')
-                        ->where('principal IN (:allowedPrincipals)')
-                        ->setParameter('allowedPrincipals', $allowedPrincipals)
-                        ->orderBy('principal.name', 'ASC');
-                },
-                'label' => 'Mandant <span class="text-danger">*</span>',
-                'label_html' => true,
-                'placeholder' => 'Bitte wählen...',
-                'autocomplete' => true,
-                'tom_select_options' => [
-                    'hideSelected' => true,
-                    'plugins' => [
-                        'dropdown_input',
-                        'clear_button',
-                    ],
-                ],
             ])
 //            ->add('logoPath') // TODO: Upload-Field für Logo integrieren
 
@@ -284,54 +292,7 @@ class CustomerFormType extends AbstractType
                     ],
                 ],
             ])
-            ->add('termOfPaymentDefault', EntityType::class, [
-                'class' => TermOfPayment::class,
-                'query_builder' => function (TermOfPaymentRepository $repository) { // TODO: Security - nur eigene Pläne anzeigen
-                    return $repository->createQueryBuilder('entity')
-                        ->orderBy('entity.name', 'ASC');
-                },
-                'choice_label' =>  function (TermOfPayment $termOfPayment) {
-                    return $termOfPayment->getPrincipal()->getShortName().' » '.$termOfPayment->getName().' ('.$termOfPayment->getDueDays().' Tage)';
-                },
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'label' => 'Zahlungsbedingung',
-                'placeholder' => 'Bitte wählen...',
-                'required' => false,
-                'autocomplete' => true,
-                'tom_select_options' => [
-                    'hideSelected' => true,
-                    'plugins' => [
-                        'dropdown_input',
-                        'clear_button',
-                    ],
-                ],
-            ])
-            ->add('accountingPlanLedgerDefault', EntityType::class, [
-                'class' => AccountingPlanLedger::class,
-                'query_builder' => function (AccountingPlanLedgerRepository $repository) { // TODO: Security - nur eigene Pläne anzeigen
-                    return $repository->createQueryBuilder('entity')
-                        ->orderBy('entity.name', 'ASC');
-                },
-                'choice_label' =>  function (AccountingPlanLedger $accountingPlanLedger) {
-                    return $accountingPlanLedger->getAccountingPlanGroup()->getAccountingPlan()->getPrincipal()->getShortName().' » '.$accountingPlanLedger->getName().' (#'.$accountingPlanLedger->getNumber().')';
-                },
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'label' => 'Buchungskonto',
-                'placeholder' => 'Bitte wählen...',
-                'required' => false,
-                'autocomplete' => true,
-                'tom_select_options' => [
-                    'hideSelected' => true,
-                    'plugins' => [
-                        'dropdown_input',
-                        'clear_button',
-                    ],
-                ],
-            ])
+
 
             // unfortunately, it is necessary to specify the style-height of textarea fixed according to https://getbootstrap.com/docs/5.3/forms/floating-labels/#textareas
             ->add('specialFooterColumn1', TextareaType::class, [
@@ -368,7 +329,6 @@ class CustomerFormType extends AbstractType
             /* INVOICE RECEIVERS */
             ->add('customerInvoiceRecipients', CollectionType::class, [
                 'entry_type' => CustomerInvoiceRecipientType::class,
-//                'entry_options' => ['label' => false],
                 'allow_add' => true,
                 'allow_delete' => true,
                 'by_reference' => false,

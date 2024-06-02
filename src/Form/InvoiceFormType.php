@@ -9,6 +9,7 @@ use App\Entity\Invoice;
 use App\Entity\InvoiceType;
 use App\Entity\Principal;
 use App\Entity\TermOfPayment;
+use App\Form\Field\AccountingPlanLedgerFieldType;
 use App\Form\Field\CustomDateType;
 use App\Form\Field\CustomerFieldType;
 use App\Form\Field\LanguageFieldType;
@@ -40,45 +41,21 @@ class InvoiceFormType extends AbstractType
         /* Buchungskonto */
         $builder
             ->addDependent('accountingPlanLedger', 'principal', function(DependentField $field, ?Principal $principal) {
-                $sharedOptions = [
-                    'label' => 'Buchungskonto',
-                    'row_attr' => [
-                        'class' => 'form-floating',
-                    ],
-                ];
                 if($principal === null)
                     $field->add(TextType::class, [
-                        ...$sharedOptions,
+                        'label' => 'Buchungskonto',
+                        'label_html' => true,
+                        'row_attr' => [
+                            'class' => 'form-floating',
+                        ],
                         'disabled' => true,
                     ]);
                 else
-                    $field->add(EntityType::class, [
-                        ...$sharedOptions,
-                        'class' => AccountingPlanLedger::class,
-                        'query_builder' => function (AccountingPlanLedgerRepository $repository) use ($principal) {
-                            $qb = $repository
-                                ->createQueryBuilder('aPL')
-                                ->join('aPL.accountingPlanGroup', 'aPLG')
-                                ->join('aPLG.accountingPlan', 'aP')
-                                ->join('aP.principal', 'p');
-                            $qb
-                                ->andWhere($qb->expr()->eq('p', ':principal'))
-                                ->setParameter('principal', $principal)
-                                ->orderBy('aPL.number', 'ASC');
-                            return $qb;
+                    $field->add(AccountingPlanLedgerFieldType::class, [
+                        'selectedPrincipal' => $principal,
+                        'choice_label' =>  function (AccountingPlanLedger $entity) {
+                            return $entity->getName().' ('.$entity->getNumber().')';
                         },
-                        'choice_label' => function (AccountingPlanLedger $entity) {
-                            return $entity->getName().' (#'.$entity->getNumber().')';
-                        },
-                        'placeholder' => 'Bitte wählen...',
-                        'autocomplete' => true,
-                        'tom_select_options' => [
-                            'hideSelected' => true,
-                            'plugins' => [
-                                'dropdown_input',
-                                'clear_button',
-                            ],
-                        ],
                         'required' => false,
                     ]);
             });

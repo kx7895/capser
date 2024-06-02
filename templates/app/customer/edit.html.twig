@@ -6,73 +6,7 @@
 {% block breadcrumb2 %}{% endblock %}
 
 {% block content %}
-    <!--suppress HtmlUnknownAnchorTarget -->
-
-    {{ form_start(form) }}
-
-    <div class="row">
-        <div class="col-xxl-9">
-            <div id="default">
-                {{ include('app/customer/_form.html.twig') }}
-            </div>
-        </div>
-        <div class="col-xxl-3">
-            <!-- Large Screens -->
-            <div class="nav-sticky d-none d-xxl-block">
-                <div class="btn-group d-flex" role="group">
-                    <a class="btn btn-outline-primary w-100" href="javascript:history.back()">
-                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
-                    </a>
-                    {{ form_widget(form.submitXXL, {'attr': {'class': 'btn btn-primary w-100'}}) }}
-                </div>
-                {% if form.vars.data.id|default %}
-                    <a class="btn btn-light mt-3 w-100" href="{{ path('app_customer_delete', {
-                        'id': customer.id,
-                        '_token': csrf_token('delete' ~ customer.id),
-                        ...app.request.query.all()
-                    }) }}" onclick="return confirm('Soll dieser Kunde wirklich gelöscht werden? Dieser Schritt kann nicht rückgängig gemacht werden.');">
-                        <i class="fa-solid fa-trash me-1"></i> Löschen
-                    </a>
-                {% endif %}
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <ul class="nav flex-column" id="stickyNav">
-                            <li class="nav-item"><a class="nav-link" href="#sectionStammdaten">Stammdaten</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#sectionRechnungsstandards">Rechnungsstandards</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#sectionCustomerInvoiceRecipients">Rechnungsempfänger</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#sectionZahlungsdaten">Zahlungsdaten</a></li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#sectionTags">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        Tags
-                                        <span class="badge bg-primary-soft text-primary">{{ customer.tags|length }}</span>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <!-- Other Screens -->
-            <div class="d-xxl-none">
-                <div class="text-center mt-5">
-                    <a class="btn btn-outline-primary" href="javascript:history.back()">
-                        <i class="fa-solid fa-chevron-left me-1"></i> Zurück
-                    </a>
-                    {% if form.vars.data.id|default %}
-                        <a class="btn btn-outline-primary" href="{{ path('app_customer_delete', {
-                            'id': customer.id,
-                            '_token': csrf_token('delete' ~ customer.id),
-                            ...app.request.query.all()
-                        }) }}" onclick="return confirm('Soll dieser Kunde wirklich gelöscht werden? Dieser Schritt kann nicht rückgängig gemacht werden.');">
-                            <i class="fa-solid fa-trash me-1"></i> Löschen
-                        </a>
-                    {% endif %}
-                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{ form_end(form) }}
+    {{ component('CustomerForm', {
+        initialFormData: customer,
+    }) }}
 {% endblock %}
