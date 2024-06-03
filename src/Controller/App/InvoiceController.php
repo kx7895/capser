@@ -246,7 +246,7 @@ class InvoiceController extends AbstractController
         $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
             return $this->invoiceLogErrorAndRedirectToIndex('newFinal', 'ICnF1');
-
+die('here?');
         [$invoice, $pdf] = $this->buildInvoice($invoice, true);
 
         $pdf->Output('F', $this->invoiceCreateService->buildFullPathToFile($invoice->getStorageFilename()));
