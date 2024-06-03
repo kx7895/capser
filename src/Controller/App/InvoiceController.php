@@ -190,7 +190,6 @@ class InvoiceController extends AbstractController
         $form = $this->createInvoiceForm($invoice, 2);
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
-            die('Form submitted - OK?!');
             $this->logger->info('InvoiceController->newPositions(): {user} - Form submitted', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
 
             $this->entityManager->persist($invoice);
