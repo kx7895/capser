@@ -264,11 +264,10 @@ class InvoiceController extends AbstractController
 
     private function buildInvoice(Invoice $invoice, $isFinal = false): array
     {
-        $invoice->setNumber(99999999);
-//        if($isFinal)
-//            $invoice->setNumber($this->invoiceCreateService->buildInvoiceNumber($invoice->getPrincipal()));
-//        else
-//            $invoice->setNumber(99999999);
+        if($isFinal)
+            $invoice->setNumber($this->invoiceCreateService->buildInvoiceNumber($invoice->getPrincipal()));
+        else
+            $invoice->setNumber(99999999);
         $invoice->setStorageFilename($this->invoiceCreateService->buildInvoiceStorageFilename($invoice));
         $invoice->setNiceFilename($this->invoiceCreateService->buildInvoiceNiceFilename($invoice));
 

@@ -114,7 +114,7 @@ class InvoiceRepository extends ServiceEntityRepository
     public function getNextAvailableDocumentNumber(Principal $principal): ?int
     {
         $fibuDocumentNumberRange = $principal->getFibuDocumentNumberRange();
-
+dd($fibuDocumentNumberRange);
         if(!$fibuDocumentNumberRange) {
             $this->logger->warning('InvoiceRepository->getNextAvailableDocumentNumber: Kein $fibuDocumentNumberRange für Mandant #{id} definiert (NULL)', ['id' => $principal->getId()]);
             return null;
