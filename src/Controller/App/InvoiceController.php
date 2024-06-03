@@ -194,7 +194,7 @@ class InvoiceController extends AbstractController
 
             $this->entityManager->persist($invoice);
             $this->entityManager->flush();
-
+dd('flush ok!');
             $redirectTarget = 'new_positions';
             /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if($form->get('finalize')->isClicked() || $form->get('finalizeXXL')->isClicked())
@@ -246,7 +246,7 @@ class InvoiceController extends AbstractController
         $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
             return $this->invoiceLogErrorAndRedirectToIndex('newFinal', 'ICnF1');
-die('here?');
+
         [$invoice, $pdf] = $this->buildInvoice($invoice, true);
 
         $pdf->Output('F', $this->invoiceCreateService->buildFullPathToFile($invoice->getStorageFilename()));
