@@ -239,7 +239,6 @@ class InvoiceController extends AbstractController
     #[Route('/new/final', name: 'new_final')]
     public function newFinal(Request $request): Response
     {
-        dd('stop for now');
         /** @var User $user */
         $user = $this->getUser();
 
@@ -247,7 +246,7 @@ class InvoiceController extends AbstractController
         $invoice = $this->findOrCreateInvoice($request);
         if(!$invoice)
             return $this->invoiceLogErrorAndRedirectToIndex('newFinal', 'ICnF1');
-
+dd($invoice);
         [$invoice, $pdf] = $this->buildInvoice($invoice, true);
 
         $pdf->Output('F', $this->invoiceCreateService->buildFullPathToFile($invoice->getStorageFilename()));
