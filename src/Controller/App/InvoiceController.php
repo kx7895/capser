@@ -179,6 +179,7 @@ class InvoiceController extends AbstractController
     #[Route('/new/positions', name: 'new_positions', methods: ['GET', 'POST'])]
     public function newPositions(Request $request): Response
     {
+        die('OK?!');
         /** @var User $user */
         $user = $this->getUser();
 
@@ -191,10 +192,10 @@ class InvoiceController extends AbstractController
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
             $this->logger->info('InvoiceController->newPositions(): {user} - Form submitted', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
-dd($invoice);
+
             $this->entityManager->persist($invoice);
             $this->entityManager->flush();
-dd('flush ok!');
+
             $redirectTarget = 'new_positions';
             /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if($form->get('finalize')->isClicked() || $form->get('finalizeXXL')->isClicked())
