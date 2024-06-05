@@ -226,7 +226,7 @@ class InvoiceCreatePdfService
     {
         $this->pdf->SetFont('Arial', '', 9);
         if($this->positionsCounter != 0)
-            $this->pdf->Ln(3);
+            $this->pdf->Ln(2);
         $yAfterMultiCell = $this->pdf->GetY(); // just as fallback, never required or used
         $i = 0;
         foreach($values as $value) {
@@ -246,7 +246,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         $this->positionsCounter++;
 
-        if($this->positionsCounter == 5) {
+        if($this->pdf->GetY() > 230) {
             $this->addPdfFooter();
 
             $this->pdf->AddPage();
