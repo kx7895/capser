@@ -324,6 +324,7 @@ class InvoiceController extends AbstractController
 
             $paymentForm = $this->createForm(InvoicePaymentFormType::class, $invoicePayment, [
                 'action' => $this->generateUrl('app_invoice_show', ['id' => $invoice->getId()]),
+                'principal' => $invoice->getPrincipal(),
             ]);
 
             // Set Default

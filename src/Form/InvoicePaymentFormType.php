@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\AccountingPlanLedger;
 use App\Entity\Currency;
 use App\Entity\InvoicePayment;
+use App\Form\Field\AccountingPlanLedgerFieldType;
 use App\Form\Field\CustomDateType;
 use App\Repository\AccountingPlanLedgerRepository;
 use App\Repository\CurrencyRepository;
@@ -56,28 +57,13 @@ class InvoicePaymentFormType extends AbstractType
                 ],
                 'required' => true,
             ])
-            /* TODO: Nur eigene Konten und nur vom tatsächlich aktivierten Kontenplan */
-            ->add('accountingPlanLedger', EntityType::class, [
-                'row_attr' => [
-                    'class' => 'form-floating',
-                ],
-                'class' => AccountingPlanLedger::class,
-                'query_builder' => function (AccountingPlanLedgerRepository $repository) {
-                    return $repository->createQueryBuilder('entity')
-                        ->orderBy('entity.name', 'ASC');
-                },
-                'choice_label' => 'name',
+            // TODO: Nur Finanzkonten
+            ->add('accountingPlanLedger', AccountingPlanLedgerFieldType::class, [
                 'label' => 'Konto <span class="text-danger">*</span>',
-                'label_html' => true,
-                'placeholder' => 'Bitte wählen...',
-                'autocomplete' => true,
-                'tom_select_options' => [
-                    'hideSelected' => true,
-                    'plugins' => [
-                        'dropdown_input',
-                        'clear_button',
-                    ],
-                ],
+                'selectedPrincipal' => $options['principal'],
+                'choice_label' =>  function (AccountingPlanLedger $entity) {
+                    return $entity->getName().' ('.$entity->getNumber().')';
+                },
                 'required' => true,
             ])
             ->add('submit', SubmitType::class, [
@@ -93,6 +79,7 @@ class InvoicePaymentFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => InvoicePayment::class,
+            'principal' => null,
         ]);
     }
 }
