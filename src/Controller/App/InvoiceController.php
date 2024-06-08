@@ -93,7 +93,7 @@ class InvoiceController extends AbstractController
         // PAGINATION
         $itemsPerPage = $this->prefs->get($user, 'itemsPerPage');
         $sort = $this->prefs->handle($user, 'InvoiceController_index_sort', $sort);
-        $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountGross', 'createdAt'], 'date');
+        $sort = $this->dataTableService->validateSort($sort, ['date', 'invoiceType', 'hCustomerName', 'hPrincipalName', 'number', 'amountNet', 'amountGross', 'createdAt'], 'date');
         $sortDirection = $this->prefs->handle($user, 'InvoiceController_index_sortDirection', $sortDirection);
         $sortDirection = $this->dataTableService->validateSortDirection($sortDirection, 'DESC');
 

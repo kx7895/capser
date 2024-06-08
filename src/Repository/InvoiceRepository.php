@@ -78,7 +78,11 @@ class InvoiceRepository extends ServiceEntityRepository
         }
 
         if($sort)
-            $qb->orderBy('i.'.$sort, $sortDirection);
+            if($sort == 'date')
+                $qb->orderBy('i.date', $sortDirection)
+                    ->addOrderBy('i.createdAt', $sortDirection);
+            else
+                $qb->orderBy('i.'.$sort, $sortDirection);
 
         return $qb;
     }
