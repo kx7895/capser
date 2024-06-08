@@ -282,12 +282,8 @@ class InvoiceController extends AbstractController
         $totalSum = 0;
         foreach($invoice->getInvoicePositions() as $position) {
             $unit = '';
-            if($position->getUnit()) {
-                $method = 'getName'.ucfirst(strtolower($invoice->getLanguage()->getAlpha2()));
-                if($method == 'getNameDe' || $method == 'getNameCh')
-                    $method = 'getName';
-                $unit = ($position->getUnit()->$method() ? $position->getUnit()->$method() : $position->getUnit()->getName());
-            }
+            if($position->getUnit())
+                $unit = $position->getUnit()->getNiceName($invoice->getLanguage()->getAlpha3());
 
             $pdfCreator->addPdfTableBodyRow([
                 $position->getText(),

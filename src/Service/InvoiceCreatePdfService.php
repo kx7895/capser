@@ -91,15 +91,8 @@ class InvoiceCreatePdfService
             $principalAddress[] = $this->principal->getAddressLine3();
         if($this->principal->getAddressLine4())
             $principalAddress[] = $this->principal->getAddressLine4();
-        if($this->principal->getAddressLineCountry()) {
-            $methodName = 'getName'.ucfirst(strtolower($this->lang));
-            if($methodName == 'getNameDe' || $methodName == 'getNameCh')
-                $methodName = 'getName';
-            if($this->principal->getAddressLineCountry()->$methodName())
-                $principalAddress[] = $this->principal->getAddressLineCountry()->$methodName();
-            else
-                $principalAddress[] = $this->principal->getAddressLineCountry()->getName();
-        }
+        if($this->principal->getAddressLineCountry())
+            $principalAddress[] = $this->principal->getAddressLineCountry()->getNiceName($this->invoice->getLanguage()->getAlpha3());
         $principalAddressString = implode(' | ', $principalAddress);
         
         $this->pdf->SetFont('Arial', '', 7);
@@ -115,15 +108,8 @@ class InvoiceCreatePdfService
             $receiverAddress[] = $this->receiver->getAddressLine3();
         if($this->receiver->getAddressLine4())
             $receiverAddress[] = $this->receiver->getAddressLine4();
-        if($this->receiver->getAddressLineCountry()) {
-            $methodName = 'getName'.ucfirst(strtolower($this->lang));
-            if($methodName == 'getNameDe' || $methodName == 'getNameCh')
-                $methodName = 'getName';
-            if($this->principal->getAddressLineCountry()->$methodName())
-                $receiverAddress[] = $this->receiver->getAddressLineCountry()->$methodName();
-            else
-                $receiverAddress[] = $this->receiver->getAddressLineCountry()->getName();
-        }
+        if($this->receiver->getAddressLineCountry())
+            $receiverAddress[] = $this->receiver->getAddressLineCountry()->getNiceName($this->invoice->getLanguage()->getAlpha3());
         $receiverAddressString = implode('
 ', $receiverAddress);
 

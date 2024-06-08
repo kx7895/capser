@@ -138,6 +138,18 @@ class Country
         return $this;
     }
 
+    public function getNiceName($lang = 'DEU'): ?string
+    {
+        if($lang == 'ENG' && $this->nameEn)
+            return $this->nameEn;
+        elseif($lang == 'FRA' && $this->nameFr)
+            return $this->nameFr;
+        elseif($lang == 'ITA' && $this->nameIt)
+            return $this->nameIt;
+
+        return $this->name;
+    }
+
     public function __toString(): string
     {
         return $this->getName();

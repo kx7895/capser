@@ -202,7 +202,7 @@ Im Auftrag von: '.$invoice->getPrincipal()->getName());
 '.$invoice->getPrincipal()->getAddressLine4();
         if($invoice->getPrincipal()->getAddressLineCountry())
             $principalFooter .= '
-'.$invoice->getPrincipal()->getAddressLineCountry()->getName();
+'.$invoice->getPrincipal()->getAddressLineCountry()->getNiceName($invoice->getLanguage()->getAlpha3());
         $principalFooter .= '
 ';
 
