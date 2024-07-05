@@ -51,6 +51,9 @@ class InvoiceCreatePdfService
         if($invoice->getInvoiceType()->$methodType())
             $this->invoiceTypeType = $invoice->getInvoiceType()->$methodType();
 
+        if($invoice->getPrincipal()->getAddressLineCountry()->getAlpha3() == 'ARE')
+            $this->invoiceTypeName = 'Tax '.$this->invoiceTypeName;
+
         $this->pdf = new Fpdf('P', 'mm', 'A4');
         $this->pdf->SetMargins(17, 5);
         $this->pdf->SetAutoPageBreak(false);
