@@ -101,7 +101,7 @@ class InvoiceCreatePdfService
         $principalAddressString = implode(' | ', $principalAddress);
         
         $this->pdf->SetFont('Arial', '', 7);
-        $this->pdf->Cell(123, 5, utf8d($principalAddressString));
+        $this->pdf->Cell(123, 5, utf8_decode($principalAddressString));
         $this->pdf->Ln();
 
         $receiverAddress = [$this->receiver->getName()];
@@ -121,7 +121,7 @@ class InvoiceCreatePdfService
         $y = $this->pdf->GetY(); // zu Beginn
         $numberOfLinesAtAddress = count($receiverAddress);
         $this->pdf->SetFont('Arial', '', 10);
-        $this->pdf->MultiCell(123, 5, utf8d($receiverAddressString));
+        $this->pdf->MultiCell(123, 5, utf8_decode($receiverAddressString));
         $this->pdf->Ln();
 
         // Richtige Position finden & Abstand
@@ -196,7 +196,7 @@ class InvoiceCreatePdfService
 
             // Kontext (links)
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8d($this->invoice->getIntroText()));
+            $this->pdf->MultiCell(0, 4, utf8_decode($this->invoice->getIntroText()));
             $this->pdf->Ln();
         }
 
@@ -225,11 +225,11 @@ class InvoiceCreatePdfService
             if($i == 0) {
                 $xBeforeMultiCell = $this->pdf->GetX();
                 $yBeforeMultiCell = $this->pdf->GetY();
-                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8d($value), 0, $align);
+                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value), 0, $align);
                 $yAfterMultiCell = $this->pdf->GetY();
                 $this->pdf->SetXY($xBeforeMultiCell+self::WIDTHS[$i], $yBeforeMultiCell);
             } else {
-                $this->pdf->Cell(self::WIDTHS[$i], 5, utf8d($value), '0', 0, $align);
+                $this->pdf->Cell(self::WIDTHS[$i], 5, utf8_decode($value), '0', 0, $align);
             }
             $i++;
         }
@@ -286,7 +286,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         foreach($conditions AS $condition) {
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8d(str_replace('_CURRENCY_', $this->currencySymbol, $condition)), 0, 'L');
+            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencySymbol, $condition)), 0, 'L');
             $this->pdf->Ln();
         }
     }
@@ -306,7 +306,7 @@ class InvoiceCreatePdfService
             $footerColumn1 = $this->principal->getFooterColumn1();
         else
             $footerColumn1 = $this->principal->getFooterColumn1En();
-        $this->pdf->MultiCell(60, 3, utf8d($footerColumn1), 'T');
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn1), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
@@ -320,7 +320,7 @@ class InvoiceCreatePdfService
             $footerColumn2 = $this->principal->getFooterColumn2();
         else
             $footerColumn2 = $this->principal->getFooterColumn2En();
-        $this->pdf->MultiCell(60, 3, utf8d($footerColumn2), 'T');
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn2), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
@@ -331,7 +331,7 @@ class InvoiceCreatePdfService
             $footerColumn3 = $this->principal->getFooterColumn3();
         else
             $footerColumn3 = $this->principal->getFooterColumn3En();
-        $this->pdf->MultiCell(60, 3, utf8d($footerColumn3), 'T');
+        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn3), 'T');
 
         $this->pdf->SetTextColor(0, 0, 0);
     }
