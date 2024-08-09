@@ -215,6 +215,7 @@ class InvoiceController extends AbstractController
             'paymentSentence' => $this->invoiceCreateService->getPaymentSentence($invoice),
             'taxSentence' => $this->invoiceCreateService->getVatSentence($invoice),
             'invoice' => $invoice,
+            'printTaxLines' => !($invoice->getPrincipal()->getAddressLineCountry()->getAlpha3() == 'ARE' && $invoice->getCurrency()->getAlpha3() == 'AED' && $invoice->getVatRate() == 0),
             'form' => $form,
         ]);
     }

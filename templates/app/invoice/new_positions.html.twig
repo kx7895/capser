@@ -167,8 +167,9 @@
                             {% if form.invoicePositions|length == 0 %}
                                 {{ form_widget(form.invoicePositions) }}
                             {% endif %}
+                            {% if printTaxLines %}
                             <div class="row border-bottom py-1">
-                                <div class="col-7 px-1 text-end fw-bold">Gesamt netto:</div>
+                                <div class="col-7 px-1 text-end fw-bold">Gesamtnetto:</div>
                                 <div class="col-2 px-1 text-end fw-bold amountNetHolder"></div>
                                 <div class="col-3 px-1">&nbsp;</div>
                             </div>
@@ -177,8 +178,9 @@
                                 <div class="col-2 px-1 text-end fw-bold amountTaxHolder"></div>
                                 <div class="col-3 px-1">&nbsp;</div>
                             </div>
+                            {% endif %}
                             <div class="row py-1">
-                                <div class="col-7 px-1 text-end fw-bold">Gesamt brutto:</div>
+                                <div class="col-7 px-1 text-end fw-bold">Gesamt{% if printTaxLines %} brutto{% endif %}:</div>
                                 <div class="col-2 px-1 text-end fw-bold amountGrossHolder"></div>
                                 <div class="col-3 px-1">&nbsp;</div>
                             </div>
