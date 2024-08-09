@@ -13,7 +13,7 @@ class InvoiceCreatePdfService
     private Fpdf $pdf;
 
     private string $lang;
-    private string $dateFormat = 'd.m.Y';
+    private string $dateFormat = 'Y-m-d';
     private string $currencySymbol;
     private string $invoiceTypeType = 'RE';
     private string $invoiceTypeName = 'Rechnung';
@@ -22,6 +22,7 @@ class InvoiceCreatePdfService
     private Invoice $invoice;
 
     private int $positionsCounter = 0;
+    private bool $printTaxLines = true;
 
     private const WIDTHS = [95, 16, 23, 22, 22];
     private const TABLEHEADS_DE = ['Beschreibung', 'Menge', 'Einheit', 'Preis [_CURRENCY_]', 'Summe [_CURRENCY_]'];
@@ -36,8 +37,6 @@ class InvoiceCreatePdfService
 
         if($this->lang == 'DE')
             $this->dateFormat = 'd.m.Y';
-        else
-            $this->dateFormat = 'Y-m-d';
         
         $this->currencySymbol = $invoice->getCurrency()->getAlpha3();
 
@@ -53,6 +52,9 @@ class InvoiceCreatePdfService
 
         if($invoice->getPrincipal()->getAddressLineCountry()->getAlpha3() == 'ARE')
             $this->invoiceTypeName = 'Tax '.$this->invoiceTypeName;
+
+        if($invoice->getPrincipal()->getAddressLineCountry()->getAlpha3() == 'ARE' && $invoice->getCurrency()->getAlpha3() == 'AED' && $invoice->getVatRate() == 0)
+            $this->printTaxLines = false;
 
         $this->pdf = new Fpdf('P', 'mm', 'A4');
         $this->pdf->SetMargins(17, 5);
@@ -99,7 +101,7 @@ class InvoiceCreatePdfService
         $principalAddressString = implode(' | ', $principalAddress);
         
         $this->pdf->SetFont('Arial', '', 7);
-        $this->pdf->Cell(123, 5, utf8_decode($principalAddressString));
+        $this->pdf->Cell(123, 5, utf8d($principalAddressString));
         $this->pdf->Ln();
 
         $receiverAddress = [$this->receiver->getName()];
@@ -119,7 +121,7 @@ class InvoiceCreatePdfService
         $y = $this->pdf->GetY(); // zu Beginn
         $numberOfLinesAtAddress = count($receiverAddress);
         $this->pdf->SetFont('Arial', '', 10);
-        $this->pdf->MultiCell(123, 5, utf8_decode($receiverAddressString));
+        $this->pdf->MultiCell(123, 5, utf8d($receiverAddressString));
         $this->pdf->Ln();
 
         // Richtige Position finden & Abstand
@@ -194,7 +196,7 @@ class InvoiceCreatePdfService
 
             // Kontext (links)
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8_decode($this->invoice->getIntroText()));
+            $this->pdf->MultiCell(0, 4, utf8d($this->invoice->getIntroText()));
             $this->pdf->Ln();
         }
 
@@ -223,11 +225,11 @@ class InvoiceCreatePdfService
             if($i == 0) {
                 $xBeforeMultiCell = $this->pdf->GetX();
                 $yBeforeMultiCell = $this->pdf->GetY();
-                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8_decode($value), 0, $align);
+                $this->pdf->MultiCell(self::WIDTHS[$i], 5, utf8d($value), 0, $align);
                 $yAfterMultiCell = $this->pdf->GetY();
                 $this->pdf->SetXY($xBeforeMultiCell+self::WIDTHS[$i], $yBeforeMultiCell);
             } else {
-                $this->pdf->Cell(self::WIDTHS[$i], 5, utf8_decode($value), '0', 0, $align);
+                $this->pdf->Cell(self::WIDTHS[$i], 5, utf8d($value), '0', 0, $align);
             }
             $i++;
         }
@@ -258,20 +260,25 @@ class InvoiceCreatePdfService
     {
         $width_a = self::WIDTHS[0] + self::WIDTHS[1] + self::WIDTHS[2] + self::WIDTHS[3];
 
-        // Summenzeile Netto
-        $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt netto' : 'Total net').':', 'R', true, true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet, 2, ',', '.'), 'R', true, true);
-        $this->pdf->Ln();
+        if($this->printTaxLines) {
+            // Summenzeile Netto
+            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt netto' : 'Total net').':', 'R', true, true);
+            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet, 2, ',', '.'), 'R', true, true);
+            $this->pdf->Ln();
 
-        // Summenzeile Steuer
-        $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'USt.' : 'Tax').' '.number_format($taxRate, 2, ',', '.').' %:', 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet * $taxRate / 100, 2, ',', '.'), 'R', true);
-        $this->pdf->Ln();
+            // Summenzeile Steuer
+            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'USt.' : 'Tax').' '.number_format($taxRate, 2, ',', '.').' %:', 'R', true);
+            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumNet * $taxRate / 100, 2, ',', '.'), 'R', true);
+            $this->pdf->Ln();
 
-        // Summenzeile Brutto
-        $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt brutto' : 'Total gross').':', 'R', true);
-        $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
-        $this->pdf->Ln();
+            // Summenzeile Brutto
+            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt brutto' : 'Total gross').':', 'R', true);
+            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
+            $this->pdf->Ln();
+        } else {
+            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt' : 'Total').':', 'R', true);
+            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
+        }
     }
 
     public function addPdfConditions(array $conditions): void
@@ -279,7 +286,7 @@ class InvoiceCreatePdfService
         $this->pdf->Ln();
         foreach($conditions AS $condition) {
             $this->pdf->SetFont('Arial', '', 9);
-            $this->pdf->MultiCell(0, 4, utf8_decode(str_replace('_CURRENCY_', $this->currencySymbol, $condition)), 0, 'L');
+            $this->pdf->MultiCell(0, 4, utf8d(str_replace('_CURRENCY_', $this->currencySymbol, $condition)), 0, 'L');
             $this->pdf->Ln();
         }
     }
@@ -299,7 +306,7 @@ class InvoiceCreatePdfService
             $footerColumn1 = $this->principal->getFooterColumn1();
         else
             $footerColumn1 = $this->principal->getFooterColumn1En();
-        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn1), 'T');
+        $this->pdf->MultiCell(60, 3, utf8d($footerColumn1), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
@@ -313,7 +320,7 @@ class InvoiceCreatePdfService
             $footerColumn2 = $this->principal->getFooterColumn2();
         else
             $footerColumn2 = $this->principal->getFooterColumn2En();
-        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn2), 'T');
+        $this->pdf->MultiCell(60, 3, utf8d($footerColumn2), 'T');
 
         $x2 = $x + 60;
         $this->pdf->SetXY($x2, $y);
@@ -324,7 +331,7 @@ class InvoiceCreatePdfService
             $footerColumn3 = $this->principal->getFooterColumn3();
         else
             $footerColumn3 = $this->principal->getFooterColumn3En();
-        $this->pdf->MultiCell(60, 3, utf8_decode($footerColumn3), 'T');
+        $this->pdf->MultiCell(60, 3, utf8d($footerColumn3), 'T');
 
         $this->pdf->SetTextColor(0, 0, 0);
     }
