@@ -211,6 +211,10 @@ class InvoiceController extends AbstractController
             $this->logger->info('InvoiceController->newPositions(): {user}', ['user' => $user->getUserIdentifier(), 'id' => $invoice->getId()]);
         }
 
+        dump($invoice->getPrincipal()->getAddressLineCountry()->getAlpha3());
+        dump($invoice->getCurrency()->getAlpha3());
+        dump($invoice->getVatRate());
+
         return $this->render('app/invoice/new_positions.html.twig', [
             'paymentSentence' => $this->invoiceCreateService->getPaymentSentence($invoice),
             'taxSentence' => $this->invoiceCreateService->getVatSentence($invoice),
