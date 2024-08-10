@@ -105,7 +105,7 @@
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('number', 'Nummer', sort, sortDirection) }}</th>
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('hCustomerName', 'Kunde', sort, sortDirection) }}</th>
                                 <th class="text-nowrap">{{ _self.sortColumnHeader('amountNet', 'Betrag', sort, sortDirection) }}</th>
-                                <th>Zahlung</th>
+                                <th>Leistung</th>
                                 <th class="text-nowrap d-none d-xxl-table-cell">{{ _self.sortColumnHeader('createdAt', 'Erstellung', sort, sortDirection) }}</th>
                                 <th class="action-column"></th>
                             </tr>
@@ -125,8 +125,7 @@
                                         <span class="badge text-bg-light">Entwurf</span>
                                     {% else %}
                                         {% if invoice.cancelled %}
-                                            <del>{{ invoice.number }}</del>
-                                            <span class="badge text-bg-info-soft">Storno</span>
+                                            <del title="Storniert">{{ invoice.number }}</del>
                                         {% else %}
                                             {{ invoice.number }}
                                         {% endif %}
@@ -144,11 +143,15 @@
                                 <td>
                                     {% if draft == false %}
                                         {{ invoice.amountNetNice(true) }}
+                                        {% if invoice.paymentStatus != 'paid' %}
+                                            <br>{{ invoice.paymentLabel|raw }}
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if draft == false %}
-                                        {{ invoice.paymentLabel|raw }}
+                                    {{ invoice.periodFrom|date('d.m.Y') }}
+                                    {% if invoice.periodFrom != invoice.periodTo %}
+                                        - {{ invoice.periodTo|date('d.m.Y') }}
                                     {% endif %}
                                 </td>
                                 <td class="d-none d-xxl-table-cell">{{ invoice.createdAt|date('d.m.Y') }}</td>
