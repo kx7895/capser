@@ -276,8 +276,8 @@ class InvoiceCreatePdfService
             $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
             $this->pdf->Ln();
         } else {
-            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt' : 'Total').':', 'R', true);
-            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true);
+            $this->addPdfTableBodyElement($width_a, ($this->lang == 'DE' ? 'Gesamt' : 'Total').':', 'R', true, true);
+            $this->addPdfTableBodyElement(self::WIDTHS[4], number_format($sumGross, 2, ',', '.'), 'R', true, true);
         }
     }
 
