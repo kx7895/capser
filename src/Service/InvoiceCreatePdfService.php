@@ -83,8 +83,8 @@ class InvoiceCreatePdfService
             } elseif($this->principal->getLogoPath() == 'ThinkingArabian-Full.png') {
                 $x = 154;
             } elseif($this->principal->getLogoPath() == 'RTA-full-trans.png') {
-                $x = 154;
-                $h = 10;
+                $x = 140;
+                $h = 15;
             }
 
             $this->pdf->Image('images/logos/'.$this->principal->getLogoPath(), $x, $y, $w, $h);
