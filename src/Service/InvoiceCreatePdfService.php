@@ -73,6 +73,8 @@ class InvoiceCreatePdfService
         if($this->principal->getLogoPath() != null) {
             $x = 145;
             $y = 10;
+            $w = 0;
+            $h = 20;
 
             // TODO: Logo-Position muss mit jedem Logo funktionieren & korrekt sein!
             if($this->principal->getLogoPath() == 'Q.png') {
@@ -81,10 +83,11 @@ class InvoiceCreatePdfService
             } elseif($this->principal->getLogoPath() == 'ThinkingArabian-Full.png') {
                 $x = 154;
             } elseif($this->principal->getLogoPath() == 'RTA-full-trans.png') {
-                $x = 100;
+                $x = 154;
+                $h = 10;
             }
 
-            $this->pdf->Image('images/logos/'.$this->principal->getLogoPath(), $x, $y, 0, 20);
+            $this->pdf->Image('images/logos/'.$this->principal->getLogoPath(), $x, $y, $w, $h);
         }
 
         $this->pdf->SetY(35);
